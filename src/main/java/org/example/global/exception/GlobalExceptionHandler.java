@@ -25,4 +25,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse> handleIllegalArgumentException(IllegalArgumentException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.of(e.getMessage()));
     }
+
+    // 본인 소유가 아닌 리소스 접근 시도
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<ApiResponse> handleSecurityException(SecurityException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.of(e.getMessage()));
+    }
 }
