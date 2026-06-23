@@ -1,5 +1,6 @@
-package org.example.global.util;
+package org.example.global.security;
 
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -10,16 +11,15 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Component
-public class JwtUtil {
+public class JwtTokenProvider {
 
     private final SecretKey secretKey;
     private final long accessExpiration;
 
-    public JwtUtil(
+    public JwtTokenProvider(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-expiration}") long accessExpiration
     ) {
-        // Base64로 인코딩된 시크릿 키를 HMAC-SHA 알고리즘용 키로 변환
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
         this.accessExpiration = accessExpiration;
     }
@@ -32,5 +32,28 @@ public class JwtUtil {
                 .expiration(new Date(now.getTime() + accessExpiration))
                 .signWith(secretKey)
                 .compact();
+    }
+
+    // 서명 검증 + 만료 시간 확인
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    // 토큰에서 이메일(subject) 추출
+    public String getEmail(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
     }
 }
