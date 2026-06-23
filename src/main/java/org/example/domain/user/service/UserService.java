@@ -4,9 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.example.domain.user.dto.LoginRequestDto;
 import org.example.domain.user.dto.LoginResponseDto;
 import org.example.domain.user.dto.SignupRequestDto;
+import org.example.domain.user.dto.UserInfoResponseDto;
 import org.example.domain.user.entity.User;
 import org.example.domain.user.repository.UserRepository;
-import org.example.global.util.JwtUtil;
+import org.example.global.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +18,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     public void signup(SignupRequestDto dto) {
@@ -43,7 +44,14 @@ public class UserService {
             throw new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
 
-        String accessToken = jwtUtil.generateAccessToken(user.getEmail());
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getEmail());
         return LoginResponseDto.of(accessToken);
+    }
+
+    @Transactional(readOnly = true)
+    public UserInfoResponseDto getMe(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        return UserInfoResponseDto.from(user);
     }
 }
