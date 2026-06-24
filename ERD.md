@@ -22,16 +22,30 @@ Novel
 ├── createdAt
 └── updatedAt
     │
-    │ 1:N
-    ▼
-Episode
-├── id (PK)
-├── novel_id (FK → Novel.id)
-├── title
-├── episodeNumber
-├── content (TEXT)
-├── createdAt
-└── updatedAt
+    ├── 1:N
+    │   ▼
+    │ Episode
+    │ ├── id (PK)
+    │ ├── novel_id (FK → Novel.id)
+    │ ├── title
+    │ ├── episodeNumber
+    │ ├── content (TEXT)
+    │ ├── createdAt
+    │ └── updatedAt
+    │
+    └── 1:N
+        ▼
+      Character
+      ├── id (PK)
+      ├── novel_id (FK → Novel.id)
+      ├── name
+      ├── role
+      ├── age (nullable)
+      ├── personality (TEXT, nullable)
+      ├── speechStyle (TEXT, nullable)
+      ├── description (TEXT, nullable)
+      ├── createdAt
+      └── updatedAt
 ```
 
 ---
@@ -42,16 +56,18 @@ Episode
 |---|---|
 | User : Novel = 1:N | 한 사용자는 여러 작품을 소유할 수 있다 |
 | Novel : Episode = 1:N | 한 작품은 여러 회차를 가질 수 있다 |
+| Novel : Character = 1:N | 한 작품은 여러 등장인물을 가질 수 있다 |
 
 ---
 
 ## 소유권 검증 체인
 
 ```
-Episode.novel_id → Novel.user_id → User.id
+Episode.novel_id   → Novel.user_id → User.id
+Character.novel_id → Novel.user_id → User.id
 ```
 
-회차 접근 권한은 Novel을 통해 User까지 거슬러 올라가서 검증한다.
+회차/등장인물 접근 권한은 Novel을 통해 User까지 거슬러 올라가서 검증한다.
 
 ---
 
@@ -59,25 +75,10 @@ Episode.novel_id → Novel.user_id → User.id
 
 ```
 Novel
-├── ...
-│
 ├── 1:N → Episode      (구현 완료)
-├── 1:N → Character    (구현 예정)
+├── 1:N → Character    (구현 완료)
 └── 1:N → WorldSetting (구현 예정)
 ```
-
-### Character (등장인물) — 예정
-
-| 필드 | 타입 |
-|---|---|
-| id | PK |
-| novel_id | FK → Novel.id |
-| name | VARCHAR |
-| role | VARCHAR |
-| age | INT |
-| personality | TEXT |
-| speechStyle | TEXT |
-| description | TEXT |
 
 ### WorldSetting (세계관) — 예정
 
