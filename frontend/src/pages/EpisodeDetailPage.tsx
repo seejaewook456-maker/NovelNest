@@ -1,7 +1,10 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEpisode, updateEpisode, deleteEpisode } from '../api/episodeApi';
+import { getSummary, generateSummary } from '../api/episodeSummaryApi';
+import { extractCharacters } from '../api/characterExtractionApi';
 import type { Episode } from '../types/episode';
+import type { EpisodeSummary } from '../types/episodeSummary';
 
 export default function EpisodeDetailPage() {
   const { episodeId } = useParams<{ episodeId: string }>();
@@ -16,9 +19,20 @@ export default function EpisodeDetailPage() {
   const [editContent, setEditContent] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // AI 요약 상태
+  const [summary, setSummary] = useState<EpisodeSummary | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState('');
+
+  // 등장인물 AI 추출 상태
+  const [extractionLoading, setExtractionLoading] = useState(false);
+  const [extractionError, setExtractionError] = useState('');
+
   useEffect(() => {
     if (!episodeId) return;
-    getEpisode(Number(episodeId))
+    const id = Number(episodeId);
+
+    getEpisode(id)
       .then((data) => {
         setEpisode(data);
         setEditTitle(data.title);
@@ -26,7 +40,39 @@ export default function EpisodeDetailPage() {
         setEditContent(data.content);
       })
       .catch((err) => setError(err instanceof Error ? err.message : '조회 실패'));
+
+    // 기존 요약 조회 (없으면 null — 오류 무시)
+    getSummary(id).then(setSummary);
   }, [episodeId]);
+
+  const handleGenerateSummary = async () => {
+    if (!episodeId) return;
+    setSummaryLoading(true);
+    setSummaryError('');
+    try {
+      const result = await generateSummary(Number(episodeId));
+      setSummary(result);
+    } catch (err) {
+      setSummaryError(err instanceof Error ? err.message : '요약 생성 실패');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  const handleExtractCharacters = async () => {
+    if (!episode) return;
+    setExtractionLoading(true);
+    setExtractionError('');
+    try {
+      const result = await extractCharacters(episode.id);
+      navigate(`/episodes/${episode.id}/character-review`, {
+        state: { candidates: result.candidates, novelId: episode.novelId, episodeTitle: result.episodeTitle },
+      });
+    } catch (err) {
+      setExtractionError(err instanceof Error ? err.message : '등장인물 추출 실패');
+      setExtractionLoading(false);
+    }
+  };
 
   const handleUpdate = async (e: FormEvent) => {
     e.preventDefault();
@@ -136,6 +182,53 @@ export default function EpisodeDetailPage() {
             </div>
           </div>
           <div className="episode-content">{episode.content}</div>
+
+          {/* AI 회차 요약 섹션 */}
+          <div className="ai-section">
+            <div className="ai-section-header">
+              <h3>AI 회차 요약</h3>
+              <button
+                className="btn-secondary"
+                onClick={handleGenerateSummary}
+                disabled={summaryLoading}
+              >
+                {summaryLoading ? '생성 중...' : summary ? '재생성' : 'AI 요약 생성'}
+              </button>
+            </div>
+            {summaryError && <p className="error-message">{summaryError}</p>}
+            {summary ? (
+              <div className="summary-box">
+                <p className="summary-text">{summary.summary}</p>
+                <p className="summary-date">
+                  마지막 생성: {new Date(summary.updatedAt).toLocaleString('ko-KR')}
+                </p>
+              </div>
+            ) : (
+              !summaryLoading && (
+                <p className="summary-empty">아직 요약이 없습니다. AI 요약을 생성해 보세요.</p>
+              )
+            )}
+          </div>
+
+          {/* 등장인물 AI 추출 섹션 */}
+          <div className="ai-section">
+            <div className="ai-section-header">
+              <h3>등장인물 AI 추출</h3>
+              <button
+                className="btn-secondary"
+                onClick={handleExtractCharacters}
+                disabled={extractionLoading}
+              >
+                {extractionLoading ? '분석 중...' : '등장인물 AI 추출'}
+              </button>
+            </div>
+            {extractionError && <p className="error-message">{extractionError}</p>}
+            {!extractionLoading && !extractionError && (
+              <p className="summary-empty">
+                AI가 이 회차의 등장인물을 분석합니다. 추출 후 1명씩 검토해 저장할 수 있습니다.
+              </p>
+            )}
+          </div>
         </div>
       )}
     </div>
