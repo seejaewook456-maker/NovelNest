@@ -7,6 +7,7 @@
 - [x] JWT 인증 필터 및 내 정보 조회 API
 - [x] 작품(Novel) CRUD API
 - [x] 회차(Episode) CRUD API
+- [x] 등장인물(Character) CRUD API
 
 ---
 
@@ -16,7 +17,7 @@
 
 - [x] Novel (작품) CRUD
 - [x] Episode (회차) CRUD
-- [ ] Character (등장인물) CRUD
+- [x] Character (등장인물) CRUD
 - [ ] WorldSetting (세계관) CRUD
 
 ### Phase 2 — AI 기능
@@ -64,15 +65,15 @@
 | PATCH | `/api/episodes/{episodeId}` | 회차 수정 |
 | DELETE | `/api/episodes/{episodeId}` | 회차 삭제 |
 
-### 등장인물 (`/api/novels/{novelId}/characters`) — 예정
+### 등장인물 (`/api/novels/{novelId}/characters`, `/api/characters`)
 
 | Method | Path | 설명 |
 |--------|------|------|
 | POST | `/api/novels/{novelId}/characters` | 등장인물 생성 |
 | GET | `/api/novels/{novelId}/characters` | 등장인물 목록 조회 |
-| GET | `/api/novels/{novelId}/characters/{characterId}` | 등장인물 상세 조회 |
-| PUT | `/api/novels/{novelId}/characters/{characterId}` | 등장인물 수정 |
-| DELETE | `/api/novels/{novelId}/characters/{characterId}` | 등장인물 삭제 |
+| GET | `/api/characters/{characterId}` | 등장인물 상세 조회 |
+| PATCH | `/api/characters/{characterId}` | 등장인물 수정 |
+| DELETE | `/api/characters/{characterId}` | 등장인물 삭제 |
 
 ### 세계관 (`/api/novels/{novelId}/world-settings`) — 예정
 
