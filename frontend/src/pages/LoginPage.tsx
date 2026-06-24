@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../api/authApi';
 import { saveToken } from '../utils/token';
+import Button from '../components/Button';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -14,7 +15,6 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       const accessToken = await login({ email, password });
       saveToken(accessToken);
@@ -27,37 +27,42 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="form-container">
-      <h1>로그인</h1>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>이메일</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="user@example.com"
-            required
-          />
+    <div className="auth-wrapper">
+      <div className="auth-card">
+        <div className="auth-header">
+          <p className="auth-brand">작가의 AI 비서</p>
+          <h2 className="auth-title">로그인</h2>
         </div>
-        <div className="form-group">
-          <label>비밀번호</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="비밀번호를 입력하세요"
-            required
-          />
-        </div>
-        {error && <p className="error-message">{error}</p>}
-        <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? '로그인 중...' : '로그인'}
-        </button>
-      </form>
-      <p className="form-link">
-        계정이 없으신가요? <Link to="/signup">회원가입</Link>
-      </p>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>이메일</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="user@example.com"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>비밀번호</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="비밀번호를 입력하세요"
+              required
+            />
+          </div>
+          {error && <p className="error-message">{error}</p>}
+          <Button type="submit" variant="primary" fullWidth disabled={loading} style={{ marginTop: 8 }}>
+            {loading ? '로그인 중...' : '로그인'}
+          </Button>
+        </form>
+        <p className="form-link">
+          계정이 없으신가요? <Link to="/signup">회원가입</Link>
+        </p>
+      </div>
     </div>
   );
 }

@@ -5,6 +5,10 @@ import { getSummary, generateSummary } from '../api/episodeSummaryApi';
 import { extractCharacters } from '../api/characterExtractionApi';
 import type { Episode } from '../types/episode';
 import type { EpisodeSummary } from '../types/episodeSummary';
+import Button from '../components/Button';
+import BackLink from '../components/BackLink';
+import Card from '../components/Card';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function EpisodeDetailPage() {
   const { episodeId } = useParams<{ episodeId: string }>();
@@ -13,25 +17,21 @@ export default function EpisodeDetailPage() {
   const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
 
-  // 수정 폼 상태
   const [editTitle, setEditTitle] = useState('');
   const [editEpisodeNumber, setEditEpisodeNumber] = useState('');
   const [editContent, setEditContent] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // AI 요약 상태
   const [summary, setSummary] = useState<EpisodeSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState('');
 
-  // 등장인물 AI 추출 상태
   const [extractionLoading, setExtractionLoading] = useState(false);
   const [extractionError, setExtractionError] = useState('');
 
   useEffect(() => {
     if (!episodeId) return;
     const id = Number(episodeId);
-
     getEpisode(id)
       .then((data) => {
         setEpisode(data);
@@ -41,7 +41,6 @@ export default function EpisodeDetailPage() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : '조회 실패'));
 
-    // 기존 요약 조회 (없으면 null — 오류 무시)
     getSummary(id).then(setSummary);
   }, [episodeId]);
 
@@ -105,66 +104,68 @@ export default function EpisodeDetailPage() {
   };
 
   if (error) return <p className="error-message">{error}</p>;
-  if (!episode) return <p>불러오는 중...</p>;
+  if (!episode) return <LoadingSpinner />;
 
   return (
     <div>
-      <span className="back-link" onClick={() => navigate(`/novels/${episode.novelId}/episodes`)}>
-        ← 회차 목록
-      </span>
+      <BackLink label="← 회차 목록" onClick={() => navigate(`/novels/${episode.novelId}/episodes`)} />
 
       {isEditing ? (
-        <form onSubmit={handleUpdate} style={{ maxWidth: 640 }}>
-          <h2 style={{ marginBottom: 20 }}>회차 수정</h2>
-          <div className="form-row">
-            <div className="form-group">
-              <label>회차 번호</label>
-              <input
-                type="number"
-                min={1}
-                value={editEpisodeNumber}
-                onChange={(e) => setEditEpisodeNumber(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>제목</label>
-              <input
-                type="text"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-          <div className="form-group">
-            <label>본문</label>
-            <textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              rows={16}
-              required
-            />
-          </div>
-          {error && <p className="error-message">{error}</p>}
-          <div className="form-actions">
-            <button type="submit" className="btn-save" disabled={saving}>
-              {saving ? '저장 중...' : '저장'}
-            </button>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => {
-                setIsEditing(false);
-                setEditTitle(episode.title);
-                setEditEpisodeNumber(String(episode.episodeNumber));
-                setEditContent(episode.content);
-              }}
-            >
-              취소
-            </button>
-          </div>
-        </form>
+        <div style={{ maxWidth: 680 }}>
+          <h2 style={{ marginBottom: 24 }}>회차 수정</h2>
+          <Card>
+            <form onSubmit={handleUpdate}>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>회차 번호</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={editEpisodeNumber}
+                    onChange={(e) => setEditEpisodeNumber(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>제목</label>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>본문</label>
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  rows={18}
+                  required
+                />
+              </div>
+              {error && <p className="error-message">{error}</p>}
+              <div className="form-actions">
+                <Button type="submit" variant="primary" disabled={saving}>
+                  {saving ? '저장 중...' : '저장'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditTitle(episode.title);
+                    setEditEpisodeNumber(String(episode.episodeNumber));
+                    setEditContent(episode.content);
+                  }}
+                >
+                  취소
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
       ) : (
         <div className="episode-detail">
           <div className="ep-header">
@@ -173,27 +174,24 @@ export default function EpisodeDetailPage() {
               <p className="ep-num-badge">{episode.episodeNumber}화</p>
             </div>
             <div className="ep-actions">
-              <button className="btn-secondary" onClick={() => setIsEditing(true)}>
+              <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
                 수정
-              </button>
-              <button className="btn-danger" onClick={handleDelete}>
+              </Button>
+              <Button variant="danger" size="sm" onClick={handleDelete}>
                 삭제
-              </button>
+              </Button>
             </div>
           </div>
+
           <div className="episode-content">{episode.content}</div>
 
           {/* AI 회차 요약 섹션 */}
           <div className="ai-section">
             <div className="ai-section-header">
               <h3>AI 회차 요약</h3>
-              <button
-                className="btn-secondary"
-                onClick={handleGenerateSummary}
-                disabled={summaryLoading}
-              >
+              <Button variant="primary" size="sm" onClick={handleGenerateSummary} disabled={summaryLoading}>
                 {summaryLoading ? '생성 중...' : summary ? '재생성' : 'AI 요약 생성'}
-              </button>
+              </Button>
             </div>
             {summaryError && <p className="error-message">{summaryError}</p>}
             {summary ? (
@@ -210,17 +208,13 @@ export default function EpisodeDetailPage() {
             )}
           </div>
 
-          {/* 등장인물 AI 추출 섹션 */}
+          {/* AI 등장인물 추출 섹션 */}
           <div className="ai-section">
             <div className="ai-section-header">
-              <h3>등장인물 AI 추출</h3>
-              <button
-                className="btn-secondary"
-                onClick={handleExtractCharacters}
-                disabled={extractionLoading}
-              >
-                {extractionLoading ? '분석 중...' : '등장인물 AI 추출'}
-              </button>
+              <h3>AI 등장인물 추출</h3>
+              <Button variant="primary" size="sm" onClick={handleExtractCharacters} disabled={extractionLoading}>
+                {extractionLoading ? '분석 중...' : 'AI 등장인물 추출'}
+              </Button>
             </div>
             {extractionError && <p className="error-message">{extractionError}</p>}
             {!extractionLoading && !extractionError && (

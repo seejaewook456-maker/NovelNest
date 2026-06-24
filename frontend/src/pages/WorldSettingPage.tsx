@@ -1,13 +1,13 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  getWorldSettings,
-  createWorldSetting,
-  updateWorldSetting,
-  deleteWorldSetting,
-} from '../api/worldSettingApi';
+import { getWorldSettings, createWorldSetting, updateWorldSetting, deleteWorldSetting } from '../api/worldSettingApi';
 import type { WorldSetting, WorldSettingCreateRequest, WorldSettingCategory } from '../types/worldsetting';
 import { CATEGORY_LABELS } from '../types/worldsetting';
+import Button from '../components/Button';
+import BackLink from '../components/BackLink';
+import PageHeader from '../components/PageHeader';
+import EmptyState from '../components/EmptyState';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const CATEGORIES: WorldSettingCategory[] = [
   'COUNTRY', 'RACE', 'MAGIC', 'ORGANIZATION', 'PLACE', 'EVENT', 'ITEM', 'RULE', 'ETC',
@@ -17,15 +17,14 @@ export default function WorldSettingPage() {
   const { novelId } = useParams<{ novelId: string }>();
   const navigate = useNavigate();
   const [settings, setSettings] = useState<WorldSetting[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // 추가 폼 상태
   const [newCategory, setNewCategory] = useState<WorldSettingCategory>('ETC');
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
   const [adding, setAdding] = useState(false);
 
-  // 수정 중인 설정 ID
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editCategory, setEditCategory] = useState<WorldSettingCategory>('ETC');
   const [editTitle, setEditTitle] = useState('');
@@ -36,18 +35,15 @@ export default function WorldSettingPage() {
     if (!novelId) return;
     getWorldSettings(Number(novelId))
       .then(setSettings)
-      .catch((err) => setError(err instanceof Error ? err.message : '목록 조회 실패'));
+      .catch((err) => setError(err instanceof Error ? err.message : '목록 조회 실패'))
+      .finally(() => setLoading(false));
   }, [novelId]);
 
   const handleAdd = async (e: FormEvent) => {
     e.preventDefault();
     setAdding(true);
     try {
-      const body: WorldSettingCreateRequest = {
-        category: newCategory,
-        title: newTitle,
-        content: newContent,
-      };
+      const body: WorldSettingCreateRequest = { category: newCategory, title: newTitle, content: newContent };
       const created = await createWorldSetting(Number(novelId), body);
       setSettings((prev) => [...prev, created]);
       setNewCategory('ETC'); setNewTitle(''); setNewContent('');
@@ -65,16 +61,10 @@ export default function WorldSettingPage() {
     setEditContent(s.content);
   };
 
-  const cancelEdit = () => setEditingId(null);
-
   const handleUpdate = async (settingId: number) => {
     setSaving(true);
     try {
-      const updated = await updateWorldSetting(settingId, {
-        category: editCategory,
-        title: editTitle,
-        content: editContent,
-      });
+      const updated = await updateWorldSetting(settingId, { category: editCategory, title: editTitle, content: editContent });
       setSettings((prev) => prev.map((s) => (s.id === settingId ? updated : s)));
       setEditingId(null);
     } catch (err) {
@@ -94,26 +84,20 @@ export default function WorldSettingPage() {
     }
   };
 
+  if (loading) return <LoadingSpinner />;
+
   return (
     <div className="manage-page">
-      <span className="back-link" onClick={() => navigate(`/novels/${novelId}`)}>
-        ← 작품으로
-      </span>
-      <div className="page-header">
-        <h2>세계관 설정 관리</h2>
-      </div>
+      <BackLink label="← 작품으로" onClick={() => navigate(`/novels/${novelId}`)} />
+      <PageHeader title="세계관 설정 관리" />
 
-      {/* 설정 추가 폼 */}
       <div className="add-form-box">
         <h3>새 설정 추가</h3>
         <form onSubmit={handleAdd}>
           <div className="form-row">
             <div className="form-group">
               <label>카테고리</label>
-              <select
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value as WorldSettingCategory)}
-              >
+              <select value={newCategory} onChange={(e) => setNewCategory(e.target.value as WorldSettingCategory)}>
                 {CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>
                 ))}
@@ -141,17 +125,14 @@ export default function WorldSettingPage() {
             />
           </div>
           {error && <p className="error-message">{error}</p>}
-          <button type="submit" className="btn-save" disabled={adding}>
+          <Button type="submit" variant="primary" disabled={adding}>
             {adding ? '추가 중...' : '설정 추가'}
-          </button>
+          </Button>
         </form>
       </div>
 
-      {/* 설정 목록 */}
       {settings.length === 0 ? (
-        <div className="empty-state">
-          <p>등록된 세계관 설정이 없습니다.</p>
-        </div>
+        <EmptyState message="등록된 세계관 설정이 없습니다." />
       ) : (
         settings.map((s) => (
           <div key={s.id} className="item-card">
@@ -163,12 +144,8 @@ export default function WorldSettingPage() {
               <div className="item-card-actions">
                 {editingId !== s.id && (
                   <>
-                    <button className="btn-secondary" onClick={() => startEdit(s)}>
-                      수정
-                    </button>
-                    <button className="btn-danger" onClick={() => handleDelete(s.id)}>
-                      삭제
-                    </button>
+                    <Button variant="secondary" size="sm" onClick={() => startEdit(s)}>수정</Button>
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(s.id)}>삭제</Button>
                   </>
                 )}
               </div>
@@ -181,10 +158,7 @@ export default function WorldSettingPage() {
                 <div className="form-row">
                   <div className="form-group">
                     <label>카테고리</label>
-                    <select
-                      value={editCategory}
-                      onChange={(e) => setEditCategory(e.target.value as WorldSettingCategory)}
-                    >
+                    <select value={editCategory} onChange={(e) => setEditCategory(e.target.value as WorldSettingCategory)}>
                       {CATEGORIES.map((cat) => (
                         <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>
                       ))}
@@ -192,35 +166,18 @@ export default function WorldSettingPage() {
                   </div>
                   <div className="form-group">
                     <label>제목 *</label>
-                    <input
-                      type="text"
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      required
-                    />
+                    <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
                   </div>
                 </div>
                 <div className="form-group">
                   <label>내용 *</label>
-                  <textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    rows={4}
-                    required
-                  />
+                  <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={4} required />
                 </div>
                 <div className="form-actions">
-                  <button
-                    type="button"
-                    className="btn-save"
-                    disabled={saving}
-                    onClick={() => handleUpdate(s.id)}
-                  >
+                  <Button variant="primary" disabled={saving} onClick={() => handleUpdate(s.id)}>
                     {saving ? '저장 중...' : '저장'}
-                  </button>
-                  <button type="button" className="btn-secondary" onClick={cancelEdit}>
-                    취소
-                  </button>
+                  </Button>
+                  <Button variant="secondary" onClick={() => setEditingId(null)}>취소</Button>
                 </div>
               </div>
             )}

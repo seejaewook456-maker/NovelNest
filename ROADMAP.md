@@ -9,6 +9,10 @@
 - [x] 회차(Episode) CRUD API
 - [x] 등장인물(Character) CRUD API
 - [x] 세계관(WorldSetting) CRUD API
+- [x] 프론트엔드 전체 페이지 구현 (MVP 1~2차)
+- [x] AI 회차 요약 UI (Emerald AI 섹션)
+- [x] AI 등장인물 추출 UI (CharacterReviewPage — 단계별 검토, ProgressBar)
+- [x] 프론트엔드 디자인 시스템 구축 (Warm Brown 컬러, 공통 컴포넌트 7개)
 
 ---
 

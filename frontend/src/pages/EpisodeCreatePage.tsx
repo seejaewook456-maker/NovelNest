@@ -1,6 +1,9 @@
 import { useState, FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { createEpisode } from '../api/episodeApi';
+import Button from '../components/Button';
+import BackLink from '../components/BackLink';
+import Card from '../components/Card';
 
 export default function EpisodeCreatePage() {
   const { novelId } = useParams<{ novelId: string }>();
@@ -30,50 +33,55 @@ export default function EpisodeCreatePage() {
   };
 
   return (
-    <div className="form-container" style={{ maxWidth: 640, marginTop: 40 }}>
-      <span className="back-link" onClick={() => navigate(`/novels/${novelId}/episodes`)}>
-        ← 회차 목록
-      </span>
-      <h1>새 회차 작성</h1>
-      <form onSubmit={handleSubmit}>
-        <div className="form-row">
+    <div style={{ maxWidth: 680 }}>
+      <BackLink label="← 회차 목록" onClick={() => navigate(`/novels/${novelId}/episodes`)} />
+      <h2 style={{ marginBottom: 24 }}>새 회차 작성</h2>
+      <Card>
+        <form onSubmit={handleSubmit}>
+          <div className="form-row">
+            <div className="form-group">
+              <label>회차 번호</label>
+              <input
+                type="number"
+                min={1}
+                value={episodeNumber}
+                onChange={(e) => setEpisodeNumber(e.target.value)}
+                placeholder="예) 1"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>제목</label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="회차 제목"
+                required
+              />
+            </div>
+          </div>
           <div className="form-group">
-            <label>회차 번호</label>
-            <input
-              type="number"
-              min={1}
-              value={episodeNumber}
-              onChange={(e) => setEpisodeNumber(e.target.value)}
-              placeholder="예) 1"
+            <label>본문</label>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="회차 내용을 입력하세요"
+              rows={18}
               required
             />
           </div>
-          <div className="form-group">
-            <label>제목</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="회차 제목"
-              required
-            />
+          {error && <p className="error-message">{error}</p>}
+          <div className="form-actions">
+            <Button type="submit" variant="primary" disabled={loading}>
+              {loading ? '저장 중...' : '회차 저장'}
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => navigate(`/novels/${novelId}/episodes`)}>
+              취소
+            </Button>
           </div>
-        </div>
-        <div className="form-group">
-          <label>본문</label>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="회차 내용을 입력하세요"
-            rows={16}
-            required
-          />
-        </div>
-        {error && <p className="error-message">{error}</p>}
-        <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? '저장 중...' : '회차 저장'}
-        </button>
-      </form>
+        </form>
+      </Card>
     </div>
   );
 }
