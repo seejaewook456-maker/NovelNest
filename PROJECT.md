@@ -109,9 +109,8 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 
 ## 현재 구현 완료
 
-* 회원가입
-* 로그인
-* JWT 인증
+### Backend
+* 회원가입 / 로그인 / JWT 인증
 * 작품(Novel) CRUD
 * 회차(Episode) CRUD
 * 등장인물(Character) CRUD
@@ -119,11 +118,28 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * OpenAI 연동 (global/ai — gpt-4.1-mini, Responses API)
 * 회차 요약(EpisodeSummary) — AI 요약 생성 / 조회 (upsert)
 
+### Frontend (MVP 1차)
+* React 19 + TypeScript + Vite (frontend/ 폴더)
+* 로그인 페이지 (JWT localStorage 저장)
+* 회원가입 페이지
+* 작품 목록 페이지
+* 작품 생성 페이지
+* 인증 가드 (PrivateRoute)
+* CORS 설정 (CorsConfig — localhost:5173 허용)
+
 ## 아직 구현되지 않음
 
-* 등장인물 자동 추출 (AI)
-* 설정 충돌 탐지 (AI)
-* 문체 분석 (AI)
+### Frontend
+* 작품 상세 페이지
+* 회차 목록 / 생성 / 수정 / 삭제
+* 등장인물 관리 페이지
+* 세계관 관리 페이지
+* 회차 요약 UI
+
+### AI 기능
+* 등장인물 자동 추출
+* 설정 충돌 탐지
+* 문체 분석
 
 ---
 
