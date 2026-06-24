@@ -8,6 +8,7 @@ import org.example.domain.episode.entity.Episode;
 import org.example.domain.episode.repository.EpisodeRepository;
 import org.example.domain.episodecharacter.repository.EpisodeCharacterRepository;
 import org.example.domain.episodesummary.repository.EpisodeSummaryRepository;
+import org.example.domain.episodeworldsetting.repository.EpisodeWorldSettingRepository;
 import org.example.domain.novel.entity.Novel;
 import org.example.domain.novel.repository.NovelRepository;
 import org.example.domain.user.entity.User;
@@ -23,6 +24,7 @@ public class EpisodeService {
 
     private final EpisodeRepository episodeRepository;
     private final EpisodeCharacterRepository episodeCharacterRepository;
+    private final EpisodeWorldSettingRepository episodeWorldSettingRepository;
     private final EpisodeSummaryRepository episodeSummaryRepository;
     private final NovelRepository novelRepository;
     private final UserRepository userRepository;
@@ -89,8 +91,9 @@ public class EpisodeService {
         Episode episode = findEpisodeById(episodeId);
         validateOwner(episode.getNovel(), user);
 
-        // 삭제 순서: EpisodeCharacter → EpisodeSummary → Episode (FK 제약 순서)
+        // 삭제 순서: EpisodeCharacter → EpisodeWorldSetting → EpisodeSummary → Episode (FK 제약 순서)
         episodeCharacterRepository.deleteAllByEpisode(episode);
+        episodeWorldSettingRepository.deleteAllByEpisode(episode);
         episodeSummaryRepository.findByEpisode(episode)
                 .ifPresent(episodeSummaryRepository::delete);
         episodeRepository.delete(episode);

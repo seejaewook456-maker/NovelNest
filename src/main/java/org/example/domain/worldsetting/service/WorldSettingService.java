@@ -1,6 +1,7 @@
 package org.example.domain.worldsetting.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.domain.episodeworldsetting.repository.EpisodeWorldSettingRepository;
 import org.example.domain.novel.entity.Novel;
 import org.example.domain.novel.repository.NovelRepository;
 import org.example.domain.user.entity.User;
@@ -20,6 +21,7 @@ import java.util.List;
 public class WorldSettingService {
 
     private final WorldSettingRepository worldSettingRepository;
+    private final EpisodeWorldSettingRepository episodeWorldSettingRepository;
     private final NovelRepository novelRepository;
     private final UserRepository userRepository;
 
@@ -75,6 +77,7 @@ public class WorldSettingService {
         WorldSetting worldSetting = findWorldSettingById(worldSettingId);
         validateOwner(worldSetting.getNovel(), user);
 
+        episodeWorldSettingRepository.deleteAllByWorldSetting(worldSetting);
         worldSettingRepository.delete(worldSetting);
     }
 
