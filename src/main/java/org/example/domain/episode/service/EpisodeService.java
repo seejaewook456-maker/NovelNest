@@ -6,6 +6,7 @@ import org.example.domain.episode.dto.EpisodeResponseDto;
 import org.example.domain.episode.dto.EpisodeUpdateRequestDto;
 import org.example.domain.episode.entity.Episode;
 import org.example.domain.episode.repository.EpisodeRepository;
+import org.example.domain.episodesummary.repository.EpisodeSummaryRepository;
 import org.example.domain.novel.entity.Novel;
 import org.example.domain.novel.repository.NovelRepository;
 import org.example.domain.user.entity.User;
@@ -20,6 +21,7 @@ import java.util.List;
 public class EpisodeService {
 
     private final EpisodeRepository episodeRepository;
+    private final EpisodeSummaryRepository episodeSummaryRepository;
     private final NovelRepository novelRepository;
     private final UserRepository userRepository;
 
@@ -84,6 +86,10 @@ public class EpisodeService {
         User user = findUserByEmail(email);
         Episode episode = findEpisodeById(episodeId);
         validateOwner(episode.getNovel(), user);
+
+        // 요약이 있으면 먼저 삭제 — episode_summaries 테이블에 FK 제약이 있어 순서가 중요하다
+        episodeSummaryRepository.findByEpisode(episode)
+                .ifPresent(episodeSummaryRepository::delete);
 
         episodeRepository.delete(episode);
     }

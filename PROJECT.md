@@ -116,10 +116,14 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * 회차(Episode) CRUD
 * 등장인물(Character) CRUD
 * 세계관(WorldSetting) CRUD
+* OpenAI 연동 (global/ai — gpt-4.1-mini, Responses API)
+* 회차 요약(EpisodeSummary) — AI 요약 생성 / 조회 (upsert)
 
 ## 아직 구현되지 않음
 
-* AI 분석
+* 등장인물 자동 추출 (AI)
+* 설정 충돌 탐지 (AI)
+* 문체 분석 (AI)
 
 ---
 
