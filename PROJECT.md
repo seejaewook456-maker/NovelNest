@@ -115,10 +115,10 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * 작품(Novel) CRUD
 * 회차(Episode) CRUD
 * 등장인물(Character) CRUD
+* 세계관(WorldSetting) CRUD
 
 ## 아직 구현되지 않음
 
-* 세계관 관리
 * AI 분석
 
 ---

@@ -8,20 +8,22 @@
 - [x] 작품(Novel) CRUD API
 - [x] 회차(Episode) CRUD API
 - [x] 등장인물(Character) CRUD API
+- [x] 세계관(WorldSetting) CRUD API
 
 ---
 
 ## MVP 구현 순서
 
-### Phase 1 — 콘텐츠 뼈대 (현재)
+### Phase 1 — 콘텐츠 뼈대 (완료)
 
 - [x] Novel (작품) CRUD
 - [x] Episode (회차) CRUD
 - [x] Character (등장인물) CRUD
-- [ ] WorldSetting (세계관) CRUD
+- [x] WorldSetting (세계관) CRUD
 
-### Phase 2 — AI 기능
+### Phase 2 — AI 기능 (다음 작업)
 
+- [ ] OpenAI API 연동
 - [ ] 문체 분석 (반복 표현, 문장 길이, 시점 혼동, 대사 비율)
 - [ ] 등장인물 자동 추출 (회차 원고 → 이름/성격/역할)
 - [ ] 회차 요약 생성 (EpisodeSummary)
@@ -75,12 +77,12 @@
 | PATCH | `/api/characters/{characterId}` | 등장인물 수정 |
 | DELETE | `/api/characters/{characterId}` | 등장인물 삭제 |
 
-### 세계관 (`/api/novels/{novelId}/world-settings`) — 예정
+### 세계관 (`/api/novels/{novelId}/world-settings`, `/api/world-settings`)
 
 | Method | Path | 설명 |
 |--------|------|------|
 | POST | `/api/novels/{novelId}/world-settings` | 세계관 설정 생성 |
 | GET | `/api/novels/{novelId}/world-settings` | 세계관 설정 목록 조회 |
-| GET | `/api/novels/{novelId}/world-settings/{worldSettingId}` | 세계관 설정 상세 조회 |
-| PUT | `/api/novels/{novelId}/world-settings/{worldSettingId}` | 세계관 설정 수정 |
-| DELETE | `/api/novels/{novelId}/world-settings/{worldSettingId}` | 세계관 설정 삭제 |
+| GET | `/api/world-settings/{worldSettingId}` | 세계관 설정 상세 조회 |
+| PATCH | `/api/world-settings/{worldSettingId}` | 세계관 설정 수정 |
+| DELETE | `/api/world-settings/{worldSettingId}` | 세계관 설정 삭제 |
