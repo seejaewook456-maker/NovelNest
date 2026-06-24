@@ -13,6 +13,7 @@
 - [x] AI 회차 요약 UI (Emerald AI 섹션)
 - [x] AI 등장인물 추출 UI (CharacterReviewPage — 단계별 검토, ProgressBar)
 - [x] 프론트엔드 디자인 시스템 구축 (Warm Brown 컬러, 공통 컴포넌트 7개)
+- [x] 회차별 등장인물 연결 (EpisodeCharacter N:M) — 회차 상세 페이지 인물 박스 표시
 
 ---
 
@@ -103,3 +104,10 @@
 | Method | Path | 설명 |
 |--------|------|------|
 | POST | `/api/episodes/{episodeId}/character-extraction` | AI 등장인물 후보 추출 (DB 저장 없음) |
+
+### 회차-등장인물 연결 (`/api/episodes`)
+
+| Method | Path | 설명 |
+|--------|------|------|
+| POST | `/api/episodes/{episodeId}/characters/{characterId}` | 회차-인물 연결 생성 (중복 무시) |
+| GET | `/api/episodes/{episodeId}/characters` | 해당 회차 추출 인물 목록 조회 |

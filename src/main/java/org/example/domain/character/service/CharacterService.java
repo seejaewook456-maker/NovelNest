@@ -6,6 +6,7 @@ import org.example.domain.character.dto.CharacterResponseDto;
 import org.example.domain.character.dto.CharacterUpdateRequestDto;
 import org.example.domain.character.entity.Character;
 import org.example.domain.character.repository.CharacterRepository;
+import org.example.domain.episodecharacter.repository.EpisodeCharacterRepository;
 import org.example.domain.novel.entity.Novel;
 import org.example.domain.novel.repository.NovelRepository;
 import org.example.domain.user.entity.User;
@@ -20,6 +21,7 @@ import java.util.List;
 public class CharacterService {
 
     private final CharacterRepository characterRepository;
+    private final EpisodeCharacterRepository episodeCharacterRepository;
     private final NovelRepository novelRepository;
     private final UserRepository userRepository;
 
@@ -80,6 +82,8 @@ public class CharacterService {
         Character character = findCharacterById(characterId);
         validateOwner(character.getNovel(), user);
 
+        // 회차-인물 연결 레코드를 먼저 삭제해야 FK 제약 위반을 피할 수 있음
+        episodeCharacterRepository.deleteAllByCharacter(character);
         characterRepository.delete(character);
     }
 

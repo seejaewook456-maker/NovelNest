@@ -728,6 +728,49 @@ select {
   line-height: 1.6;
 }
 
+/* 회차별 추출 인물 목록 */
+.episode-character-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.episode-character-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.episode-character-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.episode-character-role {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.badge-ai-extracted {
+  margin-top: 6px;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-badge);
+  padding: 2px 8px;
+  width: fit-content;
+}
+
 /* =============================================
    진행률 바
    ============================================= */

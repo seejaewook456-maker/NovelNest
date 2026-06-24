@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createCharacter, updateCharacter } from '../api/characterApi';
+import { linkCharacterToEpisode } from '../api/episodeCharacterApi';
 import type { CharacterCandidate } from '../types/characterExtraction';
 import Button from '../components/Button';
 import ProgressBar from '../components/ProgressBar';
@@ -8,6 +9,7 @@ import ProgressBar from '../components/ProgressBar';
 interface ReviewState {
   candidates: CharacterCandidate[];
   novelId: number;
+  episodeId: number;
   episodeTitle: string;
 }
 
@@ -21,7 +23,7 @@ export default function CharacterReviewPage() {
     return null;
   }
 
-  const { candidates, novelId, episodeTitle } = state;
+  const { candidates, novelId, episodeId, episodeTitle } = state;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -47,7 +49,7 @@ export default function CharacterReviewPage() {
     setSaving(true);
     setError('');
     try {
-      await createCharacter(novelId, {
+      const created = await createCharacter(novelId, {
         name: current.name,
         role: current.role ?? undefined,
         age: current.age ?? undefined,
@@ -55,6 +57,7 @@ export default function CharacterReviewPage() {
         speechStyle: current.speechStyle ?? undefined,
         description: current.description ?? undefined,
       });
+      await linkCharacterToEpisode(episodeId, created.id);
       setSavedCount((prev) => prev + 1);
       goNext();
     } catch (err) {
@@ -86,6 +89,7 @@ export default function CharacterReviewPage() {
         speechStyle: mergeList(existing.speechStyle, insights?.speechStyle) || undefined,
         description: existing.description ?? undefined,
       });
+      await linkCharacterToEpisode(episodeId, current.matchedCharacterId);
       setSavedCount((prev) => prev + 1);
       goNext();
     } catch (err) {

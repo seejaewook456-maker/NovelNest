@@ -159,6 +159,18 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
   - POST /api/episodes/{episodeId}/summary
   - GET /api/episodes/{episodeId}/summary
 
+### Backend (회차-등장인물 연결)
+* EpisodeCharacter 엔티티 — Episode : Character N:M 연결 테이블
+  - POST /api/episodes/{episodeId}/characters/{characterId} — 회차-인물 연결 생성 (중복 무시)
+  - GET /api/episodes/{episodeId}/characters — 해당 회차 추출 인물 목록 조회
+* AI 추출 후 저장 시 자동 연결 — 회차별 추출 인물 영구 보존
+
+### Frontend (회차별 인물 박스)
+* 회차 상세 페이지 "AI 등장인물 추출" 박스 — 해당 회차에서 저장된 인물만 표시
+* 인물 카드: 이름, 역할, AI 추출 배지
+* 새로고침 후에도 유지 (DB 기반)
+* CharacterReviewPage — 저장 후 episodeCharacterApi로 회차-인물 연결 자동 생성
+
 ## 아직 구현되지 않음
 
 ### AI 기능 (미구현)

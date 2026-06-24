@@ -429,6 +429,135 @@ DELETE /api/world-settings/{worldSettingId}
 
 ---
 
+## 회차-등장인물 연결(EpisodeCharacter) API
+
+> 모든 API는 `Authorization: Bearer {accessToken}` 헤더가 필요합니다.
+
+### 회차-인물 연결 생성
+
+```
+POST /api/episodes/{episodeId}/characters/{characterId}
+Authorization: Bearer {accessToken}
+```
+
+**설명**: AI 추출 검토 후 저장 시 자동 호출됩니다. 이미 연결된 경우 조용히 무시됩니다 (멱등).
+
+**Response (201)**
+```json
+{
+  "message": "회차-등장인물 연결 성공"
+}
+```
+
+---
+
+### 회차별 추출 인물 목록 조회
+
+```
+GET /api/episodes/{episodeId}/characters
+Authorization: Bearer {accessToken}
+```
+
+**설명**: 해당 회차에서 AI 추출 후 저장된 인물 목록을 반환합니다. 작품 전체 인물이 아닌 이 회차에서 저장한 인물만 반환됩니다.
+
+**Response (200)**
+```json
+{
+  "message": "회차별 등장인물 조회 성공",
+  "data": [
+    {
+      "id": 1,
+      "novelId": 1,
+      "name": "김하준",
+      "role": "주인공",
+      "age": 25,
+      "personality": "용감하고 정의감이 강함",
+      "speechStyle": "반말",
+      "description": "설명",
+      "createdAt": "2026-06-24T10:00:00",
+      "updatedAt": "2026-06-24T10:00:00"
+    }
+  ]
+}
+```
+
+---
+
+## AI 등장인물 추출(CharacterExtraction) API
+
+### AI 등장인물 후보 추출
+
+```
+POST /api/episodes/{episodeId}/character-extraction
+Authorization: Bearer {accessToken}
+```
+
+**설명**: AI가 회차 본문을 분석하여 등장인물 후보를 반환합니다. DB에 저장하지 않으며, 반환된 후보를 프론트엔드에서 1명씩 검토 후 저장합니다.
+
+**Response (200)**
+```json
+{
+  "message": "등장인물 후보 추출 성공",
+  "data": {
+    "episodeTitle": "1화 - 시작",
+    "totalCount": 2,
+    "candidates": [
+      {
+        "name": "김하준",
+        "role": "주인공",
+        "age": 25,
+        "personality": "용감함",
+        "speechStyle": "반말",
+        "description": "설명",
+        "evidence": "근거 장면",
+        "isExistingCharacter": false,
+        "matchedCharacterId": null,
+        "newInsights": null,
+        "existingCharacter": null
+      }
+    ]
+  }
+}
+```
+
+---
+
+## AI 회차 요약(EpisodeSummary) API
+
+### AI 회차 요약 생성/재생성
+
+```
+POST /api/episodes/{episodeId}/summary
+Authorization: Bearer {accessToken}
+```
+
+**Response (201)**
+```json
+{
+  "message": "회차 요약 생성 성공",
+  "data": {
+    "id": 1,
+    "episodeId": 1,
+    "summary": "이 회차에서 ...",
+    "createdAt": "...",
+    "updatedAt": "..."
+  }
+}
+```
+
+---
+
+### 회차 요약 조회
+
+```
+GET /api/episodes/{episodeId}/summary
+Authorization: Bearer {accessToken}
+```
+
+**Response (200)**: 요약 생성 응답과 동일 / 요약 없을 경우 400
+
+---
+
 ## 페이지 라우팅 구조
 
 | 경로 | 페이지 |

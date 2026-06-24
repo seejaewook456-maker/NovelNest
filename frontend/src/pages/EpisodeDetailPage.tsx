@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getEpisode, updateEpisode, deleteEpisode } from '../api/episodeApi';
 import { getSummary, generateSummary } from '../api/episodeSummaryApi';
 import { extractCharacters } from '../api/characterExtractionApi';
+import { getEpisodeCharacters } from '../api/episodeCharacterApi';
 import type { Episode } from '../types/episode';
 import type { EpisodeSummary } from '../types/episodeSummary';
+import type { Character } from '../types/character';
 import Button from '../components/Button';
 import BackLink from '../components/BackLink';
 import Card from '../components/Card';
@@ -28,6 +30,7 @@ export default function EpisodeDetailPage() {
 
   const [extractionLoading, setExtractionLoading] = useState(false);
   const [extractionError, setExtractionError] = useState('');
+  const [episodeCharacters, setEpisodeCharacters] = useState<Character[]>([]);
 
   useEffect(() => {
     if (!episodeId) return;
@@ -42,6 +45,7 @@ export default function EpisodeDetailPage() {
       .catch((err) => setError(err instanceof Error ? err.message : '조회 실패'));
 
     getSummary(id).then(setSummary);
+    getEpisodeCharacters(id).then(setEpisodeCharacters).catch(() => {});
   }, [episodeId]);
 
   const handleGenerateSummary = async () => {
@@ -65,7 +69,7 @@ export default function EpisodeDetailPage() {
     try {
       const result = await extractCharacters(episode.id);
       navigate(`/episodes/${episode.id}/character-review`, {
-        state: { candidates: result.candidates, novelId: episode.novelId, episodeTitle: result.episodeTitle },
+        state: { candidates: result.candidates, novelId: episode.novelId, episodeId: episode.id, episodeTitle: result.episodeTitle },
       });
     } catch (err) {
       setExtractionError(err instanceof Error ? err.message : '등장인물 추출 실패');
@@ -217,10 +221,22 @@ export default function EpisodeDetailPage() {
               </Button>
             </div>
             {extractionError && <p className="error-message">{extractionError}</p>}
-            {!extractionLoading && !extractionError && (
-              <p className="summary-empty">
-                AI가 이 회차의 등장인물을 분석합니다. 추출 후 1명씩 검토해 저장할 수 있습니다.
-              </p>
+            {episodeCharacters.length > 0 ? (
+              <div className="episode-character-list">
+                {episodeCharacters.map((c) => (
+                  <div key={c.id} className="episode-character-card">
+                    <div className="episode-character-name">{c.name}</div>
+                    {c.role && <div className="episode-character-role">{c.role}</div>}
+                    <span className="badge-ai-extracted">AI 추출</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              !extractionLoading && (
+                <p className="summary-empty">
+                  AI가 이 회차의 등장인물을 분석합니다. 추출 후 1명씩 검토해 저장할 수 있습니다.
+                </p>
+              )
             )}
           </div>
         </div>
