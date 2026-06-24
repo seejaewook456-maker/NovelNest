@@ -697,13 +697,13 @@ ConflictDetectionResultPage
 → 결과는 저장되지 않음 — 작가가 직접 수정 후 Character/WorldSetting 편집 API 호출
 ```
 
-### 관련 파일 (프론트 구현 시 생성)
+### 관련 파일
 
 | 파일 | 역할 |
 |------|------|
 | `src/api/conflictDetectionApi.ts` | 탐지 API 호출 |
-| `src/types/conflictDetection.ts` | ConflictResult 타입 정의 |
-| `src/pages/ConflictDetectionPage.tsx` | 결과 표시 페이지 |
+| `src/types/conflictDetection.ts` | ConflictResult 타입 + CONFLICT_TYPE_LABELS |
+| `src/pages/EpisodeDetailPage.tsx` | 충돌 감지 섹션 + ConflictSummaryBar + ConflictCard 컴포넌트 |
 
 ---
 

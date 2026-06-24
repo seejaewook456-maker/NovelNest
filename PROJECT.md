@@ -200,6 +200,15 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
   - 심각도(HIGH/MEDIUM/LOW) 포함
   - DB 저장 없음, 읽기 전용 분석 — 자동 수정 없음
 
+### Frontend (설정 충돌 감지 UI)
+* 회차 상세 페이지 "설정 충돌 감지" 섹션 — 인라인 결과 표시
+  - [설정 충돌 감지] 버튼 → POST /api/episodes/{episodeId}/conflict-detection
+  - 요약 바: 총 N건, HIGH/MEDIUM/LOW 건수 배지
+  - 충돌 카드: severity 배지, type 한국어 라벨, 기존 설정 / 현재 회차 / AI 설명 / AI 제안
+  - 충돌 없음: 빈 상태 메시지 표시
+  - 재분석: 버튼 재클릭으로 새 결과로 덮어씀
+  - severity 색상: HIGH(Red) / MEDIUM(Amber) / LOW(Warm Brown)
+
 ## 아직 구현되지 않음
 
 ### AI 기능 (미구현)

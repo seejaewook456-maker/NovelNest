@@ -36,6 +36,7 @@
 - [x] 세계관 AI 추출 (WorldSettingExtraction — 후보 반환, 신규/기존 설정 구분, newInsights)
 - ~~[ ] 문체 분석~~ — **구현하지 않음** (작가의 창작 자유 영역 — 서비스 철학과 맞지 않음)
 - [x] 설정 충돌 탐지 (ConflictDetection — 읽기 전용, HIGH/MEDIUM/LOW 심각도, 6개 충돌 유형)
+- [x] 설정 충돌 감지 UI (회차 상세 페이지 인라인 — 요약 바, severity 배지 카드, 재분석)
 
 ### Phase 3 — RAG 도입
 

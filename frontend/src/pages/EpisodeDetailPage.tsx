@@ -6,11 +6,14 @@ import { extractCharacters } from '../api/characterExtractionApi';
 import { extractWorldSettings } from '../api/worldSettingExtractionApi';
 import { getEpisodeCharacters } from '../api/episodeCharacterApi';
 import { getEpisodeWorldSettings } from '../api/episodeWorldSettingApi';
+import { detectConflicts } from '../api/conflictDetectionApi';
 import type { Episode } from '../types/episode';
 import type { EpisodeSummary } from '../types/episodeSummary';
 import type { Character } from '../types/character';
 import type { WorldSetting } from '../types/worldsetting';
+import type { ConflictResult } from '../types/conflictDetection';
 import { CATEGORY_LABELS } from '../types/worldsetting';
+import { CONFLICT_TYPE_LABELS } from '../types/conflictDetection';
 import Button from '../components/Button';
 import BackLink from '../components/BackLink';
 import Card from '../components/Card';
@@ -39,6 +42,11 @@ export default function EpisodeDetailPage() {
   const [wsExtractionLoading, setWsExtractionLoading] = useState(false);
   const [wsExtractionError, setWsExtractionError] = useState('');
   const [episodeWorldSettings, setEpisodeWorldSettings] = useState<WorldSetting[]>([]);
+
+  const [conflicts, setConflicts] = useState<ConflictResult[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [conflictError, setConflictError] = useState('');
+  const [hasAnalyzed, setHasAnalyzed] = useState(false);
 
   useEffect(() => {
     if (!episodeId) return;
@@ -117,6 +125,21 @@ export default function EpisodeDetailPage() {
       setError(err instanceof Error ? err.message : '수정 실패');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDetectConflicts = async () => {
+    if (!episode) return;
+    setIsAnalyzing(true);
+    setConflictError('');
+    try {
+      const result = await detectConflicts(episode.id);
+      setConflicts(result.conflicts);
+      setHasAnalyzed(true);
+    } catch (err) {
+      setConflictError(err instanceof Error ? err.message : '분석 중 오류가 발생했습니다.');
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -291,8 +314,108 @@ export default function EpisodeDetailPage() {
               )
             )}
           </div>
+
+          {/* 설정 충돌 감지 섹션 */}
+          <div className="ai-section">
+            <div className="ai-section-header">
+              <h3>설정 충돌 감지</h3>
+              <Button variant="primary" size="sm" onClick={handleDetectConflicts} disabled={isAnalyzing}>
+                {isAnalyzing ? 'AI가 충돌을 분석 중...' : hasAnalyzed ? '재분석' : '설정 충돌 감지'}
+              </Button>
+            </div>
+            {conflictError && <p className="error-message">{conflictError}</p>}
+            {hasAnalyzed && !isAnalyzing && (
+              <>
+                {/* 요약 바 */}
+                <ConflictSummaryBar conflicts={conflicts} />
+                {/* 충돌 카드 목록 */}
+                {conflicts.length > 0 ? (
+                  <div>
+                    {conflicts.map((conflict, i) => (
+                      <ConflictCard key={i} conflict={conflict} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="summary-empty">
+                    현재 회차에서 뚜렷한 설정 충돌은 발견되지 않았습니다.
+                  </p>
+                )}
+              </>
+            )}
+            {!hasAnalyzed && !isAnalyzing && (
+              <p className="summary-empty">
+                등장인물, 세계관, 이전 회차 요약과 현재 본문을 비교해 충돌 가능성을 분석합니다.
+              </p>
+            )}
+          </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// severity 값을 CSS 클래스 suffix로 변환
+function severityClass(severity: string): string {
+  return severity.toLowerCase();
+}
+
+// 요약 바 — HIGH/MEDIUM/LOW 건수 표시
+function ConflictSummaryBar({ conflicts }: { conflicts: ConflictResult[] }) {
+  const highCount   = conflicts.filter((c) => c.severity === 'HIGH').length;
+  const mediumCount = conflicts.filter((c) => c.severity === 'MEDIUM').length;
+  const lowCount    = conflicts.filter((c) => c.severity === 'LOW').length;
+
+  if (conflicts.length === 0) return null;
+
+  return (
+    <div className="conflict-summary-bar">
+      <span className="conflict-summary-text">
+        총 {conflicts.length}건의 충돌 가능성을 발견했습니다.
+      </span>
+      <div className="conflict-summary-counts">
+        {highCount > 0 && (
+          <span className="conflict-count-badge conflict-count-badge-high">HIGH {highCount}</span>
+        )}
+        {mediumCount > 0 && (
+          <span className="conflict-count-badge conflict-count-badge-medium">MEDIUM {mediumCount}</span>
+        )}
+        {lowCount > 0 && (
+          <span className="conflict-count-badge conflict-count-badge-low">LOW {lowCount}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 개별 충돌 카드
+function ConflictCard({ conflict }: { conflict: ConflictResult }) {
+  const sev = severityClass(conflict.severity);
+  const typeLabel = CONFLICT_TYPE_LABELS[conflict.type as keyof typeof CONFLICT_TYPE_LABELS]
+    ?? conflict.type;
+
+  return (
+    <div className={`conflict-card conflict-card-${sev}`}>
+      <div className="conflict-card-header">
+        <span className={`severity-badge severity-badge-${sev}`}>{conflict.severity}</span>
+        <span className="conflict-type-label">{typeLabel}</span>
+      </div>
+      <p className="conflict-card-title">{conflict.title}</p>
+      <div className="conflict-info-section">
+        <span className="conflict-info-label">기존 설정</span>
+        <p className="conflict-info-text">{conflict.existingInfo}</p>
+      </div>
+      <div className="conflict-info-section">
+        <span className="conflict-info-label">현재 회차 내용</span>
+        <p className="conflict-info-text">{conflict.currentEpisodeInfo}</p>
+      </div>
+      <div className="conflict-info-section conflict-info-section-description">
+        <span className="conflict-info-label">AI 설명</span>
+        <p className="conflict-info-text">{conflict.description}</p>
+      </div>
+      <div className="conflict-info-section conflict-info-section-suggestion">
+        <span className="conflict-info-label">AI 제안</span>
+        <p className="conflict-info-text">{conflict.suggestion}</p>
+      </div>
     </div>
   );
 }
