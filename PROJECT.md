@@ -171,6 +171,13 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * 새로고침 후에도 유지 (DB 기반)
 * CharacterReviewPage — 저장 후 episodeCharacterApi로 회차-인물 연결 자동 생성
 
+### Backend (삭제 안전성)
+* 소설/회차/등장인물 삭제 시 FK 제약 순서에 맞춰 하위 엔티티 cascade 삭제 처리
+  - NovelService: EpisodeCharacter → EpisodeSummary → Episode → Character → WorldSetting → Novel 순서로 삭제
+  - EpisodeService: EpisodeCharacter → EpisodeSummary → Episode 순서로 삭제
+  - CharacterService: EpisodeCharacter → Character 순서로 삭제
+* `CODING_CONVENTIONS.md` 작성 — FK 삭제 순서, /error permitAll, GlobalExceptionHandler, fetchWithAuth 동작 규칙 문서화
+
 ## 아직 구현되지 않음
 
 ### AI 기능 (미구현)
