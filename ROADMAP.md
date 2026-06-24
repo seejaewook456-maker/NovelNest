@@ -35,7 +35,7 @@
 - [x] 등장인물 AI 추출 (CharacterExtraction — 후보 반환, 신규/기존 인물 구분, newInsights)
 - [x] 세계관 AI 추출 (WorldSettingExtraction — 후보 반환, 신규/기존 설정 구분, newInsights)
 - ~~[ ] 문체 분석~~ — **구현하지 않음** (작가의 창작 자유 영역 — 서비스 철학과 맞지 않음)
-- [ ] 설정 충돌 탐지 (모순 감지)
+- [x] 설정 충돌 탐지 (ConflictDetection — 읽기 전용, HIGH/MEDIUM/LOW 심각도, 6개 충돌 유형)
 
 ### Phase 3 — RAG 도입
 
@@ -114,3 +114,9 @@
 |--------|------|------|
 | POST | `/api/episodes/{episodeId}/characters/{characterId}` | 회차-인물 연결 생성 (중복 무시) |
 | GET | `/api/episodes/{episodeId}/characters` | 해당 회차 추출 인물 목록 조회 |
+
+### AI — 설정 충돌 탐지 (`/api/episodes`)
+
+| Method | Path | 설명 |
+|--------|------|------|
+| POST | `/api/episodes/{episodeId}/conflict-detection` | AI 설정 충돌 탐지 (DB 저장 없음, 읽기 전용) |

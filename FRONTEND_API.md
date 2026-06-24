@@ -606,6 +606,107 @@ WorldSettingReviewPage (1/N ~ N/N)
 
 ---
 
+## AI 설정 충돌 탐지(ConflictDetection) API
+
+### 설정 충돌 탐지
+
+```
+POST /api/episodes/{episodeId}/conflict-detection
+Authorization: Bearer {accessToken}
+```
+
+**설명**: 현재 회차 본문을 등장인물 정보, 세계관 설정, 이전 회차 요약과 비교하여 충돌 가능성을 반환합니다. DB에 저장하지 않으며 읽기 전용 분석입니다. AI가 자동 수정하거나 저장하지 않습니다.
+
+**Request Body**: 없음 (episodeId는 경로 변수)
+
+**Response (200)**
+```json
+{
+  "message": "충돌 탐지 완료",
+  "data": {
+    "episodeTitle": "12화 - 검은 달의 밤",
+    "conflictCount": 2,
+    "conflicts": [
+      {
+        "type": "WORLD_SETTING_CONFLICT",
+        "severity": "HIGH",
+        "title": "에테르의 서 사용 조건 충돌",
+        "existingInfo": "에테르의 서는 계승자만 사용할 수 있다.",
+        "currentEpisodeInfo": "루시안이 에테르의 서를 사용한 것으로 묘사된다.",
+        "description": "기존 세계관 설정과 현재 회차 내용이 충돌할 가능성이 있습니다.",
+        "suggestion": "루시안이 계승자인지, 혹은 예외적으로 사용할 수 있는 조건이 있는지 설명을 추가하는 것을 검토하세요."
+      },
+      {
+        "type": "TIMELINE_CONFLICT",
+        "severity": "HIGH",
+        "title": "사망 인물 재등장",
+        "existingInfo": "3화 요약: 박진호가 전투 중 사망하였다.",
+        "currentEpisodeInfo": "박진호가 이번 회차에서 대화 장면에 등장한다.",
+        "description": "이전 회차 요약 기준 사망한 인물이 현재 회차에 등장하여 시간선 충돌 가능성이 있습니다.",
+        "suggestion": "의도된 회상 장면이거나 오류인지 검토하세요. 오류라면 인물명 수정이 필요합니다."
+      }
+    ]
+  }
+}
+```
+
+**충돌이 없을 때 Response**
+```json
+{
+  "message": "충돌 탐지 완료",
+  "data": {
+    "episodeTitle": "3화 - 첫 만남",
+    "conflictCount": 0,
+    "conflicts": []
+  }
+}
+```
+
+**충돌 유형(type)**
+
+| 값 | 설명 |
+|---|---|
+| `CHARACTER_CONFLICT` | 인물 기본 정보 충돌 (나이, 이름 등) |
+| `PERSONALITY_CONFLICT` | 성격/말투/행동 패턴 충돌 |
+| `RELATIONSHIP_CONFLICT` | 인물 관계 충돌 |
+| `WORLD_SETTING_CONFLICT` | 세계관 설정 충돌 |
+| `ABILITY_CONFLICT` | 능력/마법/아이템 사용 조건 충돌 |
+| `TIMELINE_CONFLICT` | 시간선/사건 순서 충돌 |
+
+**심각도(severity)**
+
+| 값 | 기준 |
+|---|---|
+| `HIGH` | 사망/생존 충돌, 나이 등 명확한 정보 충돌, 세계관 규칙 위반 |
+| `MEDIUM` | 성격 급변, 관계 설정 애매, 능력 조건 불명확 |
+| `LOW` | 추가 설명 권장, 독자 혼동 우려, 가벼운 설정 보강 필요 |
+
+### 프론트 연동 흐름
+
+```
+EpisodeDetailPage
+→ [AI 충돌 탐지] 버튼 클릭
+→ POST /api/episodes/{episodeId}/conflict-detection
+→ ConflictDetectionResultPage로 navigate (state로 conflicts 전달)
+  또는 모달/인라인 표시
+
+ConflictDetectionResultPage
+→ 충돌 목록을 severity(HIGH → MEDIUM → LOW) 순으로 표시
+→ 각 충돌 카드: type 배지, severity 배지, title, existingInfo, currentEpisodeInfo, description, suggestion
+→ 충돌 없으면 "충돌이 발견되지 않았습니다" 빈 상태 표시
+→ 결과는 저장되지 않음 — 작가가 직접 수정 후 Character/WorldSetting 편집 API 호출
+```
+
+### 관련 파일 (프론트 구현 시 생성)
+
+| 파일 | 역할 |
+|------|------|
+| `src/api/conflictDetectionApi.ts` | 탐지 API 호출 |
+| `src/types/conflictDetection.ts` | ConflictResult 타입 정의 |
+| `src/pages/ConflictDetectionPage.tsx` | 결과 표시 페이지 |
+
+---
+
 ## AI 회차 요약(EpisodeSummary) API
 
 ### AI 회차 요약 생성/재생성
