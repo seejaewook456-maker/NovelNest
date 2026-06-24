@@ -1,5 +1,6 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { removeToken } from '../utils/token';
+import Button from '../components/Button';
 
 export default function MainLayout() {
   const navigate = useNavigate();
@@ -12,15 +13,14 @@ export default function MainLayout() {
   return (
     <div className="main-layout">
       <header className="header">
-        <span className="header-title" onClick={() => navigate('/novels')} style={{ cursor: 'pointer' }}>
+        <span className="header-logo" onClick={() => navigate('/novels')}>
           작가의 AI 비서
         </span>
-        <button className="btn-secondary" onClick={handleLogout}>
+        <Button variant="ghost" size="sm" onClick={handleLogout}>
           로그아웃
-        </button>
+        </Button>
       </header>
       <main className="main-content">
-        {/* 자식 라우트가 여기에 렌더링됨 */}
         <Outlet />
       </main>
     </div>

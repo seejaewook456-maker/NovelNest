@@ -136,15 +136,30 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * 세계관 관리 페이지 (WorldSettingPage — 인라인 CRUD)
 * 라우터 확장 (8개 페이지 전체 연결)
 
-## 아직 구현되지 않음
+### Frontend (AI 기능 UI)
+* 회차 요약 UI — AI 요약 생성/재생성, Emerald 컬러 섹션
+* 등장인물 AI 추출 UI — CharacterReviewPage (단계별 검토)
+  - 신규/기존 인물 구분 카드
+  - newInsights 하이라이트 표시
+  - 등록/업데이트/건너뛰기 플로우
 
-### Frontend
-* 회차 요약 UI
+### Frontend (디자인 시스템)
+* Warm Brown + Cream 컬러 토큰 (CSS 변수)
+* 공통 컴포넌트: Button, Card, PageHeader, EmptyState, LoadingSpinner, ProgressBar, BackLink
+* AI 기능 전용 Emerald 컬러 시스템
+* 전 페이지 리디자인 — 원고 작성 도구 컨셉
+* 회차 본문 serif 폰트 적용
+* CharacterReview ProgressBar 추가
 
 ### Backend (AI 기능)
 * 등장인물 AI 추출 (CharacterExtraction) — 후보 생성, DB 저장 없음
   - POST /api/episodes/{episodeId}/character-extraction
   - 신규/기존 인물 구분, newInsights(새 발견 정보) 반환
+* 회차 요약(EpisodeSummary) — AI 요약 생성 / 조회 (upsert)
+  - POST /api/episodes/{episodeId}/summary
+  - GET /api/episodes/{episodeId}/summary
+
+## 아직 구현되지 않음
 
 ### AI 기능 (미구현)
 * 설정 충돌 탐지

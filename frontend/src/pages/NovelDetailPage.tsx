@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getNovel } from '../api/novelApi';
 import type { Novel } from '../types/novel';
+import BackLink from '../components/BackLink';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function NovelDetailPage() {
   const { novelId } = useParams<{ novelId: string }>();
@@ -17,13 +19,13 @@ export default function NovelDetailPage() {
   }, [novelId]);
 
   if (error) return <p className="error-message">{error}</p>;
-  if (!novel) return <p>불러오는 중...</p>;
+  if (!novel) return <LoadingSpinner />;
 
   const id = Number(novelId);
 
   return (
     <div>
-      <span className="back-link" onClick={() => navigate('/novels')}>← 작품 목록</span>
+      <BackLink label="← 작품 목록" onClick={() => navigate('/novels')} />
 
       <div className="novel-info-card">
         <h2>{novel.title}</h2>
