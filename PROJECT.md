@@ -141,8 +141,12 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 ### Frontend
 * 회차 요약 UI
 
-### AI 기능
-* 등장인물 자동 추출
+### Backend (AI 기능)
+* 등장인물 AI 추출 (CharacterExtraction) — 후보 생성, DB 저장 없음
+  - POST /api/episodes/{episodeId}/character-extraction
+  - 신규/기존 인물 구분, newInsights(새 발견 정보) 반환
+
+### AI 기능 (미구현)
 * 설정 충돌 탐지
 * 문체 분석
 

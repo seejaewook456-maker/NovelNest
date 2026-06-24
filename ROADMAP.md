@@ -21,12 +21,12 @@
 - [x] Character (등장인물) CRUD
 - [x] WorldSetting (세계관) CRUD
 
-### Phase 2 — AI 기능 (다음 작업)
+### Phase 2 — AI 기능
 
-- [ ] OpenAI API 연동
+- [x] OpenAI API 연동 (global/ai — gpt-4.1-mini, Responses API)
+- [x] 회차 요약 생성 (EpisodeSummary — upsert)
+- [x] 등장인물 AI 추출 (CharacterExtraction — 후보 반환, 신규/기존 인물 구분, newInsights)
 - [ ] 문체 분석 (반복 표현, 문장 길이, 시점 혼동, 대사 비율)
-- [ ] 등장인물 자동 추출 (회차 원고 → 이름/성격/역할)
-- [ ] 회차 요약 생성 (EpisodeSummary)
 - [ ] 설정 충돌 탐지 (모순 감지)
 
 ### Phase 3 — RAG 도입
@@ -86,3 +86,16 @@
 | GET | `/api/world-settings/{worldSettingId}` | 세계관 설정 상세 조회 |
 | PATCH | `/api/world-settings/{worldSettingId}` | 세계관 설정 수정 |
 | DELETE | `/api/world-settings/{worldSettingId}` | 세계관 설정 삭제 |
+
+### AI — 회차 요약 (`/api/episodes`)
+
+| Method | Path | 설명 |
+|--------|------|------|
+| POST | `/api/episodes/{episodeId}/summary` | AI 회차 요약 생성/갱신 |
+| GET | `/api/episodes/{episodeId}/summary` | 회차 요약 조회 |
+
+### AI — 등장인물 추출 (`/api/episodes`)
+
+| Method | Path | 설명 |
+|--------|------|------|
+| POST | `/api/episodes/{episodeId}/character-extraction` | AI 등장인물 후보 추출 (DB 저장 없음) |

@@ -32,6 +32,15 @@ Novel
     │ ├── content (TEXT)
     │ ├── createdAt
     │ └── updatedAt
+    │     │
+    │     │ 1:1
+    │     ▼
+    │   EpisodeSummary
+    │   ├── id (PK)
+    │   ├── episode_id (FK → Episode.id, UNIQUE)
+    │   ├── summary (TEXT)
+    │   ├── createdAt
+    │   └── updatedAt
     │
     ├── 1:N
     │   ▼
@@ -84,6 +93,17 @@ WorldSetting.novel_id → Novel.user_id → User.id
 
 ---
 
-## Phase 1 완료 — MVP 콘텐츠 구조
+## CharacterExtraction — DB 테이블 없음
 
-Novel을 중심으로 Episode, Character, WorldSetting 모두 구현 완료.
+CharacterExtraction은 DB를 사용하지 않는 순수 AI 분석 기능이다.
+OpenAI가 반환한 후보(CharacterCandidateDto)는 메모리에서만 처리되며, 저장 시 기존 Character 테이블을 직접 사용한다.
+
+## Phase 완료 현황
+
+| Phase | 내용 | 상태 |
+|---|---|---|
+| Phase 1 | Novel/Episode/Character/WorldSetting CRUD | 완료 |
+| Phase 2-a | OpenAI 연동, EpisodeSummary | 완료 |
+| Phase 2-b | CharacterExtraction (AI 후보 추출) | 완료 |
+| Phase 2-c | 문체 분석, 설정 충돌 탐지 | 미구현 |
+| Phase 3 | RAG 도입 | 미구현 |
