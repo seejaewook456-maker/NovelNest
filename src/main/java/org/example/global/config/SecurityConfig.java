@@ -29,7 +29,12 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/health", "/api/users/signup", "/api/users/login").permitAll()
+                .requestMatchers(
+                        "/health",
+                        "/api/users/signup", "/api/users/login",
+                        "/swagger-ui.html", "/swagger-ui/**",
+                        "/v3/api-docs/**", "/api-docs/**"
+                ).permitAll()
                 .anyRequest().authenticated()
             )
             // UsernamePasswordAuthenticationFilter 이전에 JWT 필터 실행
