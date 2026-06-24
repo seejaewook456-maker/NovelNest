@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createWorldSetting, updateWorldSetting } from '../api/worldSettingApi';
+import { linkWorldSettingToEpisode } from '../api/episodeWorldSettingApi';
 import type { WorldSettingCandidate } from '../types/worldSettingExtraction';
 import type { WorldSettingCategory } from '../types/worldsetting';
 import { CATEGORY_LABELS } from '../types/worldsetting';
@@ -72,11 +73,12 @@ export default function WorldSettingReviewPage() {
     setSaving(true);
     setError('');
     try {
-      await createWorldSetting(novelId, {
+      const created = await createWorldSetting(novelId, {
         category: editedCategory,
         title: editedTitle,
         content: editedContent,
       });
+      await linkWorldSettingToEpisode(episodeId, created.id);
       setSavedCount((prev) => prev + 1);
       goNext();
     } catch (err) {
@@ -96,6 +98,7 @@ export default function WorldSettingReviewPage() {
         title: editedTitle,
         content: editedContent,
       });
+      await linkWorldSettingToEpisode(episodeId, current.matchedWorldSettingId);
       setUpdatedCount((prev) => prev + 1);
       goNext();
     } catch (err) {

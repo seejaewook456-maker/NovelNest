@@ -16,24 +16,27 @@ Spring Data JPA의 `repository.delete(entity)`는 DB의 FK(외래키) 제약을 
 
 ```
 Novel 삭제 시:
-  1. EpisodeCharacter  (episode_id FK → Episode, character_id FK → Character)
-  2. EpisodeSummary    (episode_id FK → Episode)
-  3. Episode           (novel_id FK → Novel)
-  4. Character         (novel_id FK → Novel)
-  5. WorldSetting      (novel_id FK → Novel)
-  6. Novel
+  1. EpisodeCharacter     (episode_id FK → Episode, character_id FK → Character)
+  2. EpisodeWorldSetting  (episode_id FK → Episode, world_setting_id FK → WorldSetting)
+  3. EpisodeSummary       (episode_id FK → Episode)
+  4. Episode              (novel_id FK → Novel)
+  5. Character            (novel_id FK → Novel)
+  6. WorldSetting         (novel_id FK → Novel)
+  7. Novel
 
 Episode 삭제 시:
-  1. EpisodeCharacter  (episode_id FK → Episode)
-  2. EpisodeSummary    (episode_id FK → Episode)
-  3. Episode
+  1. EpisodeCharacter     (episode_id FK → Episode)
+  2. EpisodeWorldSetting  (episode_id FK → Episode)
+  3. EpisodeSummary       (episode_id FK → Episode)
+  4. Episode
 
 Character 삭제 시:
   1. EpisodeCharacter  (character_id FK → Character)
   2. Character
 
 WorldSetting 삭제 시:
-  → 자식 없음. 바로 삭제 가능.
+  1. EpisodeWorldSetting  (world_setting_id FK → WorldSetting)
+  2. WorldSetting
 ```
 
 ### 새 엔티티 추가 시 체크리스트

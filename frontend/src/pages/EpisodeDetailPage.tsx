@@ -5,9 +5,12 @@ import { getSummary, generateSummary } from '../api/episodeSummaryApi';
 import { extractCharacters } from '../api/characterExtractionApi';
 import { extractWorldSettings } from '../api/worldSettingExtractionApi';
 import { getEpisodeCharacters } from '../api/episodeCharacterApi';
+import { getEpisodeWorldSettings } from '../api/episodeWorldSettingApi';
 import type { Episode } from '../types/episode';
 import type { EpisodeSummary } from '../types/episodeSummary';
 import type { Character } from '../types/character';
+import type { WorldSetting } from '../types/worldsetting';
+import { CATEGORY_LABELS } from '../types/worldsetting';
 import Button from '../components/Button';
 import BackLink from '../components/BackLink';
 import Card from '../components/Card';
@@ -35,6 +38,7 @@ export default function EpisodeDetailPage() {
 
   const [wsExtractionLoading, setWsExtractionLoading] = useState(false);
   const [wsExtractionError, setWsExtractionError] = useState('');
+  const [episodeWorldSettings, setEpisodeWorldSettings] = useState<WorldSetting[]>([]);
 
   useEffect(() => {
     if (!episodeId) return;
@@ -50,6 +54,7 @@ export default function EpisodeDetailPage() {
 
     getSummary(id).then(setSummary);
     getEpisodeCharacters(id).then(setEpisodeCharacters).catch(() => {});
+    getEpisodeWorldSettings(id).then(setEpisodeWorldSettings).catch(() => {});
   }, [episodeId]);
 
   const handleGenerateSummary = async () => {
@@ -268,10 +273,22 @@ export default function EpisodeDetailPage() {
               </Button>
             </div>
             {wsExtractionError && <p className="error-message">{wsExtractionError}</p>}
-            {!wsExtractionLoading && (
-              <p className="summary-empty">
-                AI가 이 회차의 세계관/설정 정보를 분석합니다. 추출 후 1개씩 검토해 저장할 수 있습니다.
-              </p>
+            {episodeWorldSettings.length > 0 ? (
+              <div className="episode-character-list">
+                {episodeWorldSettings.map((ws) => (
+                  <div key={ws.id} className="episode-character-card">
+                    <div className="episode-character-name">{ws.title}</div>
+                    <div className="episode-character-role">{CATEGORY_LABELS[ws.category]}</div>
+                    <span className="badge-ai-extracted">AI 추출</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              !wsExtractionLoading && (
+                <p className="summary-empty">
+                  AI가 이 회차의 세계관/설정 정보를 분석합니다. 추출 후 1개씩 검토해 저장할 수 있습니다.
+                </p>
+              )
             )}
           </div>
         </div>
