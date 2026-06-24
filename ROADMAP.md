@@ -6,6 +6,7 @@
 - [x] 로그인 API (JWT accessToken 발급)
 - [x] JWT 인증 필터 및 내 정보 조회 API
 - [x] 작품(Novel) CRUD API
+- [x] 회차(Episode) CRUD API
 
 ---
 
@@ -14,7 +15,7 @@
 ### Phase 1 — 콘텐츠 뼈대 (현재)
 
 - [x] Novel (작품) CRUD
-- [ ] Episode (회차) CRUD
+- [x] Episode (회차) CRUD
 - [ ] Character (등장인물) CRUD
 - [ ] WorldSetting (세계관) CRUD
 
@@ -53,15 +54,15 @@
 | PUT | `/api/novels/{novelId}` | 작품 수정 |
 | DELETE | `/api/novels/{novelId}` | 작품 삭제 |
 
-### 회차 (`/api/novels/{novelId}/episodes`) — 예정
+### 회차 (`/api/novels/{novelId}/episodes`, `/api/episodes`)
 
 | Method | Path | 설명 |
 |--------|------|------|
 | POST | `/api/novels/{novelId}/episodes` | 회차 생성 |
 | GET | `/api/novels/{novelId}/episodes` | 회차 목록 조회 |
-| GET | `/api/novels/{novelId}/episodes/{episodeId}` | 회차 상세 조회 |
-| PUT | `/api/novels/{novelId}/episodes/{episodeId}` | 회차 수정 |
-| DELETE | `/api/novels/{novelId}/episodes/{episodeId}` | 회차 삭제 |
+| GET | `/api/episodes/{episodeId}` | 회차 상세 조회 |
+| PATCH | `/api/episodes/{episodeId}` | 회차 수정 |
+| DELETE | `/api/episodes/{episodeId}` | 회차 삭제 |
 
 ### 등장인물 (`/api/novels/{novelId}/characters`) — 예정
 
