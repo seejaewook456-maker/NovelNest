@@ -193,10 +193,26 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
   - newInsights: 기존 content 대비 새롭게 발견된 정보 목록
   - DB 저장 없음 — 사용자 검토 후 기존 WorldSetting CRUD API로 저장
 
+### Backend (설정 충돌 탐지)
+* Conflict Detection — POST /api/episodes/{episodeId}/conflict-detection
+  - 현재 회차 본문 + 등장인물 목록 + 세계관 설정 목록 + 최근 10개 회차 요약을 AI에 전달
+  - 충돌 유형(CHARACTER/PERSONALITY/RELATIONSHIP/WORLD_SETTING/ABILITY/TIMELINE) 분류
+  - 심각도(HIGH/MEDIUM/LOW) 포함
+  - DB 저장 없음, 읽기 전용 분석 — 자동 수정 없음
+
+### Frontend (설정 충돌 감지 UI)
+* 회차 상세 페이지 "설정 충돌 감지" 섹션 — 인라인 결과 표시
+  - [설정 충돌 감지] 버튼 → POST /api/episodes/{episodeId}/conflict-detection
+  - 요약 바: 총 N건, HIGH/MEDIUM/LOW 건수 배지
+  - 충돌 카드: severity 배지, type 한국어 라벨, 기존 설정 / 현재 회차 / AI 설명 / AI 제안
+  - 충돌 없음: 빈 상태 메시지 표시
+  - 재분석: 버튼 재클릭으로 새 결과로 덮어씀
+  - severity 색상: HIGH(Red) / MEDIUM(Amber) / LOW(Warm Brown)
+
 ## 아직 구현되지 않음
 
 ### AI 기능 (미구현)
-* 설정 충돌 탐지
+* (없음 — AI MVP 기능 모두 구현 완료)
 
 ### 구현하지 않기로 결정
 * 문체 분석 — 작가의 문체는 창작 자유 영역이므로 서비스가 평가/교정하는 방향 지양

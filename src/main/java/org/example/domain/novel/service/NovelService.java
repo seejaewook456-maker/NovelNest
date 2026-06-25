@@ -2,6 +2,7 @@ package org.example.domain.novel.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.domain.character.repository.CharacterRepository;
+import org.example.domain.conflictdetection.repository.ConflictDetectionResultRepository;
 import org.example.domain.episode.repository.EpisodeRepository;
 import org.example.domain.episodecharacter.repository.EpisodeCharacterRepository;
 import org.example.domain.episodesummary.repository.EpisodeSummaryRepository;
@@ -27,6 +28,7 @@ public class NovelService {
     private final EpisodeCharacterRepository episodeCharacterRepository;
     private final EpisodeWorldSettingRepository episodeWorldSettingRepository;
     private final EpisodeSummaryRepository episodeSummaryRepository;
+    private final ConflictDetectionResultRepository conflictDetectionResultRepository;
     private final EpisodeRepository episodeRepository;
     private final CharacterRepository characterRepository;
     private final WorldSettingRepository worldSettingRepository;
@@ -79,12 +81,13 @@ public class NovelService {
         validateOwner(novel, user);
 
         // FK 제약 순서에 맞춰 하위 엔티티를 먼저 삭제
-        episodeCharacterRepository.deleteAllByEpisode_Novel(novel);      // EpisodeCharacter (episode_id, character_id FK)
-        episodeWorldSettingRepository.deleteAllByEpisode_Novel(novel);   // EpisodeWorldSetting (episode_id, world_setting_id FK)
-        episodeSummaryRepository.deleteAllByEpisode_Novel(novel);        // EpisodeSummary (episode_id FK)
-        episodeRepository.deleteAllByNovel(novel);                       // Episode (novel_id FK)
-        characterRepository.deleteAllByNovel(novel);                     // Character (novel_id FK)
-        worldSettingRepository.deleteAllByNovel(novel);                  // WorldSetting (novel_id FK)
+        episodeCharacterRepository.deleteAllByEpisode_Novel(novel);
+        episodeWorldSettingRepository.deleteAllByEpisode_Novel(novel);
+        episodeSummaryRepository.deleteAllByEpisode_Novel(novel);
+        conflictDetectionResultRepository.deleteAllByEpisode_Novel(novel);
+        episodeRepository.deleteAllByNovel(novel);
+        characterRepository.deleteAllByNovel(novel);
+        worldSettingRepository.deleteAllByNovel(novel);
         novelRepository.delete(novel);
     }
 

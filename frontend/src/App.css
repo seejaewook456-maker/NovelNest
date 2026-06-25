@@ -1078,9 +1078,180 @@ select {
   font-weight: 500;
 }
 
-/* WorldSetting Review 편집 영역 */
+/* WorldSetting Review — 편집 영역 */
 .ws-edit-section {
   margin-top: 20px;
   padding-top: 20px;
   border-top: 1px solid var(--color-border);
+}
+
+/* =============================================
+   설정 충돌 탐지 (Conflict Detection)
+   ============================================= */
+
+/* 요약 바 — 분석 결과 건수 표시 */
+.conflict-summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-bg-card);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.conflict-summary-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  flex: 1;
+  min-width: 160px;
+}
+
+.conflict-summary-counts {
+  display: flex;
+  gap: 8px;
+}
+
+.conflict-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-badge);
+}
+
+.conflict-count-badge-high {
+  background: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+}
+
+.conflict-count-badge-medium {
+  background: #FFFBEB;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.conflict-count-badge-low {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+}
+
+/* 충돌 카드 */
+.conflict-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 20px 22px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.conflict-card-high   { border-left: 4px solid #EF4444; }
+.conflict-card-medium { border-left: 4px solid #D97706; }
+.conflict-card-low    { border-left: 4px solid var(--color-primary); }
+
+.conflict-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+/* severity 배지 */
+.severity-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-badge);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.severity-badge-high {
+  background: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+}
+
+.severity-badge-medium {
+  background: #FFFBEB;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.severity-badge-low {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+}
+
+/* type 라벨 */
+.conflict-type-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* 충돌 제목 */
+.conflict-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+/* 충돌 정보 섹션들 */
+.conflict-info-section {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  margin-bottom: 8px;
+}
+
+.conflict-info-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.conflict-info-text {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* AI 설명 / AI 제안 — 구분 배경 */
+.conflict-info-section-description {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+}
+
+.conflict-info-section-suggestion {
+  background: var(--color-primary-light);
+  border-color: var(--color-border);
+}
+
+.conflict-info-section-suggestion .conflict-info-label {
+  color: var(--color-primary);
+}
+
+.conflict-info-section-suggestion .conflict-info-text {
+  color: var(--color-primary-hover);
 }
