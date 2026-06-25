@@ -14,7 +14,7 @@ export default function MainLayout() {
     <div className="main-layout">
       <header className="header">
         <span className="header-logo" onClick={() => navigate('/novels')}>
-          작가의 AI 비서
+          노벨네스트
         </span>
         <Button variant="ghost" size="sm" onClick={handleLogout}>
           로그아웃

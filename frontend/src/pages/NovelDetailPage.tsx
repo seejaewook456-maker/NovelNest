@@ -348,7 +348,7 @@ export default function NovelDetailPage() {
             disabled={isChatLoading}
           />
           <button
-            className="btn btn-ai chat-send-btn"
+            className="btn btn-primary chat-send-btn"
             onClick={handleSend}
             disabled={isChatLoading || !inputMessage.trim()}
           >

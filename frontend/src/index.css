@@ -17,11 +17,11 @@
   --color-border:         #E7DDD3;
   --color-border-focus:   #8B5E3C;
 
-  /* AI — Emerald */
-  --color-ai:             #10B981;
-  --color-ai-hover:       #059669;
-  --color-ai-light:       #ECFDF5;
-  --color-ai-border:      #A7F3D0;
+  /* AI — Warm Brown */
+  --color-ai:             #8B5E3C;
+  --color-ai-hover:       #70492E;
+  --color-ai-light:       #F5EFE8;
+  --color-ai-border:      #C4A882;
 
   /* Danger */
   --color-danger:         #EF4444;
