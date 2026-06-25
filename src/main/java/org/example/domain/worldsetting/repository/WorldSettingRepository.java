@@ -15,5 +15,8 @@ public interface WorldSettingRepository extends JpaRepository<WorldSetting, Long
     // 카테고리 필터 — 향후 AI가 특정 카테고리 설정만 조회할 때 사용
     List<WorldSetting> findAllByNovelAndCategoryOrderByTitleAsc(Novel novel, WorldSettingCategory category);
 
+    // 챗봇 통계 전용
+    long countByNovel(Novel novel);
+
     void deleteAllByNovel(Novel novel);
 }
