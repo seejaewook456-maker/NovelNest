@@ -48,6 +48,7 @@
 - [x] WorldSetting Category Grouped View (카테고리별 카드 그룹화 — 클릭 시 상세 목록, useMemo grouping, 자동 복귀)
 - [x] Episode Detail Page Scroll to Top (AI 도구 영역 하단 [▲ 최상단으로 이동] 버튼 — window.scrollTo smooth scroll, 상단 버튼과 대응)
 - [x] 회차 글쓰기 보조 툴바 (WritingAssistToolbar — 글자 수 실시간 표시, 구분선 삽입, 특수문자 빠른 입력, 괄호형 커서 자동 이동)
+- [x] Google OAuth 로그인/회원가입 (Spring Security OAuth2 Client — JWT 발급, LOCAL 이메일 충돌 보호, 자동 회원가입)
 
 ### Phase 3 — RAG 도입
 
@@ -59,13 +60,15 @@
 
 ## API 목록
 
-### 인증 (`/api/users`)
+### 인증 (`/api/users`, OAuth2)
 
 | Method | Path | 설명 |
 |--------|------|------|
-| POST | `/api/users/signup` | 회원가입 |
-| POST | `/api/users/login` | 로그인 |
+| POST | `/api/users/signup` | 이메일 회원가입 |
+| POST | `/api/users/login` | 이메일 로그인 |
 | GET | `/api/users/me` | 내 정보 조회 |
+| GET | `/oauth2/authorization/google` | Google OAuth 로그인 진입 (브라우저 리다이렉트) |
+| GET | `/login/oauth2/code/google` | Google OAuth 콜백 (Spring Security 자동 처리) |
 
 ### 작품 (`/api/novels`)
 

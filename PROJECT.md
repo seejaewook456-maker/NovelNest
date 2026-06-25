@@ -118,10 +118,19 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * OpenAI 연동 (global/ai — gpt-4.1-mini, Responses API)
 * 회차 요약(EpisodeSummary) — AI 요약 생성 / 조회 (upsert)
 
+### Authentication
+* Google OAuth 로그인 (Spring Security OAuth2 Client)
+  - Provider enum (LOCAL/GOOGLE) — 향후 KAKAO/NAVER 동일 패턴 확장 가능
+  - CustomOAuth2UserService — Google 계정 자동 회원가입, LOCAL 이메일 충돌 시 에러
+  - OAuth2AuthenticationSuccessHandler — JWT 발급 후 `/oauth2/callback?token=...` 리다이렉트
+  - OAuth2AuthenticationFailureHandler — 에러 메시지 URL 인코딩 후 `/login?error=...` 리다이렉트
+  - SessionCreationPolicy.IF_REQUIRED — OAuth2 state 파라미터 세션 저장 필요
+
 ### Frontend (MVP 1차)
 * React 19 + TypeScript + Vite (frontend/ 폴더)
-* 로그인 페이지 (JWT localStorage 저장)
-* 회원가입 페이지
+* 로그인 페이지 (JWT localStorage 저장, Google OAuth 버튼, OAuth 에러 메시지 표시)
+* 회원가입 페이지 (Google OAuth 버튼)
+* OAuth2 콜백 페이지 (OAuth2CallbackPage — token 파라미터 처리 후 /novels 이동)
 * 작품 목록 페이지
 * 작품 생성 페이지
 * 인증 가드 (PrivateRoute)

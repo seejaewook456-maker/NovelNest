@@ -4,6 +4,7 @@ import { isLoggedIn } from '../utils/token';
 import MainLayout from '../layouts/MainLayout';
 import LoginPage from '../pages/LoginPage';
 import SignupPage from '../pages/SignupPage';
+import OAuth2CallbackPage from '../pages/OAuth2CallbackPage';
 import NovelListPage from '../pages/NovelListPage';
 import NovelCreatePage from '../pages/NovelCreatePage';
 import NovelDetailPage from '../pages/NovelDetailPage';
@@ -31,6 +32,11 @@ export const router = createBrowserRouter([
   {
     path: '/signup',
     element: <SignupPage />,
+  },
+  {
+    // Google OAuth 콜백: 백엔드가 리다이렉트하는 경로 (인증 불필요)
+    path: '/oauth2/callback',
+    element: <OAuth2CallbackPage />,
   },
   {
     // 인증이 필요한 모든 페이지를 MainLayout 아래에 배치

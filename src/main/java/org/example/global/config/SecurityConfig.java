@@ -3,6 +3,9 @@ package org.example.global.config;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.global.security.JwtAuthenticationFilter;
+import org.example.global.security.oauth2.CustomOAuth2UserService;
+import org.example.global.security.oauth2.OAuth2AuthenticationFailureHandler;
+import org.example.global.security.oauth2.OAuth2AuthenticationSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,19 +23,23 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oAuth2FailureHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
-            // JWT 방식이므로 서버에 세션을 저장하지 않음
+            // OAuth2 state 파라미터 저장을 위해 IF_REQUIRED 사용 (JWT 요청에는 세션 미사용)
             .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                         "/health", "/error",
                         "/api/users/signup", "/api/users/login",
+                        "/oauth2/**", "/login/oauth2/**",
                         "/swagger-ui.html", "/swagger-ui/**",
                         "/v3/api-docs/**", "/api-docs/**"
                 ).permitAll()
@@ -50,6 +57,14 @@ public class SecurityConfig {
                     response.setContentType("application/json;charset=UTF-8");
                     response.getWriter().write("{\"message\":\"접근 권한이 없습니다.\"}");
                 })
+            )
+            // Google OAuth2 로그인 설정
+            .oauth2Login(oauth2 -> oauth2
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(customOAuth2UserService)
+                )
+                .successHandler(oAuth2SuccessHandler)
+                .failureHandler(oAuth2FailureHandler)
             )
             // UsernamePasswordAuthenticationFilter 이전에 JWT 필터 실행
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

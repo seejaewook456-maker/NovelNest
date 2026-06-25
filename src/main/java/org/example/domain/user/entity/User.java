@@ -20,16 +20,25 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column // Google 회원은 null
     private String password;
 
     @Column(nullable = false)
     private String nickname;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Provider provider;
+
+    @Column
+    private String providerId; // Google sub ID, LOCAL이면 null
+
     @Builder
-    private User(String email, String password, String nickname) {
+    private User(String email, String password, String nickname, Provider provider, String providerId) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
+        this.provider = provider != null ? provider : Provider.LOCAL;
+        this.providerId = providerId;
     }
 }

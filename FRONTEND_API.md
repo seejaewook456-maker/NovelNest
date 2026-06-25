@@ -70,6 +70,36 @@ localStorage.removeItem('accessToken');
 
 ## 인증 API
 
+### Google OAuth 로그인 흐름
+
+일반 API 호출이 아닌 **브라우저 리다이렉트** 방식입니다.
+
+```
+1. 사용자가 "Google로 로그인" 버튼 클릭
+   → <a href="http://localhost:8080/oauth2/authorization/google">
+
+2. 백엔드(Spring Security)가 Google 인증 페이지로 리다이렉트
+
+3. 사용자가 Google 계정 선택 및 동의
+
+4. Google이 백엔드 콜백 URL로 리다이렉트
+   → GET http://localhost:8080/login/oauth2/code/google?code=...
+
+5. 백엔드가 JWT 발급 후 프론트로 리다이렉트
+   → 성공: http://localhost:5173/oauth2/callback?token=JWT_TOKEN
+   → 실패: http://localhost:5173/login?error=에러메시지(URL인코딩)
+
+6. OAuth2CallbackPage: token 파라미터를 localStorage에 저장 → /novels 이동
+   LoginPage: error 파라미터를 읽어 에러 메시지 표시
+```
+
+**주의사항**
+- `<a>` 태그 직접 이동 방식 (fetch/axios 사용 불가 — CORS 및 리다이렉트 흐름 때문)
+- `http://localhost:8080/oauth2/authorization/google` — Vite proxy를 거치지 않음
+- LOCAL 계정과 동일한 이메일로 Google 로그인 시 에러 (`/login?error=...`)
+
+---
+
 ### 로그인
 
 ```

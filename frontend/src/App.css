@@ -1938,6 +1938,51 @@ select {
 }
 
 /* =============================================
+   소셜 로그인 (Google 등)
+   ============================================= */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--color-border);
+}
+
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-btn);
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  line-height: 1;
+}
+
+.btn-google:hover {
+  background: var(--color-bg);
+  border-color: var(--color-text-muted);
+  box-shadow: var(--shadow-sm);
+}
+
+/* =============================================
    글쓰기 보조 툴바 (WritingAssistToolbar)
    ============================================= */
 .writing-toolbar {

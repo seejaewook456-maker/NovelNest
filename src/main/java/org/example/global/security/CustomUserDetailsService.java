@@ -23,9 +23,11 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + email));
 
+        // Google 회원은 password가 null이므로 빈 문자열로 대체 (JWT 필터는 password를 검증하지 않음)
+        String password = user.getPassword() != null ? user.getPassword() : "";
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
-                user.getPassword(),
+                password,
                 List.of(new SimpleGrantedAuthority("ROLE_USER"))
         );
     }
