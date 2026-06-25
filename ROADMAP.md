@@ -42,6 +42,7 @@
 
 - [x] 회차 본문 전체 복사 (EpisodeDetailPage — 📋 본문 복사 버튼, Toast 피드백, 모바일 대응)
 - [x] Novel/Episode 삭제 확인 절차 (ConfirmDeleteModal — "삭제하겠습니다" 입력 일치 시 삭제 활성화, 브라우저 confirm 제거)
+- [x] 회차 글쓰기 보조 툴바 (WritingAssistToolbar — 글자 수 실시간 표시, 구분선 삽입, 특수문자 빠른 입력, 괄호형 커서 자동 이동)
 
 ### Phase 3 — RAG 도입
 
