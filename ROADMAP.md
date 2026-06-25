@@ -42,6 +42,11 @@
 
 - [x] 회차 본문 전체 복사 (EpisodeDetailPage — 📋 본문 복사 버튼, Toast 피드백, 모바일 대응)
 - [x] Novel/Episode 삭제 확인 절차 (ConfirmDeleteModal — "삭제하겠습니다" 입력 일치 시 삭제 활성화, 브라우저 confirm 제거)
+- [x] Episode Detail Page AI 도구 빠른 이동 (본문 헤더 [▼ AI 도구로 이동] 버튼, useRef smooth scroll, AI 도구 섹션 헤더 추가)
+- [x] Collapsible Create Form (등장인물/세계관 생성폼 접이식 처리 — CollapsibleFormCard 공통 컴포넌트)
+- [x] Favorite Character / WorldSetting (즐겨찾기 DB 영구 저장 — isFavorite 컬럼, 전용 PATCH API, 즉시 재정렬 + Toast)
+- [x] WorldSetting Category Grouped View (카테고리별 카드 그룹화 — 클릭 시 상세 목록, useMemo grouping, 자동 복귀)
+- [x] Episode Detail Page Scroll to Top (AI 도구 영역 하단 [▲ 최상단으로 이동] 버튼 — window.scrollTo smooth scroll, 상단 버튼과 대응)
 
 ### Phase 3 — RAG 도입
 

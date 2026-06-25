@@ -213,10 +213,31 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 
 * Episode Content Copy — 회차 상세 페이지 본문 영역 오른쪽 상단 [📋 본문 복사] 버튼
 * Novel/Episode 삭제 확인 절차 — 삭제 버튼 클릭 시 ConfirmDeleteModal 표시, "삭제하겠습니다" 문구 입력 후 삭제 활성화 (실수 삭제 방지)
+* Episode Detail Page AI tools quick scroll — 본문 헤더 [▼ AI 도구로 이동] 버튼, useRef + scrollIntoView smooth scroll
   - navigator.clipboard.writeText 사용, 예외 처리 포함
   - 복사 성공/실패 시 하단 고정 Toast(Snackbar) 표시 (2초 자동 소멸)
   - 버튼 텍스트 2초간 "✓ 복사됨"으로 변경 후 원복
   - 모바일 대응 (@media max-width: 480px Toast 좌우 여백 처리)
+  - 백엔드 수정 없음, 프론트엔드 전용
+* Collapsible Create Form — 등장인물/세계관 관리 페이지 생성폼 접이식 처리
+  - 페이지 진입 시 "＋ 새 인물/설정 추가" 버튼만 표시 (폼 숨김)
+  - 클릭 시 폼 펼쳐짐, 저장 성공/취소 시 폼 자동 닫힘
+  - CollapsibleFormCard 공통 컴포넌트 (children 방식)
+* Favorite Character / WorldSetting — 즐겨찾기(★) 영구 저장, DB 컬럼 isFavorite 추가
+  - Character: 즐겨찾기 우선 정렬(isFavorite DESC → name ASC), 카드 헤더 별 아이콘 버튼
+  - WorldSetting: 카테고리 상세 뷰 카드 헤더 별 아이콘 버튼, 카테고리 내 즐겨찾기 우선 정렬
+  - PATCH /api/characters/{id}/favorite, PATCH /api/world-settings/{id}/favorite
+  - 토글 즉시 재정렬 + Toast 피드백, 백엔드 ddl-auto:update로 컬럼 자동 추가
+* Episode Detail Page Scroll to Top — AI 도구 영역 하단 [▲ 최상단으로 이동] 버튼
+  - AI 도구 영역 최하단에 위치, 클릭 시 window.scrollTo smooth scroll
+  - 상단 [▼ AI 도구로 이동] 버튼과 대응되는 구조
+  - ghost 버튼 스타일, 디자인 일관성 유지, 백엔드 수정 없음
+* WorldSetting Category Grouped View — 세계관 설정 목록을 카테고리별 카드로 그룹화
+  - 기본 화면: 데이터가 있는 카테고리 카드만 표시 (카테고리명 + 설정 수)
+  - 카드 클릭 시 해당 카테고리의 설정 목록 상세 표시
+  - 상세 화면에서 수정/삭제 가능, 뒤로가기 버튼으로 카테고리 목록 복귀
+  - settings useMemo grouping으로 생성/수정/삭제 즉시 카운트 반영
+  - 카테고리 상세에서 모든 설정 삭제 시 자동으로 카테고리 목록으로 복귀
   - 백엔드 수정 없음, 프론트엔드 전용
 
 ## 아직 구현되지 않음

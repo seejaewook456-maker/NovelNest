@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEpisode, updateEpisode, deleteEpisode } from '../api/episodeApi';
 import { getSummary, generateSummary } from '../api/episodeSummaryApi';
@@ -58,6 +58,15 @@ export default function EpisodeDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+
+  // AI 도구 영역 스크롤 ref
+  const aiToolsRef = useRef<HTMLDivElement>(null);
+  const scrollToAiTools = () => {
+    aiToolsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     if (!episodeId) return;
@@ -280,12 +289,26 @@ export default function EpisodeDetailPage() {
 
           <div className="episode-content-header">
             <span className="episode-content-label">회차 본문</span>
-            <Button variant="ghost" size="sm" onClick={handleCopyContent}>
-              {copied ? '✓ 복사됨' : '📋 본문 복사'}
-            </Button>
+            <div className="episode-content-actions">
+              <Button variant="ghost" size="sm" onClick={handleCopyContent}>
+                {copied ? '✓ 복사됨' : '📋 본문 복사'}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={scrollToAiTools}>
+                ▼ AI 도구로 이동
+              </Button>
+            </div>
           </div>
 
           <div className="episode-content">{episode.content}</div>
+
+          {/* AI 도구 영역 — 스크롤 대상 */}
+          <div ref={aiToolsRef}>
+            <div className="ai-tools-header">
+              <h3 className="ai-tools-title">AI 도구</h3>
+              <p className="ai-tools-desc">
+                이 회차를 요약하고, 등장인물/세계관을 추출하고, 설정 충돌을 감지할 수 있습니다.
+              </p>
+            </div>
 
           {/* AI 회차 요약 섹션 */}
           <div className="ai-section">
@@ -403,6 +426,14 @@ export default function EpisodeDetailPage() {
                 등장인물, 세계관, 이전 회차 요약과 현재 본문을 비교해 충돌 가능성을 분석합니다.
               </p>
             )}
+          </div>
+
+          {/* 최상단 이동 버튼 */}
+          <div className="ai-tools-footer">
+            <Button variant="ghost" size="sm" onClick={scrollToTop}>
+              ▲ 최상단으로 이동
+            </Button>
+          </div>
           </div>
         </div>
       )}
