@@ -30,7 +30,7 @@ export default function LoginPage() {
     <div className="auth-wrapper">
       <div className="auth-card">
         <div className="auth-header">
-          <p className="auth-brand">작가의 AI 비서</p>
+          <p className="auth-brand">노벨네스트</p>
           <h2 className="auth-title">로그인</h2>
         </div>
         <form onSubmit={handleSubmit}>

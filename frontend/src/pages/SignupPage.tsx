@@ -29,7 +29,7 @@ export default function SignupPage() {
     <div className="auth-wrapper">
       <div className="auth-card">
         <div className="auth-header">
-          <p className="auth-brand">작가의 AI 비서</p>
+          <p className="auth-brand">노벨네스트</p>
           <h2 className="auth-title">회원가입</h2>
         </div>
         <form onSubmit={handleSubmit}>
