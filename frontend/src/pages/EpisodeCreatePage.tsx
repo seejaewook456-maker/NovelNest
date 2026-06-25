@@ -1,9 +1,10 @@
-import { useState, FormEvent } from 'react';
+import { useState, useRef, FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { createEpisode } from '../api/episodeApi';
 import Button from '../components/Button';
 import BackLink from '../components/BackLink';
 import Card from '../components/Card';
+import WritingAssistToolbar from '../components/WritingAssistToolbar';
 
 export default function EpisodeCreatePage() {
   const { novelId } = useParams<{ novelId: string }>();
@@ -13,6 +14,7 @@ export default function EpisodeCreatePage() {
   const [content, setContent] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -63,7 +65,13 @@ export default function EpisodeCreatePage() {
           </div>
           <div className="form-group">
             <label>본문</label>
+            <WritingAssistToolbar
+              content={content}
+              onChange={setContent}
+              textareaRef={contentRef}
+            />
             <textarea
+              ref={contentRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="회차 내용을 입력하세요"

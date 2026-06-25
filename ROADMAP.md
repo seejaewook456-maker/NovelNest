@@ -47,6 +47,7 @@
 - [x] Favorite Character / WorldSetting (즐겨찾기 DB 영구 저장 — isFavorite 컬럼, 전용 PATCH API, 즉시 재정렬 + Toast)
 - [x] WorldSetting Category Grouped View (카테고리별 카드 그룹화 — 클릭 시 상세 목록, useMemo grouping, 자동 복귀)
 - [x] Episode Detail Page Scroll to Top (AI 도구 영역 하단 [▲ 최상단으로 이동] 버튼 — window.scrollTo smooth scroll, 상단 버튼과 대응)
+- [x] 회차 글쓰기 보조 툴바 (WritingAssistToolbar — 글자 수 실시간 표시, 구분선 삽입, 특수문자 빠른 입력, 괄호형 커서 자동 이동)
 
 ### Phase 3 — RAG 도입
 

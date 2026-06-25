@@ -19,6 +19,7 @@ import BackLink from '../components/BackLink';
 import Card from '../components/Card';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import WritingAssistToolbar from '../components/WritingAssistToolbar';
 
 export default function EpisodeDetailPage() {
   const { episodeId } = useParams<{ episodeId: string }>();
@@ -31,6 +32,7 @@ export default function EpisodeDetailPage() {
   const [editEpisodeNumber, setEditEpisodeNumber] = useState('');
   const [editContent, setEditContent] = useState('');
   const [saving, setSaving] = useState(false);
+  const editContentRef = useRef<HTMLTextAreaElement>(null);
 
   const [summary, setSummary] = useState<EpisodeSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
@@ -242,7 +244,13 @@ export default function EpisodeDetailPage() {
               </div>
               <div className="form-group">
                 <label>본문</label>
+                <WritingAssistToolbar
+                  content={editContent}
+                  onChange={setEditContent}
+                  textareaRef={editContentRef}
+                />
                 <textarea
+                  ref={editContentRef}
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   rows={18}
