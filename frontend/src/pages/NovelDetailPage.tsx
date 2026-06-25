@@ -109,6 +109,9 @@ export default function NovelDetailPage() {
   const [inputMessage, setInputMessage] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [chatError, setChatError] = useState('');
+  // 복사 피드백 — 메시지 id로 어떤 버튼이 활성화됐는지 추적
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copyFailedId, setCopyFailedId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -155,6 +158,17 @@ export default function NovelDetailPage() {
       setChatError(err instanceof Error ? err.message : 'AI 답변 생성에 실패했습니다.');
     } finally {
       setIsChatLoading(false);
+    }
+  };
+
+  const handleCopy = async (id: string, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      setCopyFailedId(id);
+      setTimeout(() => setCopyFailedId(null), 2000);
     }
   };
 
@@ -285,7 +299,21 @@ export default function NovelDetailPage() {
             <div key={msg.id} className={`chat-message chat-message-${msg.role}`}>
               <div className="chat-bubble">
                 {msg.role === 'assistant' ? (
-                  <MarkdownRenderer content={msg.content} />
+                  <>
+                    <MarkdownRenderer content={msg.content} />
+                    <div className="chat-copy-area">
+                      <button
+                        className="btn btn-ghost btn-sm chat-copy-btn"
+                        onClick={() => handleCopy(msg.id, msg.content)}
+                      >
+                        {copiedId === msg.id
+                          ? '복사되었습니다.'
+                          : copyFailedId === msg.id
+                          ? '복사에 실패했습니다.'
+                          : '답변 복사'}
+                      </button>
+                    </div>
+                  </>
                 ) : (
                   <p className="chat-user-text">{msg.content}</p>
                 )}
