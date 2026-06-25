@@ -1,5 +1,6 @@
 package org.example.global.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.global.common.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -37,5 +39,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
         return ResponseEntity.badRequest().body(ApiResponse.of("입력값 형식이 올바르지 않습니다."));
+    }
+
+    // 위에서 처리되지 않은 모든 예외 — 서버 오류를 ApiResponse 형식으로 반환해
+    // 프론트엔드 fetchWithAuth가 json.message를 읽을 수 있도록 보장
+    // 로그로 예외 클래스명과 스택트레이스를 출력해 원인 파악에 활용
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse> handleException(Exception e) {
+        log.error("[GlobalExceptionHandler] 처리되지 않은 예외: {} - {}", e.getClass().getName(), e.getMessage(), e);
+        String message = "[" + e.getClass().getSimpleName() + "] " + e.getMessage();
+        return ResponseEntity.status(500).body(ApiResponse.of(message));
     }
 }

@@ -7,6 +7,8 @@ import org.example.domain.character.entity.Character;
 import org.example.domain.character.repository.CharacterRepository;
 import org.example.domain.conflictdetection.dto.ConflictDetectionResponseDto;
 import org.example.domain.conflictdetection.dto.ConflictResultDto;
+import org.example.domain.conflictdetection.entity.ConflictDetectionResult;
+import org.example.domain.conflictdetection.repository.ConflictDetectionResultRepository;
 import org.example.domain.episode.entity.Episode;
 import org.example.domain.episode.repository.EpisodeRepository;
 import org.example.domain.episodesummary.entity.EpisodeSummary;
@@ -17,6 +19,7 @@ import org.example.domain.user.repository.UserRepository;
 import org.example.domain.worldsetting.entity.WorldSetting;
 import org.example.domain.worldsetting.repository.WorldSettingRepository;
 import org.example.global.ai.service.OpenAiService;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,35 +49,65 @@ public class ConflictDetectionService {
     private final CharacterRepository characterRepository;
     private final WorldSettingRepository worldSettingRepository;
     private final EpisodeSummaryRepository episodeSummaryRepository;
+    private final ConflictDetectionResultRepository conflictDetectionResultRepository;
     private final UserRepository userRepository;
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
 
-    @Transactional(readOnly = true)
+    // AI 충돌 탐지 실행 후 결과를 DB에 upsert
+    @Transactional
     public ConflictDetectionResponseDto detectConflicts(String email, Long episodeId) {
         User user = findUserByEmail(email);
         Episode episode = findEpisodeById(episodeId);
         Novel novel = episode.getNovel();
         validateOwner(novel, user);
 
-        // 해당 작품의 등장인물 / 세계관 설정 / 이전 회차 요약 조회
         List<Character> characters = characterRepository.findAllByNovelOrderByNameAsc(novel);
         List<WorldSetting> worldSettings = worldSettingRepository.findAllByNovelOrderByCategoryAscTitleAsc(novel);
 
-        // 최근 10개 Summary 중 현재 회차보다 이전 회차만 사용 (미래 회차 요약 제외)
         List<EpisodeSummary> recentSummaries = episodeSummaryRepository
-                .findTop10ByEpisode_NovelOrderByEpisode_EpisodeNumberDesc(novel)
+                .findRecentSummariesByNovel(novel, PageRequest.of(0, 10))
                 .stream()
                 .filter(s -> s.getEpisode().getEpisodeNumber() < episode.getEpisodeNumber())
                 .collect(Collectors.toList());
 
-        // OpenAI 호출 — DB 저장 없음
         String input = buildInput(episode, novel, characters, worldSettings, recentSummaries);
         String aiResponse = openAiService.generateText(DETECTION_INSTRUCTIONS, input);
         List<ConflictResultDto> conflicts = parseJson(aiResponse);
 
+        // 결과를 JSON으로 직렬화해 DB에 upsert — 재분석 시 기존 결과를 덮어씀
+        String conflictsJson = serializeConflicts(conflicts);
+        ConflictDetectionResult saved = conflictDetectionResultRepository.findByEpisode(episode)
+                .map(existing -> {
+                    existing.update(conflictsJson, conflicts.size());
+                    return existing;
+                })
+                .orElseGet(() -> conflictDetectionResultRepository.save(
+                        ConflictDetectionResult.builder()
+                                .episode(episode)
+                                .conflictsJson(conflictsJson)
+                                .conflictCount(conflicts.size())
+                                .build()
+                ));
+
         String episodeTitle = episode.getEpisodeNumber() + "화 - " + episode.getTitle();
-        return new ConflictDetectionResponseDto(episodeTitle, conflicts);
+        return new ConflictDetectionResponseDto(episodeTitle, conflicts, saved.getUpdatedAt());
+    }
+
+    // DB에서 저장된 충돌 탐지 결과 조회 — 없으면 null 반환
+    @Transactional(readOnly = true)
+    public ConflictDetectionResponseDto getConflictResult(String email, Long episodeId) {
+        User user = findUserByEmail(email);
+        Episode episode = findEpisodeById(episodeId);
+        validateOwner(episode.getNovel(), user);
+
+        return conflictDetectionResultRepository.findByEpisode(episode)
+                .map(result -> {
+                    List<ConflictResultDto> conflicts = parseJson(result.getConflictsJson());
+                    String episodeTitle = episode.getEpisodeNumber() + "화 - " + episode.getTitle();
+                    return new ConflictDetectionResponseDto(episodeTitle, conflicts, result.getUpdatedAt());
+                })
+                .orElse(null);
     }
 
     // AI에게 전달하는 입력 텍스트 조립
@@ -191,6 +224,15 @@ public class ConflictDetectionService {
             return objectMapper.readValue(cleaned, new TypeReference<List<ConflictResultDto>>() {});
         } catch (Exception e) {
             throw new IllegalArgumentException("AI 응답 파싱에 실패했습니다. 다시 시도해 주세요. 원인: " + e.getMessage());
+        }
+    }
+
+    // 충돌 목록을 JSON 문자열로 직렬화 — DB 저장용
+    private String serializeConflicts(List<ConflictResultDto> conflicts) {
+        try {
+            return objectMapper.writeValueAsString(conflicts);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("충돌 결과 직렬화에 실패했습니다: " + e.getMessage());
         }
     }
 

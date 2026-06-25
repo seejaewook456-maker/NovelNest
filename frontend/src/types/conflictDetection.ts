@@ -22,6 +22,7 @@ export interface ConflictDetectionResult {
   episodeTitle: string;
   conflictCount: number;
   conflicts: ConflictResult[];
+  analyzedAt: string;
 }
 
 export const CONFLICT_TYPE_LABELS: Record<ConflictType, string> = {

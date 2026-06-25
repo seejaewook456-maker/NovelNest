@@ -6,7 +6,7 @@ import { extractCharacters } from '../api/characterExtractionApi';
 import { extractWorldSettings } from '../api/worldSettingExtractionApi';
 import { getEpisodeCharacters } from '../api/episodeCharacterApi';
 import { getEpisodeWorldSettings } from '../api/episodeWorldSettingApi';
-import { detectConflicts } from '../api/conflictDetectionApi';
+import { detectConflicts, getConflictResult } from '../api/conflictDetectionApi';
 import type { Episode } from '../types/episode';
 import type { EpisodeSummary } from '../types/episodeSummary';
 import type { Character } from '../types/character';
@@ -47,6 +47,7 @@ export default function EpisodeDetailPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [conflictError, setConflictError] = useState('');
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
+  const [lastAnalyzedAt, setLastAnalyzedAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (!episodeId) return;
@@ -63,6 +64,15 @@ export default function EpisodeDetailPage() {
     getSummary(id).then(setSummary);
     getEpisodeCharacters(id).then(setEpisodeCharacters).catch(() => {});
     getEpisodeWorldSettings(id).then(setEpisodeWorldSettings).catch(() => {});
+    getConflictResult(id)
+      .then((result) => {
+        if (result) {
+          setConflicts(result.conflicts);
+          setLastAnalyzedAt(result.analyzedAt);
+          setHasAnalyzed(true);
+        }
+      })
+      .catch(() => {});
   }, [episodeId]);
 
   const handleGenerateSummary = async () => {
@@ -135,6 +145,7 @@ export default function EpisodeDetailPage() {
     try {
       const result = await detectConflicts(episode.id);
       setConflicts(result.conflicts);
+      setLastAnalyzedAt(result.analyzedAt);
       setHasAnalyzed(true);
     } catch (err) {
       setConflictError(err instanceof Error ? err.message : '분석 중 오류가 발생했습니다.');
@@ -326,6 +337,11 @@ export default function EpisodeDetailPage() {
             {conflictError && <p className="error-message">{conflictError}</p>}
             {hasAnalyzed && !isAnalyzing && (
               <>
+                {lastAnalyzedAt && (
+                  <p className="summary-date">
+                    마지막 분석: {new Date(lastAnalyzedAt).toLocaleString('ko-KR')}
+                  </p>
+                )}
                 {/* 요약 바 */}
                 <ConflictSummaryBar conflicts={conflicts} />
                 {/* 충돌 카드 목록 */}
