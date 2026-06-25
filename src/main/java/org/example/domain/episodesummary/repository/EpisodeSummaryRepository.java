@@ -21,6 +21,14 @@ public interface EpisodeSummaryRepository extends JpaRepository<EpisodeSummary, 
     @Query("SELECT es FROM EpisodeSummary es JOIN es.episode e WHERE e.novel = :novel ORDER BY e.episodeNumber DESC")
     List<EpisodeSummary> findRecentSummariesByNovel(@Param("novel") Novel novel, Pageable pageable);
 
+    // 챗봇용 전체 요약 — 회차 번호 오름차순 (LAZY+OneToOne 조합 런타임 오류 방지를 위해 @Query 사용)
+    @Query("SELECT es FROM EpisodeSummary es JOIN es.episode e WHERE e.novel = :novel ORDER BY e.episodeNumber ASC")
+    List<EpisodeSummary> findAllSummariesByNovel(@Param("novel") Novel novel);
+
+    // 챗봇 통계 전용 — 전체 로드 없이 카운트만 조회
+    @Query("SELECT COUNT(es) FROM EpisodeSummary es JOIN es.episode e WHERE e.novel = :novel")
+    long countSummariesByNovel(@Param("novel") Novel novel);
+
     // 작품 삭제 시 해당 작품의 모든 요약을 한 번에 삭제
     void deleteAllByEpisode_Novel(Novel novel);
 }

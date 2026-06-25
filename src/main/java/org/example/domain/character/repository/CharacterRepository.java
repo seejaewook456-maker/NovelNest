@@ -10,5 +10,8 @@ public interface CharacterRepository extends JpaRepository<Character, Long> {
 
     List<Character> findAllByNovelOrderByNameAsc(Novel novel);
 
+    // 챗봇 통계 전용
+    long countByNovel(Novel novel);
+
     void deleteAllByNovel(Novel novel);
 }

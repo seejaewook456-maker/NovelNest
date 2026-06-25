@@ -12,5 +12,8 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
 
     boolean existsByNovelAndEpisodeNumber(Novel novel, int episodeNumber);
 
+    // 챗봇 통계 전용 — 전체 로드 없이 카운트만 조회
+    long countByNovel(Novel novel);
+
     void deleteAllByNovel(Novel novel);
 }
