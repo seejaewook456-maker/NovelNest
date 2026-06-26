@@ -3,6 +3,10 @@ spring:
     name: ai-writing-platform
   profiles:
     active: local
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
   security:
     oauth2:
       client:
