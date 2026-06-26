@@ -1,6 +1,7 @@
 package org.example.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.domain.user.dto.LoginRequestDto;
 import org.example.domain.user.dto.LoginResponseDto;
 import org.example.domain.user.dto.SignupRequestDto;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -35,6 +37,7 @@ public class UserService {
                 .build();
 
         userRepository.save(user);
+        log.info("User registered. userId={}", user.getId());
     }
 
     @Transactional(readOnly = true)
@@ -47,6 +50,7 @@ public class UserService {
         }
 
         String accessToken = jwtTokenProvider.generateAccessToken(user.getEmail());
+        log.info("User login success. userId={}", user.getId());
         return LoginResponseDto.of(accessToken);
     }
 

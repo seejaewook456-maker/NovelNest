@@ -46,3 +46,11 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /api-docs
+
+logging:
+  level:
+    org.example: INFO
+    org.hibernate.SQL: WARN
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

@@ -1,6 +1,7 @@
 package org.example.domain.worldsetting.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.domain.episodeworldsetting.repository.EpisodeWorldSettingRepository;
 import org.example.domain.novel.entity.Novel;
 import org.example.domain.novel.repository.NovelRepository;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WorldSettingService {
@@ -39,7 +41,9 @@ public class WorldSettingService {
                 .content(dto.getContent())
                 .build();
 
-        return WorldSettingResponseDto.from(worldSettingRepository.save(worldSetting));
+        WorldSetting saved = worldSettingRepository.save(worldSetting);
+        log.info("WorldSetting created. worldSettingId={}, novelId={}, userId={}", saved.getId(), novelId, user.getId());
+        return WorldSettingResponseDto.from(saved);
     }
 
     @Transactional(readOnly = true)
@@ -90,6 +94,7 @@ public class WorldSettingService {
 
         episodeWorldSettingRepository.deleteAllByWorldSetting(worldSetting);
         worldSettingRepository.delete(worldSetting);
+        log.info("WorldSetting deleted. worldSettingId={}, userId={}", worldSettingId, user.getId());
     }
 
     private User findUserByEmail(String email) {

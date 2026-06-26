@@ -1,6 +1,7 @@
 package org.example.domain.chat.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.domain.character.entity.Character;
 import org.example.domain.character.repository.CharacterRepository;
 import org.example.domain.chat.dto.ChatResponseDto;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatService {
@@ -57,6 +59,7 @@ public class ChatService {
         List<EpisodeSummary> summaries = episodeSummaryRepository.findAllSummariesByNovel(novel);
         long totalEpisodeCount = episodeRepository.countByNovel(novel);
 
+        log.info("Chat request. novelId={}, userId={}", novelId, user.getId());
         String input = buildContext(novel, characters, worldSettings, summaries, totalEpisodeCount, message);
         String answer = openAiService.generateText(CHAT_INSTRUCTIONS, input);
 
