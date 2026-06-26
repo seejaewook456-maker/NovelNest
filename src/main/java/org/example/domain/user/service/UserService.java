@@ -5,6 +5,7 @@ import org.example.domain.user.dto.LoginRequestDto;
 import org.example.domain.user.dto.LoginResponseDto;
 import org.example.domain.user.dto.SignupRequestDto;
 import org.example.domain.user.dto.UserInfoResponseDto;
+import org.example.domain.user.entity.Provider;
 import org.example.domain.user.entity.User;
 import org.example.domain.user.repository.UserRepository;
 import org.example.global.security.JwtTokenProvider;
@@ -30,6 +31,7 @@ public class UserService {
                 .email(dto.getEmail())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .nickname(dto.getNickname())
+                .provider(Provider.LOCAL)
                 .build();
 
         userRepository.save(user);
