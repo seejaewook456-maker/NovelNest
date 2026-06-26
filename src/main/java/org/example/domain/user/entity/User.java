@@ -8,7 +8,13 @@ import lombok.NoArgsConstructor;
 import org.example.global.common.BaseEntity;
 
 @Entity
-@Table(name = "users")
+@Table(
+    name = "users",
+    indexes = {
+        // OAuth 로그인 시 findByProviderAndProviderId 쿼리 성능 보장
+        @Index(name = "idx_users_provider_provider_id", columnList = "provider, provider_id")
+    }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseEntity {
