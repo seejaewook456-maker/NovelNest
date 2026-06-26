@@ -9,7 +9,14 @@ import org.example.domain.novel.entity.Novel;
 import org.example.global.common.BaseEntity;
 
 @Entity
-@Table(name = "episodes")
+@Table(
+    name = "episodes",
+    uniqueConstraints = {
+        // 동일 작품 내에서 회차 번호 중복을 DB 레벨에서 방지
+        // — 서비스 코드의 중복 체크만으로는 동시 요청 시 뚫릴 수 있음
+        @UniqueConstraint(name = "uq_episodes_novel_episode_number", columnNames = {"novel_id", "episode_number"})
+    }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Episode extends BaseEntity {
