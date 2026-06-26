@@ -3,6 +3,7 @@ package org.example.domain.conflictdetection.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.domain.character.entity.Character;
 import org.example.domain.character.repository.CharacterRepository;
 import org.example.domain.conflictdetection.dto.ConflictDetectionResponseDto;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ConflictDetectionService {
@@ -62,6 +64,7 @@ public class ConflictDetectionService {
         Novel novel = episode.getNovel();
         validateOwner(novel, user);
 
+        log.info("Conflict detection started. episodeId={}, userId={}", episodeId, user.getId());
         List<Character> characters = characterRepository.findAllByNovelOrderByIsFavoriteDescNameAsc(novel);
         List<WorldSetting> worldSettings = worldSettingRepository.findAllByNovelOrderByCategoryAscIsFavoriteDescTitleAsc(novel);
 
@@ -90,6 +93,7 @@ public class ConflictDetectionService {
                                 .build()
                 ));
 
+        log.info("Conflict detection complete. episodeId={}, conflictCount={}, userId={}", episodeId, conflicts.size(), user.getId());
         String episodeTitle = episode.getEpisodeNumber() + "화 - " + episode.getTitle();
         return new ConflictDetectionResponseDto(episodeTitle, conflicts, saved.getUpdatedAt());
     }

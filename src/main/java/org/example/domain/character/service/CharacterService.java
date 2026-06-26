@@ -1,6 +1,7 @@
 package org.example.domain.character.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.domain.character.dto.CharacterCreateRequestDto;
 import org.example.domain.character.dto.CharacterFavoriteRequestDto;
 import org.example.domain.character.dto.CharacterResponseDto;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CharacterService {
@@ -42,7 +44,9 @@ public class CharacterService {
                 .description(dto.getDescription())
                 .build();
 
-        return CharacterResponseDto.from(characterRepository.save(character));
+        Character saved = characterRepository.save(character);
+        log.info("Character created. characterId={}, novelId={}, userId={}", saved.getId(), novelId, user.getId());
+        return CharacterResponseDto.from(saved);
     }
 
     @Transactional(readOnly = true)
@@ -96,6 +100,7 @@ public class CharacterService {
         // 회차-인물 연결 레코드를 먼저 삭제해야 FK 제약 위반을 피할 수 있음
         episodeCharacterRepository.deleteAllByCharacter(character);
         characterRepository.delete(character);
+        log.info("Character deleted. characterId={}, userId={}", characterId, user.getId());
     }
 
     private User findUserByEmail(String email) {

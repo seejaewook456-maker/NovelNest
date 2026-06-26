@@ -1,6 +1,7 @@
 package org.example.domain.episodesummary.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.domain.episode.entity.Episode;
 import org.example.domain.episode.repository.EpisodeRepository;
 import org.example.domain.episodesummary.dto.EpisodeSummaryResponseDto;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EpisodeSummaryService {
@@ -53,6 +55,7 @@ public class EpisodeSummaryService {
             );
         }
 
+        log.info("Episode summary generated. episodeId={}, userId={}", episodeId, user.getId());
         return EpisodeSummaryResponseDto.from(episodeSummary);
     }
 

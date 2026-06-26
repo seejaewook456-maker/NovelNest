@@ -1,6 +1,7 @@
 package org.example.global.ai.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.global.ai.config.OpenAiConfig;
 import org.example.global.ai.dto.OpenAiRequestDto;
 import org.example.global.ai.dto.OpenAiResponseDto;
@@ -9,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OpenAiService {
@@ -42,6 +44,7 @@ public class OpenAiService {
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
+            log.error("OpenAI API call failed. model={}", openAiConfig.getModel(), e);
             throw new IllegalArgumentException("AI 요약 생성 중 오류가 발생했습니다: " + e.getMessage());
         }
     }

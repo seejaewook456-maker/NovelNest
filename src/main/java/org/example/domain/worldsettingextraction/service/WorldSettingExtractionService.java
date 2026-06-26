@@ -3,6 +3,7 @@ package org.example.domain.worldsettingextraction.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.domain.episode.entity.Episode;
 import org.example.domain.episode.repository.EpisodeRepository;
 import org.example.domain.novel.entity.Novel;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WorldSettingExtractionService {
@@ -72,6 +74,7 @@ public class WorldSettingExtractionService {
             }
         }
 
+        log.info("WorldSetting extraction complete. episodeId={}, candidateCount={}, userId={}", episodeId, candidates.size(), user.getId());
         String episodeTitle = episode.getEpisodeNumber() + "화 - " + episode.getTitle();
         return new WorldSettingExtractionResponseDto(episodeTitle, candidates.size(), candidates);
     }

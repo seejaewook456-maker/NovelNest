@@ -1,6 +1,7 @@
 package org.example.domain.episode.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.domain.episode.dto.EpisodeCreateRequestDto;
 import org.example.domain.episode.dto.EpisodeResponseDto;
 import org.example.domain.episode.dto.EpisodeUpdateRequestDto;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EpisodeService {
@@ -48,7 +50,9 @@ public class EpisodeService {
                 .content(dto.getContent())
                 .build();
 
-        return EpisodeResponseDto.from(episodeRepository.save(episode));
+        Episode saved = episodeRepository.save(episode);
+        log.info("Episode created. episodeId={}, novelId={}, userId={}", saved.getId(), novelId, user.getId());
+        return EpisodeResponseDto.from(saved);
     }
 
     @Transactional(readOnly = true)
@@ -84,6 +88,7 @@ public class EpisodeService {
         }
 
         episode.update(dto.getTitle(), dto.getEpisodeNumber(), dto.getContent());
+        log.info("Episode updated. episodeId={}, userId={}", episodeId, user.getId());
         return EpisodeResponseDto.from(episode);
     }
 
@@ -101,6 +106,7 @@ public class EpisodeService {
         conflictDetectionResultRepository.findByEpisode(episode)
                 .ifPresent(conflictDetectionResultRepository::delete);
         episodeRepository.delete(episode);
+        log.info("Episode deleted. episodeId={}, userId={}", episodeId, user.getId());
     }
 
     private User findUserByEmail(String email) {

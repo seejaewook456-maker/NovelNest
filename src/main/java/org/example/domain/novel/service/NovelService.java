@@ -1,6 +1,7 @@
 package org.example.domain.novel.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.domain.character.repository.CharacterRepository;
 import org.example.domain.conflictdetection.repository.ConflictDetectionResultRepository;
 import org.example.domain.episode.repository.EpisodeRepository;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NovelService {
@@ -45,7 +47,9 @@ public class NovelService {
                 .description(dto.getDescription())
                 .build();
 
-        return NovelResponseDto.from(novelRepository.save(novel));
+        Novel saved = novelRepository.save(novel);
+        log.info("Novel created. novelId={}, userId={}", saved.getId(), user.getId());
+        return NovelResponseDto.from(saved);
     }
 
     @Transactional(readOnly = true)
@@ -71,6 +75,7 @@ public class NovelService {
         validateOwner(novel, user);
 
         novel.update(dto.getTitle(), dto.getGenre(), dto.getDescription());
+        log.info("Novel updated. novelId={}, userId={}", novelId, user.getId());
         return NovelResponseDto.from(novel);
     }
 
@@ -89,6 +94,7 @@ public class NovelService {
         characterRepository.deleteAllByNovel(novel);
         worldSettingRepository.deleteAllByNovel(novel);
         novelRepository.delete(novel);
+        log.info("Novel deleted. novelId={}, userId={}", novelId, user.getId());
     }
 
     private User findUserByEmail(String email) {
