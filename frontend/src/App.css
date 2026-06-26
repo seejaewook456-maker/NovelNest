@@ -1982,6 +1982,32 @@ select {
   box-shadow: var(--shadow-sm);
 }
 
+.btn-kakao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 20px;
+  border: none;
+  border-radius: var(--radius-btn);
+  background: #FEE500;
+  color: #191919;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, box-shadow 0.15s;
+  line-height: 1;
+  margin-top: 10px;
+}
+
+.btn-kakao:hover {
+  background: #F0D800;
+  box-shadow: var(--shadow-sm);
+}
+
 /* =============================================
    글쓰기 보조 툴바 (WritingAssistToolbar)
    ============================================= */

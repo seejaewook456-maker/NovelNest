@@ -1,5 +1,6 @@
 package org.example.domain.user.repository;
 
+import org.example.domain.user.entity.Provider;
 import org.example.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,4 +11,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByProviderAndProviderId(Provider provider, String providerId);
 }

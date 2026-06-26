@@ -106,6 +106,14 @@ export default function LoginPage() {
           Google로 로그인
         </a>
 
+        {/* 카카오 로그인 */}
+        <a
+          href="http://localhost:8080/oauth2/authorization/kakao"
+          className="btn-kakao"
+        >
+          카카오로 로그인
+        </a>
+
         <p className="form-link">
           계정이 없으신가요? <Link to="/signup">회원가입</Link>
         </p>
