@@ -2,7 +2,7 @@ spring:
   application:
     name: ai-writing-platform
   profiles:
-    active: local
+    active: ${SPRING_PROFILES_ACTIVE:local}
   servlet:
     multipart:
       max-file-size: 10MB
