@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signup } from '../api/authApi';
+import { BACKEND_BASE_URL } from '../api/config';
 import Button from '../components/Button';
 
 // Google 로고 SVG (인라인, CDN 의존 없음)
@@ -98,7 +99,7 @@ export default function SignupPage() {
 
         {/* Google로 바로 회원가입: 계정이 없으면 자동 가입, 있으면 로그인 */}
         <a
-          href="http://localhost:8080/oauth2/authorization/google"
+          href={`${BACKEND_BASE_URL}/oauth2/authorization/google`}
           className="btn-google"
         >
           <GoogleIcon />

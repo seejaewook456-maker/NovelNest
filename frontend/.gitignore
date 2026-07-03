@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# 루트 .gitignore의 .env.* 규칙 예외 처리 — 민감정보 없는 환경별 빌드 설정이라 커밋 대상
+!.env.development
+!.env.production

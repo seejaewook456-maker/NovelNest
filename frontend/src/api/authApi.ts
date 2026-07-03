@@ -1,4 +1,5 @@
 import type { LoginRequest, SignupRequest, LoginData } from '../types/auth';
+import { API_BASE_URL } from './config';
 
 // 백엔드 공통 응답 구조
 interface ApiResponse<T = undefined> {
@@ -7,7 +8,7 @@ interface ApiResponse<T = undefined> {
 }
 
 export const login = async (body: LoginRequest): Promise<string> => {
-  const res = await fetch('/api/users/login', {
+  const res = await fetch(`${API_BASE_URL}/users/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -24,7 +25,7 @@ export const login = async (body: LoginRequest): Promise<string> => {
 };
 
 export const signup = async (body: SignupRequest): Promise<void> => {
-  const res = await fetch('/api/users/signup', {
+  const res = await fetch(`${API_BASE_URL}/users/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

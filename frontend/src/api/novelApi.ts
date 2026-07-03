@@ -2,17 +2,17 @@ import type { Novel, NovelCreateRequest } from '../types/novel';
 import { fetchWithAuth } from './fetchWithAuth';
 
 export const getMyNovels = async (): Promise<Novel[]> => {
-  const json = await fetchWithAuth<Novel[]>('/api/novels');
+  const json = await fetchWithAuth<Novel[]>('/novels');
   return json.data!;
 };
 
 export const getNovel = async (novelId: number): Promise<Novel> => {
-  const json = await fetchWithAuth<Novel>(`/api/novels/${novelId}`);
+  const json = await fetchWithAuth<Novel>(`/novels/${novelId}`);
   return json.data!;
 };
 
 export const createNovel = async (body: NovelCreateRequest): Promise<Novel> => {
-  const json = await fetchWithAuth<Novel>('/api/novels', {
+  const json = await fetchWithAuth<Novel>('/novels', {
     method: 'POST',
     body: JSON.stringify(body),
   });
@@ -20,5 +20,5 @@ export const createNovel = async (body: NovelCreateRequest): Promise<Novel> => {
 };
 
 export const deleteNovel = async (novelId: number): Promise<void> => {
-  await fetchWithAuth(`/api/novels/${novelId}`, { method: 'DELETE' });
+  await fetchWithAuth(`/novels/${novelId}`, { method: 'DELETE' });
 };

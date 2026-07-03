@@ -1,4 +1,5 @@
 import { getToken, removeToken } from '../utils/token';
+import { API_BASE_URL } from './config';
 
 interface ApiResponse<T = undefined> {
   message: string;
@@ -6,11 +7,12 @@ interface ApiResponse<T = undefined> {
 }
 
 // 인증 헤더를 포함한 fetch 래퍼 — 401 시 자동 로그아웃
+// path는 '/users/login'처럼 API_BASE_URL 이후의 경로만 전달
 export const fetchWithAuth = async <T>(
-  url: string,
+  path: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> => {
-  const res = await fetch(url, {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',

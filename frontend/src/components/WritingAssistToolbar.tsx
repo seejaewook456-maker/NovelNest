@@ -20,7 +20,7 @@ const DIVIDER = '──────────────';
 interface Props {
   content: string;
   onChange: (value: string) => void;
-  textareaRef: RefObject<HTMLTextAreaElement>;
+  textareaRef: RefObject<HTMLTextAreaElement | null>;
 }
 
 export default function WritingAssistToolbar({ content, onChange, textareaRef }: Props) {

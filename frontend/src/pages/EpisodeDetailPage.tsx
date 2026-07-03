@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEpisode, updateEpisode, deleteEpisode } from '../api/episodeApi';
 import { getSummary, generateSummary } from '../api/episodeSummaryApi';
