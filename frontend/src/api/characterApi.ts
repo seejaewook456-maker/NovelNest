@@ -2,12 +2,12 @@ import type { Character, CharacterCreateRequest, CharacterUpdateRequest } from '
 import { fetchWithAuth } from './fetchWithAuth';
 
 export const getCharacters = async (novelId: number): Promise<Character[]> => {
-  const json = await fetchWithAuth<Character[]>(`/api/novels/${novelId}/characters`);
+  const json = await fetchWithAuth<Character[]>(`/novels/${novelId}/characters`);
   return json.data!;
 };
 
 export const createCharacter = async (novelId: number, body: CharacterCreateRequest): Promise<Character> => {
-  const json = await fetchWithAuth<Character>(`/api/novels/${novelId}/characters`, {
+  const json = await fetchWithAuth<Character>(`/novels/${novelId}/characters`, {
     method: 'POST',
     body: JSON.stringify(body),
   });
@@ -15,7 +15,7 @@ export const createCharacter = async (novelId: number, body: CharacterCreateRequ
 };
 
 export const updateCharacter = async (characterId: number, body: CharacterUpdateRequest): Promise<Character> => {
-  const json = await fetchWithAuth<Character>(`/api/characters/${characterId}`, {
+  const json = await fetchWithAuth<Character>(`/characters/${characterId}`, {
     method: 'PATCH',
     body: JSON.stringify(body),
   });
@@ -23,7 +23,7 @@ export const updateCharacter = async (characterId: number, body: CharacterUpdate
 };
 
 export const toggleCharacterFavorite = async (characterId: number, isFavorite: boolean): Promise<Character> => {
-  const json = await fetchWithAuth<Character>(`/api/characters/${characterId}/favorite`, {
+  const json = await fetchWithAuth<Character>(`/characters/${characterId}/favorite`, {
     method: 'PATCH',
     body: JSON.stringify({ isFavorite }),
   });
@@ -31,5 +31,5 @@ export const toggleCharacterFavorite = async (characterId: number, isFavorite: b
 };
 
 export const deleteCharacter = async (characterId: number): Promise<void> => {
-  await fetchWithAuth(`/api/characters/${characterId}`, { method: 'DELETE' });
+  await fetchWithAuth(`/characters/${characterId}`, { method: 'DELETE' });
 };

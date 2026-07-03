@@ -1,6 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { login } from '../api/authApi';
+import { BACKEND_BASE_URL } from '../api/config';
 import { saveToken } from '../utils/token';
 import Button from '../components/Button';
 
@@ -99,7 +100,7 @@ export default function LoginPage() {
 
         {/* Google 로그인: <a> 태그로 백엔드 OAuth2 진입점에 직접 이동 */}
         <a
-          href="http://localhost:8080/oauth2/authorization/google"
+          href={`${BACKEND_BASE_URL}/oauth2/authorization/google`}
           className="btn-google"
         >
           <GoogleIcon />
@@ -108,7 +109,7 @@ export default function LoginPage() {
 
         {/* 카카오 로그인 */}
         <a
-          href="http://localhost:8080/oauth2/authorization/kakao"
+          href={`${BACKEND_BASE_URL}/oauth2/authorization/kakao`}
           className="btn-kakao"
         >
           카카오로 로그인
