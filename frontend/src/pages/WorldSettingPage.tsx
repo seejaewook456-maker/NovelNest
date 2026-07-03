@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, FormEvent } from 'react';
+import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getWorldSettings, createWorldSetting, updateWorldSetting, toggleWorldSettingFavorite, deleteWorldSetting } from '../api/worldSettingApi';
 import type { WorldSetting, WorldSettingCreateRequest, WorldSettingCategory } from '../types/worldsetting';
