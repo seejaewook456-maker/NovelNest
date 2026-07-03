@@ -14,6 +14,10 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
+            # Google Cloud Console 승인된 리디렉션 URI와 동일해야 함
+            # 로컬: http://localhost:8080/login/oauth2/code/google
+            # 운영: https://api.novelnestia.com/login/oauth2/code/google (server.forward-headers-strategy로 baseUrl 인식)
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             scope:
               - email
               - profile
