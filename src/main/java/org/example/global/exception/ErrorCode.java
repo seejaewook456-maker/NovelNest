@@ -26,6 +26,15 @@ public enum ErrorCode {
     FILE_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "FILE_TOO_LARGE", "파일 크기가 허용 한도를 초과했습니다."),
     MULTIPART_ERROR(HttpStatus.BAD_REQUEST, "MULTIPART_ERROR", "파일 업로드 중 오류가 발생했습니다."),
 
+    // 이메일 인증
+    EMAIL_ALREADY_REGISTERED(HttpStatus.CONFLICT, "EMAIL_ALREADY_REGISTERED", "이미 가입된 이메일입니다."),
+    EMAIL_CODE_RESEND_TOO_SOON(HttpStatus.TOO_MANY_REQUESTS, "EMAIL_CODE_RESEND_TOO_SOON", "인증번호는 60초 이후에 재전송할 수 있습니다."),
+    EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "EMAIL_SEND_FAILED", "인증 이메일 발송에 실패했습니다."),
+    EMAIL_VERIFICATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "EMAIL_VERIFICATION_NOT_FOUND", "인증번호 발송 이력이 없습니다. 인증번호를 다시 요청해주세요."),
+    EMAIL_CODE_MISMATCH(HttpStatus.BAD_REQUEST, "EMAIL_CODE_MISMATCH", "인증번호가 일치하지 않습니다."),
+    EMAIL_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "EMAIL_CODE_EXPIRED", "인증번호가 만료되었습니다. 다시 요청해주세요."),
+    EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "EMAIL_NOT_VERIFIED", "이메일 인증이 완료되지 않았습니다."),
+
     // 서버 오류
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다.");
 

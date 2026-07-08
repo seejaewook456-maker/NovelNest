@@ -46,6 +46,14 @@ public class User extends BaseEntity {
     @Column(nullable = false, columnDefinition = "VARCHAR(50) DEFAULT 'FREE'")
     private Plan plan = Plan.FREE;
 
+    // 이메일 소유 인증 완료 여부.
+    // - LOCAL 회원가입: EmailVerificationService의 인증 통과 후에만 User가 생성되므로 항상 true로 저장
+    // - GOOGLE/KAKAO 회원가입: OAuth 제공자가 이메일 소유를 이미 검증한 것으로 간주하여 true로 저장
+    // columnDefinition의 DEFAULT TRUE는 이메일 인증 기능 도입 이전에 가입된 기존 계정이
+    // 컬럼 추가 후에도 로그인 불가 상태가 되지 않도록 보장
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean emailVerified;
+
     @Builder
     private User(String email, String password, String nickname, Provider provider, String providerId) {
         this.email = email;
@@ -54,5 +62,6 @@ public class User extends BaseEntity {
         this.provider = provider != null ? provider : Provider.LOCAL;
         this.providerId = providerId;
         this.plan = Plan.FREE; // 모든 신규 회원은 FREE로 시작
+        this.emailVerified = true; // User는 이메일 인증(또는 OAuth 검증) 완료 후에만 생성됨
     }
 }

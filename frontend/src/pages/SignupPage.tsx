@@ -1,8 +1,11 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signup } from '../api/authApi';
+import { signup, sendEmailVerificationCode, verifyEmailCode } from '../api/authApi';
 import { BACKEND_BASE_URL } from '../api/config';
 import Button from '../components/Button';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const RESEND_INTERVAL_SECONDS = 60;
 
 // Google 로고 SVG (인라인, CDN 의존 없음)
 function GoogleIcon() {
@@ -33,22 +36,104 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // 이메일 인증 관련 상태
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isCodeSent, setIsCodeSent] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+  const [resendSeconds, setResendSeconds] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // 60초 재전송 카운트다운
+  useEffect(() => {
+    if (resendSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setResendSeconds((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendSeconds]);
+
+  const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    // 인증번호를 이미 발송했던 이메일을 수정하면 인증 상태를 초기화
+    if (isCodeSent) {
+      setIsCodeSent(false);
+      setIsEmailVerified(false);
+      setVerificationCode('');
+      setResendSeconds(0);
+      setSuccessMessage('');
+      setErrorMessage('');
+    }
+  };
+
+  const handleCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6));
+  };
+
+  const handleSendCode = async () => {
+    setErrorMessage('');
+    setSuccessMessage('');
+    setIsSendingCode(true);
+    try {
+      await sendEmailVerificationCode({ email });
+      setIsCodeSent(true);
+      setResendSeconds(RESEND_INTERVAL_SECONDS);
+      setSuccessMessage('인증번호가 이메일로 발송되었습니다.');
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : '인증번호 발송에 실패했습니다.');
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    setErrorMessage('');
+    setSuccessMessage('');
+    setIsVerifyingCode(true);
+    try {
+      await verifyEmailCode({ email, code: verificationCode });
+      setIsEmailVerified(true);
+      setSuccessMessage('이메일 인증이 완료되었습니다.');
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : '인증번호 확인에 실패했습니다.');
+    } finally {
+      setIsVerifyingCode(false);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    if (!isEmailVerified) {
+      setErrorMessage('이메일 인증을 먼저 완료해주세요.');
+      return;
+    }
+    setErrorMessage('');
+    setSuccessMessage('');
     setLoading(true);
     try {
       await signup({ email, password, nickname });
-      navigate('/login');
+      // 완료 메시지를 보여준 뒤 짧은 안내 후 로그인 화면으로 이동 (버튼은 계속 비활성 상태로 유지해 중복 제출 방지)
+      setSuccessMessage('회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.');
+      setTimeout(() => navigate('/login'), 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '회원가입에 실패했습니다.');
-    } finally {
+      setErrorMessage(err instanceof Error ? err.message : '회원가입에 실패했습니다.');
       setLoading(false);
     }
   };
+
+  const sendCodeLabel = isEmailVerified
+    ? '인증 완료'
+    : isSendingCode
+      ? '전송 중...'
+      : resendSeconds > 0
+        ? `${resendSeconds}초 후 재전송`
+        : isCodeSent
+          ? '인증번호 재전송'
+          : '인증번호 전송';
 
   return (
     <div className="auth-wrapper">
@@ -60,14 +145,55 @@ export default function SignupPage() {
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>이메일</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="user@example.com"
-              required
-            />
+            <div className="input-with-button">
+              <input
+                type="email"
+                value={email}
+                onChange={handleEmailChange}
+                placeholder="user@example.com"
+                disabled={isEmailVerified}
+                required
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleSendCode}
+                disabled={isSendingCode || isEmailVerified || resendSeconds > 0 || !EMAIL_REGEX.test(email)}
+              >
+                {sendCodeLabel}
+              </Button>
+            </div>
           </div>
+
+          {isCodeSent && !isEmailVerified && (
+            <div className="form-group">
+              <label>인증번호</label>
+              <div className="input-with-button">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={verificationCode}
+                  onChange={handleCodeChange}
+                  placeholder="6자리 숫자"
+                  maxLength={6}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleVerifyCode}
+                  disabled={isVerifyingCode || verificationCode.length !== 6}
+                >
+                  {isVerifyingCode ? '확인 중...' : '인증번호 확인'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {errorMessage && <p className="error-message">{errorMessage}</p>}
+          {!errorMessage && successMessage && <p className="success-message">{successMessage}</p>}
+
           <div className="form-group">
             <label>비밀번호</label>
             <input
@@ -88,8 +214,13 @@ export default function SignupPage() {
               required
             />
           </div>
-          {error && <p className="error-message">{error}</p>}
-          <Button type="submit" variant="primary" fullWidth disabled={loading} style={{ marginTop: 8 }}>
+          <Button
+            type="submit"
+            variant="primary"
+            fullWidth
+            disabled={loading || !isEmailVerified}
+            style={{ marginTop: 8 }}
+          >
             {loading ? '처리 중...' : '회원가입'}
           </Button>
         </form>
@@ -104,6 +235,14 @@ export default function SignupPage() {
         >
           <GoogleIcon />
           Google로 회원가입
+        </a>
+
+        {/* 카카오로 바로 회원가입: 계정이 없으면 자동 가입, 있으면 로그인 (LoginPage와 동일한 진입점/스타일) */}
+        <a
+          href={`${BACKEND_BASE_URL}/oauth2/authorization/kakao`}
+          className="btn-kakao"
+        >
+          카카오로 회원가입
         </a>
 
         <p className="form-link">

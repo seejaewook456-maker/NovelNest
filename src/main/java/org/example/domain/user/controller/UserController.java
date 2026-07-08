@@ -1,6 +1,9 @@
 package org.example.domain.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -25,7 +28,33 @@ public class UserController {
 
     private final UserService userService;
 
-    @Operation(summary = "회원가입", description = "이메일, 비밀번호, 닉네임으로 회원가입합니다.")
+    @Operation(
+            summary = "회원가입",
+            description = "이메일, 비밀번호, 닉네임으로 회원가입합니다. 사전에 /api/users/email/verify-code로 이메일 인증을 완료해야 합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "201", description = "회원가입 성공",
+                    content = @Content(examples = @ExampleObject(
+                            name = "회원가입 성공",
+                            value = "{\"success\":true,\"code\":\"OK\",\"message\":\"회원가입 성공\"}"
+                    ))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400", description = "이메일 인증 미완료",
+                    content = @Content(examples = @ExampleObject(
+                            name = "이메일 인증 미완료",
+                            value = "{\"success\":false,\"code\":\"EMAIL_NOT_VERIFIED\",\"message\":\"이메일 인증이 완료되지 않았습니다.\"}"
+                    ))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "409", description = "이미 가입된 이메일",
+                    content = @Content(examples = @ExampleObject(
+                            name = "이미 가입된 이메일",
+                            value = "{\"success\":false,\"code\":\"EMAIL_ALREADY_REGISTERED\",\"message\":\"이미 가입된 이메일입니다.\"}"
+                    ))
+            )
+    })
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse> signup(@Valid @RequestBody SignupRequestDto dto) {
         userService.signup(dto);

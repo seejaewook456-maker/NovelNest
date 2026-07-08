@@ -234,7 +234,7 @@ select {
 }
 
 /* =============================================
-   에러 메시지
+   에러 / 성공 메시지
    ============================================= */
 .error-message {
   color: var(--color-danger);
@@ -244,6 +244,34 @@ select {
   background: var(--color-danger-light);
   border-radius: 8px;
   border-left: 3px solid var(--color-danger);
+}
+
+.success-message {
+  color: var(--color-primary-hover);
+  font-size: 13px;
+  margin: 10px 0 6px;
+  padding: 10px 14px;
+  background: var(--color-primary-light);
+  border-radius: 8px;
+  border-left: 3px solid var(--color-primary);
+}
+
+/* =============================================
+   이메일 인증번호 입력 (입력 필드 + 버튼 가로 배치)
+   ============================================= */
+.input-with-button {
+  display: flex;
+  gap: 8px;
+}
+
+.input-with-button input {
+  flex: 1;
+  min-width: 0;
+}
+
+.input-with-button .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* =============================================
