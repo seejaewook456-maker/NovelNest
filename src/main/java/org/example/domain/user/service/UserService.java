@@ -2,6 +2,7 @@ package org.example.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.domain.emailverification.service.EmailVerificationService;
 import org.example.domain.user.dto.LoginRequestDto;
 import org.example.domain.user.dto.LoginResponseDto;
 import org.example.domain.user.dto.SignupRequestDto;
@@ -9,6 +10,8 @@ import org.example.domain.user.dto.UserInfoResponseDto;
 import org.example.domain.user.entity.Provider;
 import org.example.domain.user.entity.User;
 import org.example.domain.user.repository.UserRepository;
+import org.example.global.exception.BusinessException;
+import org.example.global.exception.ErrorCode;
 import org.example.global.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,12 +25,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final EmailVerificationService emailVerificationService;
 
     @Transactional
     public void signup(SignupRequestDto dto) {
         if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_REGISTERED);
         }
+        // 일반 이메일 회원가입은 이메일 인증 완료 후에만 허용 (OAuth 회원가입은 이 경로를 타지 않음)
+        emailVerificationService.assertVerified(dto.getEmail());
 
         User user = User.builder()
                 .email(dto.getEmail())
@@ -37,6 +43,7 @@ public class UserService {
                 .build();
 
         userRepository.save(user);
+        emailVerificationService.consume(dto.getEmail()); // 인증번호 재사용 방지
         log.info("User registered. userId={}", user.getId());
     }
 

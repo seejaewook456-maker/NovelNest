@@ -51,6 +51,7 @@ public class SecurityConfig {
                 .requestMatchers(
                         "/health", "/error",
                         "/api/users/signup", "/api/users/login",
+                        "/api/users/email/send-code", "/api/users/email/verify-code",
                         "/oauth2/**", "/login/oauth2/**",
                         "/swagger-ui.html", "/swagger-ui/**",
                         "/v3/api-docs/**", "/api-docs/**"
