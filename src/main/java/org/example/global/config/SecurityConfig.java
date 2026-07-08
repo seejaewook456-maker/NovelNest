@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.web.cors.CorsUtils;
 
 @Configuration
 @EnableWebSecurity
@@ -44,6 +45,9 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             )
             .authorizeHttpRequests(auth -> auth
+                // CORS preflight(OPTIONS)는 인증 정보 없이 오므로, 인증 필요 경로보다 먼저 무조건 허용
+                // (그렇지 않으면 인증 필터가 401을 먼저 반환해 CorsFilter까지 도달하지 못하고 브라우저가 CORS 오류로 처리함)
+                .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
                 .requestMatchers(
                         "/health", "/error",
                         "/api/users/signup", "/api/users/login",
