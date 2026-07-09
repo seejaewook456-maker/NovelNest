@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { saveToken } from '../utils/token';
+import { saveTokens } from '../utils/token';
 
 export default function OAuth2CallbackPage() {
   const navigate = useNavigate();
@@ -8,9 +8,10 @@ export default function OAuth2CallbackPage() {
 
   useEffect(() => {
     const token = searchParams.get('token');
+    const refreshToken = searchParams.get('refreshToken');
 
-    if (token) {
-      saveToken(token);
+    if (token && refreshToken) {
+      saveTokens(token, refreshToken);
       navigate('/novels', { replace: true });
     } else {
       navigate('/login', { replace: true });

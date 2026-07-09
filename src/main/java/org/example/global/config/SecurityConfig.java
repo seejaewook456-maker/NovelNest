@@ -52,6 +52,7 @@ public class SecurityConfig {
                         "/health", "/error",
                         "/api/users/signup", "/api/users/login",
                         "/api/users/email/send-code", "/api/users/email/verify-code",
+                        "/api/auth/refresh", // Access Token 만료 후 호출되므로 인증 없이 허용
                         "/oauth2/**", "/login/oauth2/**",
                         "/swagger-ui.html", "/swagger-ui/**",
                         "/v3/api-docs/**", "/api-docs/**"

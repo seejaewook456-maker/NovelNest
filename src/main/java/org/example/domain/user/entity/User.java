@@ -54,6 +54,10 @@ public class User extends BaseEntity {
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     private boolean emailVerified;
 
+    // Refresh Token 재발급 API 검증용 — 로그인/재발급 시 갱신하고, 로그아웃 시 null로 초기화
+    @Column(length = 512)
+    private String refreshToken;
+
     @Builder
     private User(String email, String password, String nickname, Provider provider, String providerId) {
         this.email = email;
@@ -63,5 +67,13 @@ public class User extends BaseEntity {
         this.providerId = providerId;
         this.plan = Plan.FREE; // 모든 신규 회원은 FREE로 시작
         this.emailVerified = true; // User는 이메일 인증(또는 OAuth 검증) 완료 후에만 생성됨
+    }
+
+    public void updateRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public void clearRefreshToken() {
+        this.refreshToken = null;
     }
 }
