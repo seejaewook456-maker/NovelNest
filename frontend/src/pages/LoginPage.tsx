@@ -2,7 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { login } from '../api/authApi';
 import { BACKEND_BASE_URL } from '../api/config';
-import { saveToken } from '../utils/token';
+import { saveTokens } from '../utils/token';
 import Button from '../components/Button';
 
 // Google 로고 SVG (CDN 없이 인라인으로 삽입, XSS 위험 없음)
@@ -38,11 +38,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   // Google OAuth 실패 시 백엔드가 ?error=... 파라미터를 붙여 리다이렉트함
+  // Refresh Token까지 만료되어 자동 재발급에 실패한 경우 ?expired=true 로 이동해옴
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const oauthError = params.get('error');
     if (oauthError) {
       setError(decodeURIComponent(oauthError));
+    } else if (params.get('expired') === 'true') {
+      setError('로그인이 만료되었습니다. 다시 로그인해주세요.');
     }
   }, [location.search]);
 
@@ -51,8 +54,8 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const accessToken = await login({ email, password });
-      saveToken(accessToken);
+      const { accessToken, refreshToken } = await login({ email, password });
+      saveTokens(accessToken, refreshToken);
       navigate('/novels');
     } catch (err) {
       setError(err instanceof Error ? err.message : '로그인에 실패했습니다.');

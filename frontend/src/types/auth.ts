@@ -11,6 +11,12 @@ export interface SignupRequest {
 
 export interface LoginData {
   accessToken: string;
+  refreshToken: string;
+}
+
+export interface TokenReissueData {
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface EmailSendCodeRequest {

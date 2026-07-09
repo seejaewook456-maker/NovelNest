@@ -6,6 +6,7 @@ import type {
   EmailVerifyCodeRequest,
 } from '../types/auth';
 import { API_BASE_URL } from './config';
+import { fetchWithAuth } from './fetchWithAuth';
 
 // 백엔드 공통 응답 구조
 interface ApiResponse<T = undefined> {
@@ -13,7 +14,7 @@ interface ApiResponse<T = undefined> {
   data?: T;
 }
 
-export const login = async (body: LoginRequest): Promise<string> => {
+export const login = async (body: LoginRequest): Promise<LoginData> => {
   const res = await fetch(`${API_BASE_URL}/users/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -26,8 +27,13 @@ export const login = async (body: LoginRequest): Promise<string> => {
     throw new Error(json.message || '로그인에 실패했습니다.');
   }
 
-  // 백엔드 응답: { message: "로그인 성공", data: { accessToken: "..." } }
-  return json.data!.accessToken;
+  // 백엔드 응답: { message: "로그인 성공", data: { accessToken: "...", refreshToken: "..." } }
+  return json.data!;
+};
+
+// 로그아웃 — 서버에 저장된 Refresh Token을 무효화한다 (로컬 토큰 삭제는 호출부에서 처리)
+export const logout = async (): Promise<void> => {
+  await fetchWithAuth('/auth/logout', { method: 'POST' });
 };
 
 export const signup = async (body: SignupRequest): Promise<void> => {
