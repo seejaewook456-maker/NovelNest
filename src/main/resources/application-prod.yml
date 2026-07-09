@@ -7,11 +7,16 @@ spring:
 
   jpa:
     hibernate:
+      # 운영 스키마 변경은 Hibernate 자동 변경이 아니라 Flyway 마이그레이션(db/migration)으로만 수행한다.
+      # 절대 update로 바꾸지 말 것 — Entity 변경이 검증 없이 그대로 운영 DB에 반영되는 것을 막기 위함.
       ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+
+  flyway:
+    enabled: true
 
 # Nginx 리버스 프록시 뒤에서 X-Forwarded-* 헤더를 신뢰해 HTTPS/실제 host를 인식
 # OAuth2 redirect-uri의 {baseUrl}이 https://api.novelnestia.com 으로 정상 치환되려면

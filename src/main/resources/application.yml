@@ -7,6 +7,11 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 20MB
+  flyway:
+    # 운영 DB처럼 flyway_schema_history 테이블 없이 이미 테이블이 있는 스키마에서도
+    # 안전하게 시작할 수 있도록, 첫 실행 시 자동으로 baseline을 잡는다.
+    baseline-on-migrate: true
+    baseline-version: 0
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
