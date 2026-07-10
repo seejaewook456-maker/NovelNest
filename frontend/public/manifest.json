@@ -1,0 +1,19 @@
+{
+  "name": "노벨네스트 - 웹소설 창작 도구",
+  "short_name": "노벨네스트",
+  "description": "AI와 함께 웹소설을 집필하고 등장인물, 세계관, 설정을 체계적으로 관리할 수 있는 웹소설 창작 도구",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F1E7",
+  "theme_color": "#6B3F2A",
+  "lang": "ko-KR",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

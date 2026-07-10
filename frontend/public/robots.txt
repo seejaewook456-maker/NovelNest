@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /novels
+Disallow: /episodes
+Disallow: /oauth2/callback
+
+Sitemap: https://novelnestia.com/sitemap.xml
