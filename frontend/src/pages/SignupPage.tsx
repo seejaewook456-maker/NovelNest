@@ -35,6 +35,7 @@ export default function SignupPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [nickname, setNickname] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -111,11 +112,15 @@ export default function SignupPage() {
       setErrorMessage('이메일 인증을 먼저 완료해주세요.');
       return;
     }
+    if (password !== passwordConfirm) {
+      setErrorMessage('비밀번호가 일치하지 않습니다.');
+      return;
+    }
     setErrorMessage('');
     setSuccessMessage('');
     setLoading(true);
     try {
-      await signup({ email, password, nickname });
+      await signup({ email, password, passwordConfirm, nickname });
       // 완료 메시지를 보여준 뒤 짧은 안내 후 로그인 화면으로 이동 (버튼은 계속 비활성 상태로 유지해 중복 제출 방지)
       setSuccessMessage('회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.');
       setTimeout(() => navigate('/login'), 1500);
@@ -205,6 +210,29 @@ export default function SignupPage() {
             />
           </div>
           <div className="form-group">
+            <label>비밀번호 재입력</label>
+            <input
+              type="password"
+              value={passwordConfirm}
+              onChange={(e) => setPasswordConfirm(e.target.value)}
+              placeholder="비밀번호를 다시 입력해주세요."
+              required
+            />
+            {passwordConfirm && (
+              <p
+                className={
+                  password === passwordConfirm
+                    ? 'password-match-hint match'
+                    : 'password-match-hint mismatch'
+                }
+              >
+                {password === passwordConfirm
+                  ? '비밀번호가 일치합니다.'
+                  : '비밀번호가 일치하지 않습니다.'}
+              </p>
+            )}
+          </div>
+          <div className="form-group">
             <label>닉네임</label>
             <input
               type="text"
@@ -218,7 +246,7 @@ export default function SignupPage() {
             type="submit"
             variant="primary"
             fullWidth
-            disabled={loading || !isEmailVerified}
+            disabled={loading || !isEmailVerified || password !== passwordConfirm}
             style={{ marginTop: 8 }}
           >
             {loading ? '처리 중...' : '회원가입'}

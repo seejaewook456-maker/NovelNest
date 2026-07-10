@@ -26,6 +26,9 @@ public enum ErrorCode {
     FILE_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "FILE_TOO_LARGE", "파일 크기가 허용 한도를 초과했습니다."),
     MULTIPART_ERROR(HttpStatus.BAD_REQUEST, "MULTIPART_ERROR", "파일 업로드 중 오류가 발생했습니다."),
 
+    // 회원가입
+    PASSWORD_CONFIRM_MISMATCH(HttpStatus.BAD_REQUEST, "PASSWORD_CONFIRM_MISMATCH", "비밀번호와 비밀번호 확인이 일치하지 않습니다."),
+
     // 이메일 인증
     EMAIL_ALREADY_REGISTERED(HttpStatus.CONFLICT, "EMAIL_ALREADY_REGISTERED", "이미 가입된 이메일입니다."),
     EMAIL_CODE_RESEND_TOO_SOON(HttpStatus.TOO_MANY_REQUESTS, "EMAIL_CODE_RESEND_TOO_SOON", "인증번호는 60초 이후에 재전송할 수 있습니다."),
