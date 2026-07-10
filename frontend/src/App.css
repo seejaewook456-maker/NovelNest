@@ -219,6 +219,20 @@ select {
   margin-top: 16px;
 }
 
+.password-match-hint {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.password-match-hint.match {
+  color: var(--color-primary-hover);
+}
+
+.password-match-hint.mismatch {
+  color: var(--color-danger);
+}
+
 .form-link {
   text-align: center;
   margin-top: 20px;

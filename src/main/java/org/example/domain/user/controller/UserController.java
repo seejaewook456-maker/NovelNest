@@ -41,11 +41,17 @@ public class UserController {
                     ))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "400", description = "이메일 인증 미완료",
-                    content = @Content(examples = @ExampleObject(
-                            name = "이메일 인증 미완료",
-                            value = "{\"success\":false,\"code\":\"EMAIL_NOT_VERIFIED\",\"message\":\"이메일 인증이 완료되지 않았습니다.\"}"
-                    ))
+                    responseCode = "400", description = "잘못된 요청 (비밀번호 확인 불일치 또는 이메일 인증 미완료)",
+                    content = @Content(examples = {
+                            @ExampleObject(
+                                    name = "비밀번호 확인 불일치",
+                                    value = "{\"success\":false,\"code\":\"PASSWORD_CONFIRM_MISMATCH\",\"message\":\"비밀번호와 비밀번호 확인이 일치하지 않습니다.\"}"
+                            ),
+                            @ExampleObject(
+                                    name = "이메일 인증 미완료",
+                                    value = "{\"success\":false,\"code\":\"EMAIL_NOT_VERIFIED\",\"message\":\"이메일 인증이 완료되지 않았습니다.\"}"
+                            )
+                    })
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "409", description = "이미 가입된 이메일",

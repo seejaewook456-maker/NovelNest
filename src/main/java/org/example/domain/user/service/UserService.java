@@ -33,11 +33,14 @@ public class UserService {
 
     @Transactional
     public void signup(SignupRequestDto dto) {
-        if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new BusinessException(ErrorCode.EMAIL_ALREADY_REGISTERED);
+        if (!dto.getPassword().equals(dto.getPasswordConfirm())) {
+            throw new BusinessException(ErrorCode.PASSWORD_CONFIRM_MISMATCH);
         }
         // 일반 이메일 회원가입은 이메일 인증 완료 후에만 허용 (OAuth 회원가입은 이 경로를 타지 않음)
         emailVerificationService.assertVerified(dto.getEmail());
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_REGISTERED);
+        }
 
         User user = User.builder()
                 .email(dto.getEmail())

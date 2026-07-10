@@ -17,6 +17,10 @@ public class SignupRequestDto {
     @NotBlank
     private String password;
 
+    @Schema(description = "비밀번호 확인", example = "password123")
+    @NotBlank(message = "비밀번호 확인을 입력해주세요.")
+    private String passwordConfirm;
+
     @Schema(description = "닉네임", example = "홍길동")
     @NotBlank
     private String nickname;
