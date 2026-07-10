@@ -397,6 +397,60 @@ select {
   color: var(--color-text-primary);
 }
 
+/* 로그인 화면 전용 브랜딩 영역 (아이콘 + 브랜드명 + 태그라인 + 소개 문구) */
+.auth-brand-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.auth-brand-icon {
+  display: inline-flex;
+  margin-bottom: 14px;
+}
+
+.auth-brand-name {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-primary-hover);
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
+}
+
+.auth-brand-tagline {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 16px;
+}
+
+.auth-brand-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* 로그인 카드: 공용 auth-card 위에 더 크게 둥글리고 여백을 넉넉히 준 변형 */
+.login-card {
+  border-radius: 26px;
+  padding: 48px 40px;
+  box-shadow: 0 24px 60px -12px rgba(47, 42, 38, 0.18);
+}
+
+.login-submit-btn {
+  height: 52px;
+  padding: 0 24px;
+  border-radius: 14px;
+  font-size: 15px;
+}
+
+.login-google-btn,
+.login-kakao-btn {
+  padding: 14px 20px;
+  border-radius: 14px;
+}
+
 /* =============================================
    작품 목록
    ============================================= */
