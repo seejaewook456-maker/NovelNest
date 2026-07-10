@@ -5,6 +5,22 @@ import { BACKEND_BASE_URL } from '../api/config';
 import { saveTokens } from '../utils/token';
 import Button from '../components/Button';
 
+// 브랜드 연필 아이콘 (favicon.svg와 동일한 컨셉의 인라인 SVG)
+function PencilIcon() {
+  return (
+    <svg viewBox="0 0 64 64" width="48" height="48" aria-hidden="true">
+      <g transform="translate(24,50) rotate(26) scale(0.82)">
+        <path
+          d="M-6.5,-48 A6.5,6.5 0 0 1 6.5,-48 L6.5,-11 L0,0 L-6.5,-11 Z"
+          fill="#70492E"
+        />
+        <rect x="-6.5" y="-41" width="13" height="3" fill="#FFFFFF" />
+        <path d="M-3.5,-15 L2.5,-9 L-3.5,-3 L-0.5,-9 Z" fill="#FFFFFF" />
+      </g>
+    </svg>
+  );
+}
+
 // Google 로고 SVG (CDN 없이 인라인으로 삽입, XSS 위험 없음)
 function GoogleIcon() {
   return (
@@ -66,10 +82,18 @@ export default function LoginPage() {
 
   return (
     <div className="auth-wrapper">
-      <div className="auth-card">
-        <div className="auth-header">
-          <p className="auth-brand">노벨네스트</p>
-          <h2 className="auth-title">로그인</h2>
+      <div className="auth-card login-card">
+        <div className="auth-brand-header">
+          <div className="auth-brand-icon">
+            <PencilIcon />
+          </div>
+          <h1 className="auth-brand-name">노벨네스트</h1>
+          <p className="auth-brand-tagline">AI 기반 웹소설 집필 도구</p>
+          <p className="auth-brand-desc">
+            AI와 함께 등장인물, 세계관, 회차를
+            <br />
+            체계적으로 관리하세요.
+          </p>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -93,7 +117,14 @@ export default function LoginPage() {
             />
           </div>
           {error && <p className="error-message">{error}</p>}
-          <Button type="submit" variant="primary" fullWidth disabled={loading} style={{ marginTop: 8 }}>
+          <Button
+            type="submit"
+            variant="primary"
+            fullWidth
+            disabled={loading}
+            className="login-submit-btn"
+            style={{ marginTop: 8 }}
+          >
             {loading ? '로그인 중...' : '로그인'}
           </Button>
         </form>
@@ -104,7 +135,7 @@ export default function LoginPage() {
         {/* Google 로그인: <a> 태그로 백엔드 OAuth2 진입점에 직접 이동 */}
         <a
           href={`${BACKEND_BASE_URL}/oauth2/authorization/google`}
-          className="btn-google"
+          className="btn-google login-google-btn"
         >
           <GoogleIcon />
           Google로 로그인
@@ -113,7 +144,7 @@ export default function LoginPage() {
         {/* 카카오 로그인 */}
         <a
           href={`${BACKEND_BASE_URL}/oauth2/authorization/kakao`}
-          className="btn-kakao"
+          className="btn-kakao login-kakao-btn"
         >
           카카오로 로그인
         </a>
