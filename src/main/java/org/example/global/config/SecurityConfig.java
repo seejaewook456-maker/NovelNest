@@ -17,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsUtils;
 
@@ -44,6 +45,17 @@ public class SecurityConfig {
             // OAuth2 state 파라미터 저장을 위해 IF_REQUIRED 사용 (JWT 요청에는 세션 미사용)
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+            )
+            // IF_REQUIRED이므로 OAuth2 로그인 과정에서 세션이 생성될 수 있는데, 기본 설정이라면
+            // SecurityContextHolderFilter가 그 세션에 인증 정보를 함께 저장/복원해버린다.
+            // 그 결과 JwtAuthenticationFilter가 Access Token 검증에 실패해도, 세션에 남은 인증이
+            // 그대로 통과되어 로그아웃/Refresh Token 무효화 이후에도 요청이 인증돼버리는 문제가 있었다.
+            // SecurityContext는 매 요청마다 JwtAuthenticationFilter가 새로 채우는 것만 사용하도록
+            // RequestAttributeSecurityContextRepository로 한정해, 세션에 저장/복원되지 않게 한다.
+            // (OAuth2 state 저장은 HttpSessionOAuth2AuthorizationRequestRepository가 이 설정과
+            //  무관하게 세션을 직접 사용하므로 영향받지 않는다.)
+            .securityContext(securityContext ->
+                securityContext.securityContextRepository(new RequestAttributeSecurityContextRepository())
             )
             .authorizeHttpRequests(auth -> auth
                 // CORS preflight(OPTIONS)는 인증 정보 없이 오므로, 인증 필요 경로보다 먼저 무조건 허용
