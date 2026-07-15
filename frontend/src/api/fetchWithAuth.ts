@@ -1,4 +1,5 @@
 import { getToken, getRefreshToken, saveTokens, clearTokens } from '../utils/token';
+import { notifySessionExpired } from '../state/sessionExpired';
 import { API_BASE_URL } from './config';
 
 interface ApiResponse<T = undefined> {
@@ -42,14 +43,17 @@ const refreshAccessToken = (): Promise<string | null> => {
   return refreshPromise;
 };
 
-const goToLoginExpired = (): void => {
+// Refresh Token까지 만료/무효화되어 더 이상 인증을 유지할 수 없는 경우 호출.
+// 즉시 페이지를 이동시키지 않고, 토큰만 정리한 뒤 SessionExpiredModal에 안내를 위임한다
+// (여러 요청이 동시에 이 경로를 타도 모달은 notifySessionExpired 내부 플래그로 한 번만 뜬다).
+const handleSessionExpired = (): void => {
   clearTokens();
-  window.location.href = '/login?expired=true';
+  notifySessionExpired();
 };
 
 // 인증 헤더를 포함한 fetch 래퍼
 // - Access Token 만료(401) 시 Refresh Token으로 자동 재발급 후 원래 요청을 한 번 재시도한다.
-// - Refresh Token까지 만료/무효화된 경우에만 로그인 페이지로 이동한다.
+// - Refresh Token까지 만료/무효화된 경우에만 세션 만료를 알린다.
 // path는 '/users/login'처럼 API_BASE_URL 이후의 경로만 전달
 export const fetchWithAuth = async <T>(
   path: string,
@@ -71,14 +75,14 @@ export const fetchWithAuth = async <T>(
     const newAccessToken = await refreshAccessToken();
 
     if (!newAccessToken) {
-      goToLoginExpired();
+      handleSessionExpired();
       throw new Error('로그인이 만료되었습니다. 다시 로그인해주세요.');
     }
 
     res = await callApi(newAccessToken);
 
     if (res.status === 401) {
-      goToLoginExpired();
+      handleSessionExpired();
       throw new Error('로그인이 만료되었습니다. 다시 로그인해주세요.');
     }
   }

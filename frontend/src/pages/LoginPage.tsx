@@ -54,14 +54,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   // Google OAuth 실패 시 백엔드가 ?error=... 파라미터를 붙여 리다이렉트함
-  // Refresh Token까지 만료되어 자동 재발급에 실패한 경우 ?expired=true 로 이동해옴
+  // (세션 만료 안내는 SessionExpiredModal이 로그인 페이지 이동 전에 먼저 보여준다)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const oauthError = params.get('error');
     if (oauthError) {
       setError(decodeURIComponent(oauthError));
-    } else if (params.get('expired') === 'true') {
-      setError('로그인이 만료되었습니다. 다시 로그인해주세요.');
     }
   }, [location.search]);
 
