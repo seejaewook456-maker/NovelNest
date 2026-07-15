@@ -4,6 +4,10 @@ import type {
   LoginData,
   EmailSendCodeRequest,
   EmailVerifyCodeRequest,
+  PasswordResetCodeRequest,
+  PasswordResetVerifyRequest,
+  PasswordResetVerifyData,
+  PasswordResetConfirmRequest,
 } from '../types/auth';
 import { API_BASE_URL } from './config';
 import { fetchWithAuth } from './fetchWithAuth';
@@ -76,5 +80,53 @@ export const verifyEmailCode = async (body: EmailVerifyCodeRequest): Promise<voi
 
   if (!res.ok) {
     throw new Error(json.message || '인증번호 확인에 실패했습니다.');
+  }
+};
+
+// 비밀번호 재설정 인증번호 발송 — 계정 열거 방지를 위해 백엔드가 항상 동일한 성공 메시지를 반환함
+export const requestPasswordResetCode = async (body: PasswordResetCodeRequest): Promise<void> => {
+  const res = await fetch(`${API_BASE_URL}/auth/password-reset/code`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  const json: ApiResponse = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || '인증번호 발송에 실패했습니다.');
+  }
+};
+
+// 비밀번호 재설정 인증번호 검증 — 성공 시 비밀번호 변경 API 전용 임시 토큰(resetToken)을 반환
+export const verifyPasswordResetCode = async (
+  body: PasswordResetVerifyRequest
+): Promise<PasswordResetVerifyData> => {
+  const res = await fetch(`${API_BASE_URL}/auth/password-reset/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  const json: ApiResponse<PasswordResetVerifyData> = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || '인증번호 확인에 실패했습니다.');
+  }
+  return json.data!;
+};
+
+// 새 비밀번호로 변경 — resetToken은 AccessToken/RefreshToken과 무관한 일회성 임시 토큰
+export const confirmPasswordReset = async (body: PasswordResetConfirmRequest): Promise<void> => {
+  const res = await fetch(`${API_BASE_URL}/auth/password-reset/confirm`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  const json: ApiResponse = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || '비밀번호 변경에 실패했습니다.');
   }
 };

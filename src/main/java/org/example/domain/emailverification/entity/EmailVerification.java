@@ -13,7 +13,10 @@ import java.time.LocalDateTime;
 @Table(
     name = "email_verifications",
     indexes = {
-        @Index(name = "idx_email_verifications_email", columnList = "email", unique = true)
+        // 목적(SIGN_UP/PASSWORD_RESET)별로 동일 이메일이 독립된 행을 가지므로 유니크 제약도 (email, purpose) 복합키로 구성
+        @Index(name = "uk_email_verifications_email_purpose", columnList = "email, purpose", unique = true),
+        // 만료 데이터 정기 삭제(스케줄러)의 벌크 삭제 조건이 expires_at 이므로 별도 인덱스 부여
+        @Index(name = "idx_email_verifications_expires_at", columnList = "expires_at")
     }
 )
 @Getter
@@ -24,11 +27,15 @@ public class EmailVerification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
     @Column(nullable = false, length = 6)
     private String verificationCode;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Purpose purpose;
 
     @Column(nullable = false)
     private boolean verified;
@@ -44,18 +51,20 @@ public class EmailVerification {
     private LocalDateTime verifiedAt;
 
     @Builder
-    private EmailVerification(String email, String verificationCode, LocalDateTime createdAt, LocalDateTime expiresAt) {
+    private EmailVerification(String email, String verificationCode, Purpose purpose, LocalDateTime createdAt, LocalDateTime expiresAt) {
         this.email = email;
         this.verificationCode = verificationCode;
+        this.purpose = purpose;
         this.verified = false;
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
     }
 
-    public static EmailVerification create(String email, String verificationCode, LocalDateTime now, LocalDateTime expiresAt) {
+    public static EmailVerification create(String email, String verificationCode, Purpose purpose, LocalDateTime now, LocalDateTime expiresAt) {
         return EmailVerification.builder()
                 .email(email)
                 .verificationCode(verificationCode)
+                .purpose(purpose)
                 .createdAt(now)
                 .expiresAt(expiresAt)
                 .build();
