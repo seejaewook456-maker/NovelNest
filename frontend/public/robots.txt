@@ -4,4 +4,4 @@ Disallow: /novels
 Disallow: /episodes
 Disallow: /oauth2/callback
 
-Sitemap: https://novelnestia.com/sitemap.xml
+Sitemap: https://www.novelnestia.com/sitemap.xml
