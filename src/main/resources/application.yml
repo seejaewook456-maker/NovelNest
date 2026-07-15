@@ -68,6 +68,21 @@ openai:
   api-key: ${OPENAI_API_KEY}
   model: gpt-4.1-mini
 
+app:
+  password-reset:
+    code-expiration-minutes: 5
+    resend-cooldown-seconds: 60
+    token-expiration-minutes: 10
+    email-subject: "[NovelNest] 비밀번호 재설정 인증번호"
+  cleanup:
+    verification-cron: "0 0 * * * *" # 매 정각 실행
+  async:
+    email:
+      core-pool-size: 2
+      max-pool-size: 5
+      queue-capacity: 100
+      thread-name-prefix: "email-async-"
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

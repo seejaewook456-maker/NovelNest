@@ -76,4 +76,9 @@ public class User extends BaseEntity {
     public void clearRefreshToken() {
         this.refreshToken = null;
     }
+
+    // 비밀번호 재설정 완료 시 새 암호화 비밀번호로 교체 (평문은 이 메서드에 도달하기 전 PasswordEncoder로 암호화되어야 함)
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }

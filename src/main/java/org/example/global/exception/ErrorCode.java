@@ -38,6 +38,16 @@ public enum ErrorCode {
     EMAIL_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "EMAIL_CODE_EXPIRED", "인증번호가 만료되었습니다. 다시 요청해주세요."),
     EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "EMAIL_NOT_VERIFIED", "이메일 인증이 완료되지 않았습니다."),
 
+    // 비밀번호 재설정
+    // 소셜 로그인 전용 계정의 비밀번호 재설정 시도 — 계정 열거 방지를 위해 API 응답에는 노출하지 않고 내부 로직 분기에만 사용
+    SOCIAL_ACCOUNT_PASSWORD_RESET_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "SOCIAL_ACCOUNT_PASSWORD_RESET_NOT_ALLOWED", "소셜 로그인 계정은 비밀번호 재설정을 이용할 수 없습니다."),
+    PASSWORD_RESET_CODE_NOT_FOUND(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_CODE_NOT_FOUND", "인증번호 발송 이력이 없습니다. 인증번호를 다시 요청해주세요."),
+    PASSWORD_RESET_CODE_MISMATCH(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_CODE_MISMATCH", "인증번호가 일치하지 않습니다."),
+    PASSWORD_RESET_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_CODE_EXPIRED", "인증번호가 만료되었습니다. 다시 요청해주세요."),
+    PASSWORD_RESET_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_TOKEN_INVALID", "유효하지 않은 재설정 요청입니다. 처음부터 다시 시도해주세요."),
+    PASSWORD_RESET_TOKEN_EXPIRED(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_TOKEN_EXPIRED", "재설정 가능 시간이 만료되었습니다. 처음부터 다시 시도해주세요."),
+    PASSWORD_RESET_TOKEN_ALREADY_USED(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_TOKEN_ALREADY_USED", "이미 처리된 재설정 요청입니다. 처음부터 다시 시도해주세요."),
+
     // Refresh Token
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_NOT_FOUND", "Refresh Token이 존재하지 않습니다."),
     REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_EXPIRED", "Refresh Token이 만료되었습니다. 다시 로그인해주세요."),

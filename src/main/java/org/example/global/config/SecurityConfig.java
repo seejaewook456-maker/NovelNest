@@ -3,6 +3,7 @@ package org.example.global.config;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.global.security.JwtAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import org.example.global.security.oauth2.CustomOAuth2UserService;
 import org.example.global.security.oauth2.OAuth2AuthenticationFailureHandler;
 import org.example.global.security.oauth2.OAuth2AuthenticationSuccessHandler;
@@ -56,6 +57,13 @@ public class SecurityConfig {
                         "/oauth2/**", "/login/oauth2/**",
                         "/swagger-ui.html", "/swagger-ui/**",
                         "/v3/api-docs/**", "/api-docs/**"
+                ).permitAll()
+                // 비밀번호를 잊은 사용자가 로그인 없이 호출해야 하므로 3개 POST 경로만 명시적으로 허용
+                // (재설정 토큰은 요청 바디로 전달되어 JwtAuthenticationFilter가 파싱하지 않으므로 별도 처리 불필요)
+                .requestMatchers(HttpMethod.POST,
+                        "/api/auth/password-reset/code",
+                        "/api/auth/password-reset/verify",
+                        "/api/auth/password-reset/confirm"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

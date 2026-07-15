@@ -116,6 +116,9 @@ export default function LoginPage() {
               required
             />
           </div>
+          <p className="form-link" style={{ textAlign: 'right', margin: '-4px 0 12px' }}>
+            <Link to="/forgot-password">비밀번호를 잊으셨나요?</Link>
+          </p>
           {error && <p className="error-message">{error}</p>}
           <Button
             type="submit"

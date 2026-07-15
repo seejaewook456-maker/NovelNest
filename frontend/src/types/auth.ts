@@ -28,3 +28,22 @@ export interface EmailVerifyCodeRequest {
   email: string;
   code: string;
 }
+
+export interface PasswordResetCodeRequest {
+  email: string;
+}
+
+export interface PasswordResetVerifyRequest {
+  email: string;
+  code: string;
+}
+
+export interface PasswordResetVerifyData {
+  resetToken: string;
+}
+
+export interface PasswordResetConfirmRequest {
+  resetToken: string;
+  newPassword: string;
+  newPasswordConfirm: string;
+}
