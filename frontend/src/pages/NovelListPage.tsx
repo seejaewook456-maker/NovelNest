@@ -58,9 +58,11 @@ export default function NovelListPage() {
       <PageHeader
         title="내 작품 목록"
         action={
-          <Button variant="primary" onClick={() => navigate('/novels/new')}>
-            + 새 작품
-          </Button>
+          novels.length > 0 ? (
+            <Button variant="primary" onClick={() => navigate('/novels/new')}>
+              + 새 작품
+            </Button>
+          ) : undefined
         }
       />
 
