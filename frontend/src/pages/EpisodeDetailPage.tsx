@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, type FormEvent } from 'react';
+import { useState, useEffect, useRef, useCallback, type FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getEpisode, updateEpisode, deleteEpisode } from '../api/episodeApi';
+import { getEpisode, deleteEpisode } from '../api/episodeApi';
+import { useEpisodeAutoSave } from '../hooks/useEpisodeAutoSave';
 import { getSummary, generateSummary } from '../api/episodeSummaryApi';
 import { extractCharacters } from '../api/characterExtractionApi';
 import { extractWorldSettings } from '../api/worldSettingExtractionApi';
@@ -31,8 +32,23 @@ export default function EpisodeDetailPage() {
   const [editTitle, setEditTitle] = useState('');
   const [editEpisodeNumber, setEditEpisodeNumber] = useState('');
   const [editContent, setEditContent] = useState('');
-  const [saving, setSaving] = useState(false);
   const editContentRef = useRef<HTMLTextAreaElement>(null);
+
+  // 자동 저장 — episodeNumber는 입력 중 잠깐 빈 값이 되어도(예: 지우고 다시 입력)
+  // 유효하지 않은 값으로 저장을 시도하지 않도록 원래 값으로 폴백한다.
+  const handleAutoSaved = useCallback((updated: Episode) => {
+    setEpisode(updated);
+  }, []);
+  const autoSave = useEpisodeAutoSave({
+    episode,
+    draft: {
+      title: editTitle,
+      episodeNumber: Number(editEpisodeNumber) || episode?.episodeNumber || 1,
+      content: editContent,
+    },
+    enabled: isEditing,
+    onSaved: handleAutoSaved,
+  });
 
   const [summary, setSummary] = useState<EpisodeSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
@@ -140,23 +156,12 @@ export default function EpisodeDetailPage() {
     }
   };
 
+  // 수동 저장 — 자동 저장과 동일한 saveNow()를 공유해 저장 로직이 중복되지 않는다.
+  // 디바운스 타이머가 있었다면 saveNow 내부에서 취소하고 즉시 저장한다.
   const handleUpdate = async (e: FormEvent) => {
     e.preventDefault();
-    if (!episode) return;
-    setSaving(true);
-    try {
-      const updated = await updateEpisode(episode.id, {
-        title: editTitle,
-        episodeNumber: Number(editEpisodeNumber),
-        content: editContent,
-      });
-      setEpisode(updated);
-      setIsEditing(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '수정 실패');
-    } finally {
-      setSaving(false);
-    }
+    const ok = await autoSave.saveNow();
+    if (ok) setIsEditing(false);
   };
 
   const handleDetectConflicts = async () => {
@@ -218,7 +223,10 @@ export default function EpisodeDetailPage() {
 
       {isEditing ? (
         <div style={{ maxWidth: 680 }}>
-          <h2 style={{ marginBottom: 24 }}>회차 수정</h2>
+          <div className="episode-content-header" style={{ marginTop: 0 }}>
+            <h2 style={{ margin: 0 }}>회차 수정</h2>
+            <AutoSaveStatusBadge autoSave={autoSave} />
+          </div>
           <Card>
             <form onSubmit={handleUpdate}>
               <div className="form-row">
@@ -257,10 +265,17 @@ export default function EpisodeDetailPage() {
                   required
                 />
               </div>
-              {error && <p className="error-message">{error}</p>}
+              {autoSave.status === 'error' && (
+                <p className="error-message">
+                  {autoSave.errorMessage || '저장에 실패했습니다.'}{' '}
+                  <button type="button" className="link-button" onClick={() => void autoSave.saveNow()}>
+                    다시 시도
+                  </button>
+                </p>
+              )}
               <div className="form-actions">
-                <Button type="submit" variant="primary" disabled={saving}>
-                  {saving ? '저장 중...' : '저장'}
+                <Button type="submit" variant="primary" disabled={autoSave.status === 'saving'}>
+                  {autoSave.status === 'saving' ? '저장 중...' : '저장'}
                 </Button>
                 <Button
                   type="button"
@@ -464,6 +479,32 @@ export default function EpisodeDetailPage() {
       )}
     </div>
   );
+}
+
+// 자동 저장 상태 배지 — "변경사항 있음 / 저장 중.../ 저장됨 / 저장 실패"
+function AutoSaveStatusBadge({ autoSave }: { autoSave: ReturnType<typeof useEpisodeAutoSave> }) {
+  const { status, lastSavedAt } = autoSave;
+
+  if (status === 'saving') {
+    return (
+      <span className="autosave-status autosave-status-saving">
+        <span className="autosave-spinner" /> 저장 중...
+      </span>
+    );
+  }
+  if (status === 'error') {
+    return <span className="autosave-status autosave-status-error">⚠ 저장 실패</span>;
+  }
+  if (status === 'unsaved') {
+    return <span className="autosave-status autosave-status-unsaved">저장되지 않은 변경사항이 있습니다.</span>;
+  }
+  if (status === 'saved') {
+    const timeText = lastSavedAt
+      ? lastSavedAt.toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' })
+      : '';
+    return <span className="autosave-status autosave-status-saved">{timeText && `${timeText} `}저장됨</span>;
+  }
+  return null;
 }
 
 // severity 값을 CSS 클래스 suffix로 변환

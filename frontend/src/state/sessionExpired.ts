@@ -22,3 +22,7 @@ export const notifySessionExpired = (): void => {
 export const resetSessionExpiredNotice = (): void => {
   notified = false;
 };
+
+// 세션이 이미 만료 안내된 상태인지 확인.
+// 자동 저장처럼 백그라운드에서 반복 시도되는 로직이, 만료 후에도 불필요한 요청을 계속 보내지 않도록 사전에 걸러내는 용도.
+export const isSessionExpired = (): boolean => notified;
