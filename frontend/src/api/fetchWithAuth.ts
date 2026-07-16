@@ -7,6 +7,11 @@ interface ApiResponse<T = undefined> {
   data?: T;
 }
 
+// fetch 자체가 실패한 경우(오프라인, 서버 다운, CORS 등)를 서버가 명시적으로
+// refresh token을 거부한 경우와 구분하기 위한 에러 타입.
+// 전자는 토큰이 여전히 유효할 수 있으므로 로그아웃 처리하면 안 된다.
+class NetworkError extends Error {}
+
 // Access Token 만료로 401을 받은 요청이 동시에 여러 개 발생해도
 // Refresh API는 단 한 번만 호출되도록 진행 중인 재발급 요청을 공유한다.
 let refreshPromise: Promise<string | null> | null = null;
@@ -15,23 +20,26 @@ const requestRefresh = async (): Promise<string | null> => {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return null;
 
+  let res: Response;
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    res = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
     });
-
-    if (!res.ok) return null;
-
-    const json: ApiResponse<{ accessToken: string; refreshToken: string }> = await res.json();
-    if (!json.data) return null;
-
-    saveTokens(json.data.accessToken, json.data.refreshToken);
-    return json.data.accessToken;
   } catch {
-    return null;
+    // 네트워크 오류: refresh token 자체가 무효화된 것이 아니므로 세션 만료로 취급하지 않는다.
+    throw new NetworkError('네트워크 연결을 확인해주세요.');
   }
+
+  // 서버가 명시적으로 거부한 경우에만 진짜 만료/무효로 판단한다.
+  if (!res.ok) return null;
+
+  const json: ApiResponse<{ accessToken: string; refreshToken: string }> = await res.json();
+  if (!json.data) return null;
+
+  saveTokens(json.data.accessToken, json.data.refreshToken);
+  return json.data.accessToken;
 };
 
 const refreshAccessToken = (): Promise<string | null> => {
@@ -69,17 +77,32 @@ export const fetchWithAuth = async <T>(
       },
     });
 
-  let res = await callApi(getToken());
+  let res: Response;
+  try {
+    res = await callApi(getToken());
+  } catch {
+    throw new NetworkError('네트워크 연결을 확인해주세요.');
+  }
 
   if (res.status === 401) {
-    const newAccessToken = await refreshAccessToken();
+    let newAccessToken: string | null;
+    try {
+      newAccessToken = await refreshAccessToken();
+    } catch (err) {
+      if (err instanceof NetworkError) throw err;
+      throw new NetworkError('네트워크 연결을 확인해주세요.');
+    }
 
     if (!newAccessToken) {
       handleSessionExpired();
       throw new Error('로그인이 만료되었습니다. 다시 로그인해주세요.');
     }
 
-    res = await callApi(newAccessToken);
+    try {
+      res = await callApi(newAccessToken);
+    } catch {
+      throw new NetworkError('네트워크 연결을 확인해주세요.');
+    }
 
     if (res.status === 401) {
       handleSessionExpired();
