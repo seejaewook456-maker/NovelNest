@@ -33,9 +33,11 @@ export default function EpisodeListPage() {
       <PageHeader
         title="회차 목록"
         action={
-          <Button variant="primary" onClick={() => navigate(`/novels/${novelId}/episodes/new`)}>
-            + 새 회차
-          </Button>
+          episodes.length > 0 ? (
+            <Button variant="primary" onClick={() => navigate(`/novels/${novelId}/episodes/new`)}>
+              + 새 회차
+            </Button>
+          ) : undefined
         }
       />
 
