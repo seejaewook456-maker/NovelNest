@@ -6,7 +6,7 @@ import type { Episode } from '../types/episode';
 
 export type AutoSaveStatus = 'idle' | 'unsaved' | 'saving' | 'saved' | 'error';
 
-interface EpisodeDraft {
+export interface EpisodeDraft {
   title: string;
   episodeNumber: number;
   content: string;
@@ -29,6 +29,9 @@ interface UseEpisodeAutoSaveResult {
   errorMessage: string;
   // 디바운스 타이머를 취소하고 즉시 저장한다. 수동 저장 버튼과 자동 저장이 이 함수를 공유한다.
   saveNow: () => Promise<boolean>;
+  // 지정한 스냅샷을 강제로 저장한다. 편집 중 자동 저장으로 서버에 중간 내용이 이미 반영된 뒤
+  // "취소"를 누른 경우, 그 중간 내용을 수정 이전 값으로 덮어써 되돌리기 위한 용도.
+  revertTo: (snapshot: EpisodeDraft) => Promise<boolean>;
 }
 
 const DEFAULT_DEBOUNCE_MS = 2500;
@@ -116,14 +119,16 @@ export function useEpisodeAutoSave({
   // 메모이제이션을 보존하지 못하므로, ref를 한 단계 거쳐 호출한다.
   const performSaveRef = useRef<() => Promise<boolean>>(async () => false);
 
-  const performSave = useCallback(async (): Promise<boolean> => {
+  // overrideSnapshot을 넘기면 현재 입력값(latestDraftRef) 대신 그 값을 그대로 저장한다.
+  // revertTo가 "수정 이전 값으로 강제 되돌리기"에 사용한다.
+  const performSave = useCallback(async (overrideSnapshot?: EpisodeDraft): Promise<boolean> => {
     const session = sessionRef.current;
     if (session.episodeId === null || session.baseline === null) return false;
     // 세션이 이미 만료 안내된 상태라면 저장을 계속 시도하지 않는다(무한 재시도 방지).
     if (isSessionExpired()) return false;
 
     const targetEpisodeId = session.episodeId;
-    const snapshot = latestDraftRef.current;
+    const snapshot = overrideSnapshot ?? latestDraftRef.current;
     if (isSameSnapshot(session.baseline, snapshot)) {
       setStatus('saved');
       return true;
@@ -215,6 +220,15 @@ export function useEpisodeAutoSave({
     return performSave();
   }, [performSave]);
 
+  const revertTo = useCallback(async (snapshot: EpisodeDraft): Promise<boolean> => {
+    const session = sessionRef.current;
+    if (session.timer) {
+      clearTimeout(session.timer);
+      session.timer = null;
+    }
+    return performSave(snapshot);
+  }, [performSave]);
+
   // 브라우저 새로고침/탭 닫기 경고
   useEffect(() => {
     if (!hasUnsavedChanges) return;
@@ -258,5 +272,5 @@ export function useEpisodeAutoSave({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blocker.state]);
 
-  return { status, hasUnsavedChanges, lastSavedAt, errorMessage, saveNow };
+  return { status, hasUnsavedChanges, lastSavedAt, errorMessage, saveNow, revertTo };
 }

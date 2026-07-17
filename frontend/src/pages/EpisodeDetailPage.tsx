@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, type FormEvent } from 'react'
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEpisode, deleteEpisode } from '../api/episodeApi';
 import { useEpisodeAutoSave } from '../hooks/useEpisodeAutoSave';
+import type { EpisodeDraft } from '../hooks/useEpisodeAutoSave';
 import { getSummary, generateSummary } from '../api/episodeSummaryApi';
 import { extractCharacters } from '../api/characterExtractionApi';
 import { extractWorldSettings } from '../api/worldSettingExtractionApi';
@@ -20,6 +21,7 @@ import BackLink from '../components/BackLink';
 import Card from '../components/Card';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import RevertConfirmModal from '../components/RevertConfirmModal';
 import WritingAssistToolbar from '../components/WritingAssistToolbar';
 
 export default function EpisodeDetailPage() {
@@ -50,6 +52,12 @@ export default function EpisodeDetailPage() {
     onSaved: handleAutoSaved,
   });
 
+  // 수정 시작 시점의 값 — 편집 도중 자동 저장이 서버에 중간 내용을 반영해도
+  // "취소" 시 되돌아갈 진짜 원본을 알기 위해 별도로 보관한다(episode는 자동 저장마다 갱신되므로 못 씀).
+  const preEditSnapshotRef = useRef<EpisodeDraft | null>(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
   const [summary, setSummary] = useState<EpisodeSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState('');
@@ -71,6 +79,16 @@ export default function EpisodeDetailPage() {
   // 본문 복사 상태
   const [copied, setCopied] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 연속으로 토스트를 띄울 때 이전 타이머가 방금 띄운 토스트를 조기에 지우지 않도록 타이머를 교체한다.
+  const showToast = useCallback((message: string, type: 'success' | 'error') => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ message, type });
+    toastTimerRef.current = setTimeout(() => {
+      toastTimerRef.current = null;
+      setToast(null);
+    }, 2000);
+  }, []);
 
   // 삭제 확인 모달 상태
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -157,11 +175,93 @@ export default function EpisodeDetailPage() {
   };
 
   // 수동 저장 — 자동 저장과 동일한 saveNow()를 공유해 저장 로직이 중복되지 않는다.
-  // 디바운스 타이머가 있었다면 saveNow 내부에서 취소하고 즉시 저장한다.
+  // 디바운스 타이머가 있었다면 saveNow 내부에서 즉시 저장한다.
   const handleUpdate = async (e: FormEvent) => {
     e.preventDefault();
     const ok = await autoSave.saveNow();
     if (ok) setIsEditing(false);
+  };
+
+  // 수정 시작 — "취소" 시 되돌아갈 기준값을 이 시점의 episode로 고정해둔다.
+  const handleStartEdit = () => {
+    if (!episode) return;
+    preEditSnapshotRef.current = {
+      title: episode.title,
+      episodeNumber: episode.episodeNumber,
+      content: episode.content,
+    };
+    setIsEditing(true);
+  };
+
+  // 취소 버튼 클릭 — 곧바로 되돌리지 않고, 되돌릴 내용이 실제로 있을 때만 확인 모달을 띄운다.
+  // (아무것도 바뀌지 않았다면 물어볼 필요 없이 바로 편집을 종료한다.)
+  const handleCancelClick = () => {
+    const preEdit = preEditSnapshotRef.current;
+    if (!episode || !preEdit) {
+      setIsEditing(false);
+      return;
+    }
+
+    const hasChanges =
+      episode.title !== preEdit.title ||
+      episode.episodeNumber !== preEdit.episodeNumber ||
+      episode.content !== preEdit.content ||
+      editTitle !== preEdit.title ||
+      Number(editEpisodeNumber) !== preEdit.episodeNumber ||
+      editContent !== preEdit.content;
+
+    if (!hasChanges) {
+      setIsEditing(false);
+      return;
+    }
+
+    setShowCancelConfirm(true);
+  };
+
+  // 확인 모달에서 "아니오" — 아무것도 되돌리지 않고 수정 화면을 그대로 유지한다.
+  const handleCancelConfirmNo = () => {
+    setShowCancelConfirm(false);
+  };
+
+  // 확인 모달에서 "예" — 편집 중 자동 저장이 서버에 중간 내용을 이미 반영했다면, 그 내용을
+  // 수정 시작 시점 값으로 덮어써 되돌린 뒤에만 편집을 종료한다(자동 저장분이 그대로 남지 않도록).
+  const handleCancelConfirmYes = async () => {
+    const preEdit = preEditSnapshotRef.current;
+    if (!episode || !preEdit) {
+      setShowCancelConfirm(false);
+      setIsEditing(false);
+      return;
+    }
+
+    const persistedDuringEdit =
+      episode.title !== preEdit.title ||
+      episode.episodeNumber !== preEdit.episodeNumber ||
+      episode.content !== preEdit.content;
+
+    if (!persistedDuringEdit) {
+      // 자동 저장이 아직 한 번도 반영되지 않았다면 서버에 되돌릴 것이 없으므로 화면만 되돌린다.
+      setShowCancelConfirm(false);
+      setIsEditing(false);
+      setEditTitle(episode.title);
+      setEditEpisodeNumber(String(episode.episodeNumber));
+      setEditContent(episode.content);
+      return;
+    }
+
+    showToast('수정 이전 버전으로 돌아갑니다.', 'success');
+    setCancelLoading(true);
+    const ok = await autoSave.revertTo(preEdit);
+    setCancelLoading(false);
+    setShowCancelConfirm(false);
+
+    if (ok) {
+      setIsEditing(false);
+      setEditTitle(preEdit.title);
+      setEditEpisodeNumber(String(preEdit.episodeNumber));
+      setEditContent(preEdit.content);
+    } else {
+      showToast('이전 버전으로 되돌리지 못했습니다. 다시 시도해주세요.', 'error');
+    }
   };
 
   const handleDetectConflicts = async () => {
@@ -185,12 +285,10 @@ export default function EpisodeDetailPage() {
     try {
       await navigator.clipboard.writeText(episode.content);
       setCopied(true);
-      setToast({ message: '회차 본문이 복사되었습니다.', type: 'success' });
+      showToast('회차 본문이 복사되었습니다.', 'success');
       setTimeout(() => setCopied(false), 2000);
-      setTimeout(() => setToast(null), 2000);
     } catch {
-      setToast({ message: '본문 복사에 실패했습니다.', type: 'error' });
-      setTimeout(() => setToast(null), 2000);
+      showToast('본문 복사에 실패했습니다.', 'error');
     }
   };
 
@@ -274,18 +372,18 @@ export default function EpisodeDetailPage() {
                 </p>
               )}
               <div className="form-actions">
-                <Button type="submit" variant="primary" disabled={autoSave.status === 'saving'}>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={autoSave.status === 'saving' || cancelLoading}
+                >
                   {autoSave.status === 'saving' ? '저장 중...' : '저장'}
                 </Button>
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditTitle(episode.title);
-                    setEditEpisodeNumber(String(episode.episodeNumber));
-                    setEditContent(episode.content);
-                  }}
+                  disabled={autoSave.status === 'saving' || cancelLoading}
+                  onClick={handleCancelClick}
                 >
                   취소
                 </Button>
@@ -301,7 +399,7 @@ export default function EpisodeDetailPage() {
               <p className="ep-num-badge">{episode.episodeNumber}화</p>
             </div>
             <div className="ep-actions">
-              <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
+              <Button variant="secondary" size="sm" onClick={handleStartEdit}>
                 수정
               </Button>
               <Button variant="danger" size="sm" onClick={handleDelete}>
@@ -470,6 +568,13 @@ export default function EpisodeDetailPage() {
         onCancel={() => setShowDeleteModal(false)}
         isLoading={deleteLoading}
         error={deleteError}
+      />
+
+      <RevertConfirmModal
+        isOpen={showCancelConfirm}
+        onConfirm={() => void handleCancelConfirmYes()}
+        onCancel={handleCancelConfirmNo}
+        loading={cancelLoading}
       />
 
       {toast && (
