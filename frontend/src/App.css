@@ -270,6 +270,53 @@ select {
   border-left: 3px solid var(--color-primary);
 }
 
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  text-decoration: underline;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* =============================================
+   자동 저장 상태 배지
+   ============================================= */
+.autosave-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.autosave-status-saved {
+  color: var(--color-text-muted);
+}
+
+.autosave-status-unsaved {
+  color: var(--color-text-secondary);
+}
+
+.autosave-status-error {
+  color: var(--color-danger);
+}
+
+.autosave-status-saving {
+  color: var(--color-primary);
+}
+
+.autosave-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
 /* =============================================
    이메일 인증번호 입력 (입력 필드 + 버튼 가로 배치)
    ============================================= */

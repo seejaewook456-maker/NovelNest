@@ -1,8 +1,8 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { login } from '../api/authApi';
+import { login, logout } from '../api/authApi';
 import { BACKEND_BASE_URL } from '../api/config';
-import { saveTokens } from '../utils/token';
+import { saveTokens, clearTokens } from '../utils/token';
 import Button from '../components/Button';
 
 // 브랜드 연필 아이콘 (favicon.svg와 동일한 컨셉의 인라인 SVG)
@@ -61,6 +61,25 @@ export default function LoginPage() {
     if (oauthError) {
       setError(decodeURIComponent(oauthError));
     }
+  }, [location.search]);
+
+  // 실제 로그아웃 마무리(서버 Refresh Token 무효화 + 로컬 토큰 삭제).
+  // MainLayout의 로그아웃 버튼은 이 페이지로의 이동이 실제로 성공했을 때만 여기 도달하므로,
+  // 편집 중 페이지의 "저장되지 않은 변경사항" 이동 차단이 사용자의 취소를 정상적으로 존중할 수 있다.
+  const logoutFinalizedRef = useRef(false);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('logout') !== '1' || logoutFinalizedRef.current) return;
+    logoutFinalizedRef.current = true;
+    void (async () => {
+      try {
+        await logout();
+      } catch {
+        // 네트워크 오류 등으로 서버 로그아웃에 실패해도 사용자는 로그아웃되어야 하므로 무시
+      } finally {
+        clearTokens();
+      }
+    })();
   }, [location.search]);
 
   const handleSubmit = async (e: FormEvent) => {
