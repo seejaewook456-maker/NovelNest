@@ -19,6 +19,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.CorsUtils;
 
 @Configuration
@@ -30,10 +31,15 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2FailureHandler;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            // CorsConfig의 설정을 Security 필터 체인 맨 앞의 CorsFilter로 등록한다.
+            // 독립된 @Bean CorsFilter와 달리, 401/403을 직접 응답하고 체인을 끊는
+            // authenticationEntryPoint/accessDeniedHandler 경로에서도 CORS 헤더가 항상 붙는다.
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .csrf(AbstractHttpConfigurer::disable)
             // X-Content-Type-Options, X-Frame-Options(DENY)는 Spring Security 기본값으로 적용됨
             // Referrer-Policy만 명시적으로 추가
