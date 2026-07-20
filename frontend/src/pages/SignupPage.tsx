@@ -7,6 +7,18 @@ import Button from '../components/Button';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const RESEND_INTERVAL_SECONDS = 60;
 
+// 카카오 로고 SVG (말풍선 아이콘, CDN 없이 인라인으로 삽입)
+function KakaoIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+      <path
+        fill="#191919"
+        d="M9 1.5C4.44 1.5 0.75 4.44 0.75 8.07c0 2.34 1.56 4.4 3.9 5.58-.17.62-.62 2.27-.71 2.62-.11.44.16.43.34.31.14-.09 2.24-1.52 3.15-2.14.5.07 1.02.11 1.57.11 4.56 0 8.25-2.94 8.25-6.57S13.56 1.5 9 1.5z"
+      />
+    </svg>
+  );
+}
+
 // Google 로고 SVG (인라인, CDN 의존 없음)
 function GoogleIcon() {
   return (
@@ -270,6 +282,7 @@ export default function SignupPage() {
           href={`${BACKEND_BASE_URL}/oauth2/authorization/kakao`}
           className="btn-kakao"
         >
+          <KakaoIcon />
           카카오로 회원가입
         </a>
 
