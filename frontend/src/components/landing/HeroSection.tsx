@@ -23,7 +23,7 @@ export default function HeroSection({ onExploreFeatures }: HeroSectionProps) {
           <Button variant="primary" onClick={() => navigate('/login')}>
             무료로 시작하기
           </Button>
-          <Button variant="secondary" onClick={onExploreFeatures}>
+          <Button variant="secondary" onClick={onExploreFeatures} aria-controls="features">
             기능 살펴보기
           </Button>
         </div>
@@ -37,8 +37,11 @@ export default function HeroSection({ onExploreFeatures }: HeroSectionProps) {
           </div>
           <LandingImage
             src="/landing/hero-dashboard.png"
-            alt="노벨네스트 작품 대시보드 화면"
+            alt="노벨네스트 AI 웹소설 대시보드"
             className="landing-browser-frame-img"
+            width={1247}
+            height={810}
+            fetchPriority="high"
             eager
           />
         </div>
