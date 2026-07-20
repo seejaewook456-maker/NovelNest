@@ -22,6 +22,8 @@ import Card from '../components/Card';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import RevertConfirmModal from '../components/RevertConfirmModal';
+import EpisodeWorkspace from '../components/workspace/EpisodeWorkspace';
+import EditorHeader from '../components/workspace/EditorHeader';
 import WritingAssistToolbar from '../components/WritingAssistToolbar';
 
 export default function EpisodeDetailPage() {
@@ -316,15 +318,19 @@ export default function EpisodeDetailPage() {
   if (!episode) return <LoadingSpinner />;
 
   return (
-    <div>
-      <BackLink label="← 회차 목록" onClick={() => navigate(`/novels/${episode.novelId}/episodes`)} />
-
+    <>
+      {/* 메뉴(등장인물/세계관/AI 채팅)는 회차 작성·수정 화면에서만 제공한다.
+          읽기 전용 상세 화면(else 분기)에는 EpisodeWorkspace를 아예 사용하지 않는다. */}
       {isEditing ? (
-        <div style={{ maxWidth: 680 }}>
-          <div className="episode-content-header" style={{ marginTop: 0 }}>
-            <h2 style={{ margin: 0 }}>회차 수정</h2>
-            <AutoSaveStatusBadge autoSave={autoSave} />
-          </div>
+        // 뒤로가기/제목/저장 상태를 EpisodeWorkspace의 children(=입력 박스와 같은 flex 컬럼) 안에
+        // 함께 렌더링해, 패널 열림/닫힘·화면 크기 변경과 무관하게 입력 박스와 항상 같은 위치를 유지한다.
+        <EpisodeWorkspace novelId={episode.novelId} fixedContentWidth={680}>
+          <EditorHeader
+            backLabel="← 회차 목록"
+            onBack={() => navigate(`/novels/${episode.novelId}/episodes`)}
+            title="회차 수정"
+            statusBadge={<AutoSaveStatusBadge autoSave={autoSave} />}
+          />
           <Card>
             <form onSubmit={handleUpdate}>
               <div className="form-row">
@@ -390,8 +396,10 @@ export default function EpisodeDetailPage() {
               </div>
             </form>
           </Card>
-        </div>
+        </EpisodeWorkspace>
       ) : (
+        <>
+          <BackLink label="← 회차 목록" onClick={() => navigate(`/novels/${episode.novelId}/episodes`)} />
         <div className="episode-detail">
           <div className="ep-header">
             <div>
@@ -557,6 +565,7 @@ export default function EpisodeDetailPage() {
           </div>
           </div>
         </div>
+        </>
       )}
 
       <ConfirmDeleteModal
@@ -582,7 +591,7 @@ export default function EpisodeDetailPage() {
           {toast.message}
         </div>
       )}
-    </div>
+    </>
   );
 }
 
