@@ -9,6 +9,8 @@ import BackLink from '../components/BackLink';
 import Card from '../components/Card';
 import WritingAssistToolbar from '../components/WritingAssistToolbar';
 import DraftRecoveryModal from '../components/DraftRecoveryModal';
+import EpisodeWorkspace from '../components/workspace/EpisodeWorkspace';
+import EditorHeader from '../components/workspace/EditorHeader';
 
 export default function EpisodeCreatePage() {
   const { novelId } = useParams<{ novelId: string }>();
@@ -80,6 +82,8 @@ export default function EpisodeCreatePage() {
     }
   };
 
+  if (numericNovelId === null) return null;
+
   if (pendingDraft) {
     return (
       <div style={{ maxWidth: 680 }}>
@@ -91,65 +95,70 @@ export default function EpisodeCreatePage() {
   }
 
   return (
-    <div style={{ maxWidth: 680 }}>
-      <BackLink label="← 회차 목록" onClick={() => navigate(`/novels/${novelId}/episodes`)} />
-      <div className="episode-content-header" style={{ marginTop: 0 }}>
-        <h2 style={{ margin: 0 }}>새 회차 작성</h2>
-        <DraftAutoSaveStatusBadge status={draftAutoSave.status} lastSavedAt={draftAutoSave.lastSavedAt} />
-      </div>
+    // 뒤로가기/제목/저장 상태를 EpisodeWorkspace의 children(=입력 박스와 같은 flex 컬럼) 안에
+    // 함께 렌더링해, 패널 열림/닫힘·화면 크기 변경과 무관하게 입력 박스와 항상 같은 위치를 유지한다.
+    <EpisodeWorkspace novelId={numericNovelId} fixedContentWidth={680}>
+      <EditorHeader
+        backLabel="← 회차 목록"
+        onBack={() => navigate(`/novels/${novelId}/episodes`)}
+        title="새 회차 작성"
+        statusBadge={
+          <DraftAutoSaveStatusBadge status={draftAutoSave.status} lastSavedAt={draftAutoSave.lastSavedAt} />
+        }
+      />
       <Card>
-        <form onSubmit={handleSubmit}>
-          <div className="form-row">
+          <form onSubmit={handleSubmit}>
+            <div className="form-row">
+              <div className="form-group">
+                <label>회차 번호</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={episodeNumber}
+                  onChange={(e) => setEpisodeNumber(e.target.value)}
+                  placeholder="예) 1"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>제목</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="회차 제목"
+                  required
+                />
+              </div>
+            </div>
             <div className="form-group">
-              <label>회차 번호</label>
-              <input
-                type="number"
-                min={1}
-                value={episodeNumber}
-                onChange={(e) => setEpisodeNumber(e.target.value)}
-                placeholder="예) 1"
+              <label>본문</label>
+              <WritingAssistToolbar
+                content={content}
+                onChange={setContent}
+                textareaRef={contentRef}
+              />
+              <textarea
+                ref={contentRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="회차 내용을 입력하세요"
+                rows={18}
                 required
               />
             </div>
-            <div className="form-group">
-              <label>제목</label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="회차 제목"
-                required
-              />
+            {error && <p className="error-message">{error}</p>}
+            <div className="form-actions">
+              <Button type="submit" variant="primary" disabled={loading}>
+                {loading ? '저장 중...' : '회차 저장'}
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => navigate(`/novels/${novelId}/episodes`)}>
+                취소
+              </Button>
             </div>
-          </div>
-          <div className="form-group">
-            <label>본문</label>
-            <WritingAssistToolbar
-              content={content}
-              onChange={setContent}
-              textareaRef={contentRef}
-            />
-            <textarea
-              ref={contentRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="회차 내용을 입력하세요"
-              rows={18}
-              required
-            />
-          </div>
-          {error && <p className="error-message">{error}</p>}
-          <div className="form-actions">
-            <Button type="submit" variant="primary" disabled={loading}>
-              {loading ? '저장 중...' : '회차 저장'}
-            </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate(`/novels/${novelId}/episodes`)}>
-              취소
-            </Button>
-          </div>
-        </form>
-      </Card>
-    </div>
+          </form>
+        </Card>
+    </EpisodeWorkspace>
   );
 }
 
