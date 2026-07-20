@@ -2132,7 +2132,8 @@ select {
   gap: 10px;
   width: 100%;
   padding: 11px 20px;
-  border: none;
+  /* Google 버튼(border: 1px solid)과 실제 두께를 맞추기 위해 투명 테두리를 동일하게 부여 */
+  border: 1px solid transparent;
   border-radius: var(--radius-btn);
   background: #FEE500;
   color: #191919;
