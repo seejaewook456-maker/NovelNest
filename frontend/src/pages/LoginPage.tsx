@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { login, logout } from '../api/authApi';
 import { BACKEND_BASE_URL } from '../api/config';
-import { saveTokens, clearTokens } from '../utils/token';
+import { saveTokens, clearTokens, isLoggedIn } from '../utils/token';
 import Button from '../components/Button';
 
 // 브랜드 연필 아이콘 (favicon.svg와 동일한 컨셉의 인라인 SVG)
@@ -65,15 +65,18 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Google OAuth 실패 시 백엔드가 ?error=... 파라미터를 붙여 리다이렉트함
+  // Google/카카오 OAuth 실패 시 백엔드가 ?error=... 파라미터를 붙여 리다이렉트함
   // (세션 만료 안내는 SessionExpiredModal이 로그인 페이지 이동 전에 먼저 보여준다)
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const oauthError = params.get('error');
+  // location.search 변경에 반응해 state를 조정하는 경우이므로, effect 안에서 setState하는 대신
+  // React가 권장하는 대로 렌더링 중 이전 값과 비교해 직접 반영한다.
+  const [processedSearch, setProcessedSearch] = useState<string | null>(null);
+  if (processedSearch !== location.search) {
+    setProcessedSearch(location.search);
+    const oauthError = new URLSearchParams(location.search).get('error');
     if (oauthError) {
       setError(decodeURIComponent(oauthError));
     }
-  }, [location.search]);
+  }
 
   // 실제 로그아웃 마무리(서버 Refresh Token 무효화 + 로컬 토큰 삭제).
   // MainLayout의 로그아웃 버튼은 이 페이지로의 이동이 실제로 성공했을 때만 여기 도달하므로,
@@ -83,6 +86,16 @@ export default function LoginPage() {
     const params = new URLSearchParams(location.search);
     if (params.get('logout') !== '1' || logoutFinalizedRef.current) return;
     logoutFinalizedRef.current = true;
+
+    // logoutFinalizedRef는 새로고침 시 초기화되는데 URL의 ?logout=1은 그대로 남아있어,
+    // 로그아웃 후 새로고침하면 이 로직이 토큰이 이미 지워진 상태로 다시 실행되곤 했다.
+    // 그러면 fetchWithAuth가 빈 토큰으로 401을 받고 재발급도 실패해 "세션 만료" 모달이
+    // 잘못 뜨는 문제로 이어지므로, 처리 즉시 쿼리를 제거해 재실행을 원천 차단한다.
+    navigate('/login', { replace: true });
+
+    // 이미 로그아웃된 상태(토큰 없음)라면 서버에 무효화할 대상이 없으므로 API 호출 자체를 생략한다.
+    if (!isLoggedIn()) return;
+
     void (async () => {
       try {
         await logout();
@@ -92,7 +105,7 @@ export default function LoginPage() {
         clearTokens();
       }
     })();
-  }, [location.search]);
+  }, [location.search, navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
