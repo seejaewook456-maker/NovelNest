@@ -1,7 +1,11 @@
 User-agent: *
 Allow: /
+
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
 Disallow: /novels
 Disallow: /episodes
-Disallow: /oauth2/callback
+Disallow: /oauth2/
 
 Sitemap: https://www.novelnestia.com/sitemap.xml

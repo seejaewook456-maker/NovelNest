@@ -24,11 +24,11 @@ export default function LandingHeader() {
           <BrandMark />
           <span>노벨네스트</span>
         </Link>
-        <div className="landing-header-actions">
+        <nav className="landing-header-actions" aria-label="시작하기">
           <Button variant="primary" size="sm" onClick={() => navigate('/login')}>
             무료로 시작하기
           </Button>
-        </div>
+        </nav>
       </div>
     </header>
   );
