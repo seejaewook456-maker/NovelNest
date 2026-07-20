@@ -23,19 +23,17 @@ export default function WorldSettingReviewPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as ReviewState | null;
-
-  if (!state) {
-    navigate('/novels', { replace: true });
-    return null;
-  }
-
-  const { candidates, novelId, episodeId, episodeTitle } = state;
+  const candidates = state?.candidates ?? [];
   const total = candidates.length;
+  // state가 없거나(새로고침·URL 직접 접근 등) 검토할 후보가 하나도 없는 경우 — 목록으로 돌려보낸다
+  const isValid = state !== null && total > 0;
 
+  // 아래 훅들은 isValid 여부와 무관하게 항상 동일한 순서로 호출되어야 하므로,
+  // "state 없으면 return" 같은 조기 종료보다 반드시 앞에 와야 한다 (React Hooks 규칙).
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [editedCategory, setEditedCategory] = useState<WorldSettingCategory>(candidates[0].category);
-  const [editedTitle, setEditedTitle] = useState(candidates[0].title);
-  const [editedContent, setEditedContent] = useState(candidates[0].content);
+  const [editedCategory, setEditedCategory] = useState<WorldSettingCategory>(candidates[0]?.category ?? 'ETC');
+  const [editedTitle, setEditedTitle] = useState(candidates[0]?.title ?? '');
+  const [editedContent, setEditedContent] = useState(candidates[0]?.content ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
@@ -44,17 +42,34 @@ export default function WorldSettingReviewPage() {
   const [skippedCount, setSkippedCount] = useState(0);
 
   const current = candidates[currentIndex];
-  const isLast = currentIndex + 1 >= total;
-  const isExisting = current.isExistingSetting && current.existingWorldSetting !== null;
-  const hasNewInsights = (current.newInsights?.content?.length ?? 0) > 0;
+
+  // 유효하지 않은 진입(state 없음/후보 0개)의 리다이렉트는 부수효과이므로 effect에서 처리한다
+  // (렌더링 도중 navigate를 직접 호출하지 않음)
+  useEffect(() => {
+    if (!isValid) {
+      navigate('/novels', { replace: true });
+    }
+  }, [isValid, navigate]);
 
   // 인덱스가 바뀌면 편집 필드를 현재 후보 값으로 초기화
   useEffect(() => {
+    if (!current) return;
     setEditedCategory(current.category);
     setEditedTitle(current.title);
     setEditedContent(current.content);
     setError('');
   }, [currentIndex]);
+
+  // 모든 훅 호출이 끝난 뒤에만 조기 반환한다 — isValid가 false인 렌더에서도
+  // 위 훅들은 이미 다 호출된 상태라 다음 렌더와 훅 호출 순서가 항상 동일하게 유지된다.
+  if (!isValid || !state || !current) {
+    return null;
+  }
+
+  const { novelId, episodeId, episodeTitle } = state;
+  const isLast = currentIndex + 1 >= total;
+  const isExisting = current.isExistingSetting && current.existingWorldSetting !== null;
+  const hasNewInsights = (current.newInsights?.content?.length ?? 0) > 0;
 
   const goNext = () => {
     if (isLast) {
