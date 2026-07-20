@@ -2756,3 +2756,465 @@ select {
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0s;
   }
 }
+
+/* =============================================
+   랜딩 페이지
+   ============================================= */
+.landing-page {
+  min-height: 100vh;
+  background: var(--color-bg);
+  overflow-x: hidden;
+}
+
+/* 섹션이 바뀌는 지점마다 짧은 갈색 구분선을 그어 다음 섹션으로 넘어감을 시각적으로 알린다. */
+.landing-page main > section + section {
+  border-top: none;
+}
+
+.landing-page main > section + section::before {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 2px;
+  margin: 32px auto;
+  background: var(--color-ai-border);
+  border-radius: 2px;
+}
+
+.landing-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.landing-header-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.landing-header-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.2px;
+}
+
+.landing-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.landing-hero {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 72px 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 48px;
+  align-items: center;
+}
+
+.landing-hero-title {
+  font-size: 32px;
+  line-height: 1.4;
+  word-break: keep-all;
+  margin-bottom: 20px;
+}
+
+.landing-hero-desc {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  line-height: 1.75;
+  word-break: keep-all;
+  margin-bottom: 28px;
+}
+
+.landing-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.landing-hero-actions .btn {
+  padding: 13px 26px;
+  font-size: 15px;
+}
+
+/* 브라우저/앱 화면처럼 보이는 카드 프레임 — Hero와 기능 소개 섹션 캡처 이미지에 공통 사용 */
+.landing-browser-frame {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.landing-browser-frame-bar {
+  display: flex;
+  gap: 6px;
+  padding: 12px 14px;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.landing-browser-frame-bar span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-border);
+}
+
+.landing-browser-frame-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+  object-fit: contain;
+  background: var(--color-bg);
+}
+
+.landing-image-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  padding: 24px;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.landing-section {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 64px 24px;
+}
+
+.landing-section-head {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 40px;
+}
+
+.landing-section-head h2 {
+  font-size: 28px;
+  word-break: keep-all;
+  margin-bottom: 10px;
+}
+
+.landing-section-head p {
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  word-break: keep-all;
+}
+
+/* 문제 vs 해결 비교 */
+.landing-compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.landing-compare-col {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+}
+
+.landing-compare-col h3 {
+  font-size: 16px;
+  margin-bottom: 18px;
+}
+
+.landing-compare-col ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.landing-compare-col li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.landing-compare-mark {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+.landing-compare-mark-x {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.landing-compare-mark-check {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* 핵심 기능 — 이미지·설명 교차 배치 */
+.landing-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 72px;
+}
+
+.landing-feature-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 48px;
+  align-items: center;
+}
+
+.landing-feature-row.reverse {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+}
+
+.landing-feature-row.reverse .landing-feature-visual {
+  order: 2;
+}
+
+.landing-feature-copy h3 {
+  font-size: 22px;
+  margin-bottom: 12px;
+  word-break: keep-all;
+}
+
+.landing-feature-copy p {
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+/* 사용 방법 3단계 */
+.landing-steps {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.landing-step {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 28px 24px;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.landing-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.landing-step h3 {
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+
+.landing-step p {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+/* 추천 대상 */
+.landing-audience-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.landing-audience-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 20px 22px;
+  font-size: 14.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  word-break: keep-all;
+  box-shadow: var(--shadow-sm);
+}
+
+/* 마지막 CTA */
+.landing-final-cta {
+  background: var(--color-primary-hover);
+  color: #ffffff;
+  text-align: center;
+  padding: 72px 24px;
+}
+
+.landing-final-cta h2 {
+  color: #ffffff;
+  font-size: 26px;
+  margin-bottom: 12px;
+  word-break: keep-all;
+}
+
+.landing-final-cta p {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 15px;
+  margin-bottom: 28px;
+  word-break: keep-all;
+}
+
+.landing-final-cta .btn-primary {
+  background: #ffffff;
+  color: var(--color-primary-hover);
+  border-color: #ffffff;
+  padding: 13px 28px;
+  font-size: 15px;
+}
+
+.landing-final-cta .btn-primary:hover:not(:disabled) {
+  background: var(--color-bg);
+  border-color: var(--color-bg);
+}
+
+/* Footer */
+.landing-footer {
+  border-top: none;
+  background: var(--color-bg-card);
+}
+
+.landing-footer::before {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 2px;
+  margin: 32px auto;
+  background: var(--color-ai-border);
+  border-radius: 2px;
+}
+
+.landing-footer-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.landing-footer-logo {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.landing-footer-brand p {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.landing-footer-copyright {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+@media (max-width: 880px) {
+  .landing-hero {
+    grid-template-columns: 1fr;
+    padding: 48px 20px;
+    gap: 32px;
+  }
+
+  .landing-hero-title {
+    font-size: 26px;
+  }
+
+  .landing-feature-row,
+  .landing-feature-row.reverse {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .landing-feature-row.reverse .landing-feature-visual {
+    order: 0;
+  }
+
+  .landing-compare-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-section {
+    padding: 48px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-header-inner {
+    padding: 0 16px;
+  }
+
+  .landing-header-actions .btn {
+    padding: 8px 12px;
+    font-size: 12.5px;
+  }
+
+  .landing-hero-title {
+    font-size: 22px;
+  }
+
+  .landing-hero-actions .btn {
+    flex: 1 1 auto;
+  }
+
+  .landing-audience-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-final-cta h2 {
+    font-size: 21px;
+  }
+}

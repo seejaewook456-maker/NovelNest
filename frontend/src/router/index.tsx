@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { isLoggedIn } from '../utils/token';
 import MainLayout from '../layouts/MainLayout';
+import LandingPage from '../pages/LandingPage';
 import LoginPage from '../pages/LoginPage';
 import SignupPage from '../pages/SignupPage';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage';
@@ -64,8 +65,8 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    // 루트 접속 시 로그인 상태에 따라 분기
+    // 루트 접속 시 로그인 상태에 따라 분기: 로그인 상태면 작품 목록으로, 비로그인 상태면 랜딩 페이지를 보여준다.
     path: '/',
-    element: isLoggedIn() ? <Navigate to="/novels" replace /> : <Navigate to="/login" replace />,
+    element: isLoggedIn() ? <Navigate to="/novels" replace /> : <LandingPage />,
   },
 ]);
