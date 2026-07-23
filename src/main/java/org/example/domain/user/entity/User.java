@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.global.common.BaseEntity;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(
     name = "users",
@@ -58,6 +60,10 @@ public class User extends BaseEntity {
     @Column(length = 512)
     private String refreshToken;
 
+    // 회원 탈퇴 시각. null이면 정상 회원, 값이 있으면 탈퇴한 회원으로 간주한다(소프트 삭제).
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @Builder
     private User(String email, String password, String nickname, Provider provider, String providerId) {
         this.email = email;
@@ -80,5 +86,15 @@ public class User extends BaseEntity {
     // 비밀번호 재설정 완료 시 새 암호화 비밀번호로 교체 (평문은 이 메서드에 도달하기 전 PasswordEncoder로 암호화되어야 함)
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
+    }
+
+    // 회원 탈퇴 처리: 탈퇴 시각을 기록하고, 탈퇴 이후 기존 Refresh Token으로 재발급받지 못하도록 즉시 제거한다.
+    public void withdraw() {
+        this.deletedAt = LocalDateTime.now();
+        this.refreshToken = null;
+    }
+
+    public boolean isWithdrawn() {
+        return this.deletedAt != null;
     }
 }

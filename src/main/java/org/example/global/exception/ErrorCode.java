@@ -31,6 +31,8 @@ public enum ErrorCode {
 
     // 이메일 인증
     EMAIL_ALREADY_REGISTERED(HttpStatus.CONFLICT, "EMAIL_ALREADY_REGISTERED", "이미 가입된 이메일입니다."),
+    // 탈퇴한 계정의 이메일로 인증번호 발송/회원가입을 시도한 경우 — 재가입 기능은 아직 없으므로 명확히 안내
+    WITHDRAWN_EMAIL_SIGNUP_BLOCKED(HttpStatus.CONFLICT, "WITHDRAWN_EMAIL_SIGNUP_BLOCKED", "회원 탈퇴한 이메일로는 재가입할 수 없습니다."),
     EMAIL_CODE_RESEND_TOO_SOON(HttpStatus.TOO_MANY_REQUESTS, "EMAIL_CODE_RESEND_TOO_SOON", "인증번호는 60초 이후에 재전송할 수 있습니다."),
     EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "EMAIL_SEND_FAILED", "인증 이메일 발송에 실패했습니다."),
     EMAIL_VERIFICATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "EMAIL_VERIFICATION_NOT_FOUND", "인증번호 발송 이력이 없습니다. 인증번호를 다시 요청해주세요."),
@@ -54,6 +56,10 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN", "유효하지 않은 Refresh Token입니다."),
     REFRESH_TOKEN_MISMATCH(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_MISMATCH", "저장된 Refresh Token과 일치하지 않습니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "사용자를 찾을 수 없습니다."),
+
+    // 회원 탈퇴
+    USER_ALREADY_WITHDRAWN(HttpStatus.CONFLICT, "USER_ALREADY_WITHDRAWN", "이미 탈퇴한 사용자입니다."),
+    WITHDRAWN_USER(HttpStatus.UNAUTHORIZED, "WITHDRAWN_USER", "탈퇴한 계정입니다. 다시 로그인해주세요."),
 
     // 서버 오류
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다.");

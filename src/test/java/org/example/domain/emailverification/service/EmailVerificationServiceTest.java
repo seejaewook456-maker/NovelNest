@@ -3,6 +3,8 @@ package org.example.domain.emailverification.service;
 import org.example.domain.emailverification.entity.EmailVerification;
 import org.example.domain.emailverification.entity.Purpose;
 import org.example.domain.emailverification.repository.EmailVerificationRepository;
+import org.example.domain.user.entity.Provider;
+import org.example.domain.user.entity.User;
 import org.example.domain.user.repository.UserRepository;
 import org.example.global.event.EmailSendRequestedEvent;
 import org.example.global.exception.BusinessException;
@@ -46,7 +48,7 @@ class EmailVerificationServiceTest {
 
     @Test
     void 신규_이메일이면_인증번호를_발송하고_저장한다() {
-        given(userRepository.existsByEmail(EMAIL)).willReturn(false);
+        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.empty());
         given(emailVerificationRepository.findByEmailAndPurpose(EMAIL, Purpose.SIGN_UP)).willReturn(Optional.empty());
 
         emailVerificationService.sendCode(EMAIL);
@@ -57,7 +59,7 @@ class EmailVerificationServiceTest {
 
     @Test
     void 이미_가입된_이메일이면_발송을_거부한다() {
-        given(userRepository.existsByEmail(EMAIL)).willReturn(true);
+        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(activeUser()));
 
         assertThatThrownBy(() -> emailVerificationService.sendCode(EMAIL))
                 .isInstanceOf(BusinessException.class)
@@ -68,8 +70,20 @@ class EmailVerificationServiceTest {
     }
 
     @Test
+    void 탈퇴한_이메일이면_전용_메시지로_발송을_거부한다() {
+        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(withdrawnUser()));
+
+        assertThatThrownBy(() -> emailVerificationService.sendCode(EMAIL))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.WITHDRAWN_EMAIL_SIGNUP_BLOCKED);
+
+        verifyNoInteractions(eventPublisher);
+    }
+
+    @Test
     void 재전송_요청이_60초_이내면_거부한다() {
-        given(userRepository.existsByEmail(EMAIL)).willReturn(false);
+        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.empty());
         EmailVerification recent = createVerification(EMAIL, "111111", Purpose.SIGN_UP, LocalDateTime.now().minusSeconds(10),
                 LocalDateTime.now().plusMinutes(5));
         given(emailVerificationRepository.findByEmailAndPurpose(EMAIL, Purpose.SIGN_UP)).willReturn(Optional.of(recent));
@@ -158,5 +172,20 @@ class EmailVerificationServiceTest {
 
     private EmailVerification createVerification(String email, String code, Purpose purpose, LocalDateTime createdAt, LocalDateTime expiresAt) {
         return EmailVerification.create(email, code, purpose, createdAt, expiresAt);
+    }
+
+    private User activeUser() {
+        return User.builder()
+                .email(EMAIL)
+                .password("encodedPassword")
+                .nickname("홍길동")
+                .provider(Provider.LOCAL)
+                .build();
+    }
+
+    private User withdrawnUser() {
+        User user = activeUser();
+        user.withdraw();
+        return user;
     }
 }
