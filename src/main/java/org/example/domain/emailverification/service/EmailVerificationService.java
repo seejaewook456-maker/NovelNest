@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.domain.emailverification.entity.EmailVerification;
 import org.example.domain.emailverification.entity.Purpose;
 import org.example.domain.emailverification.repository.EmailVerificationRepository;
+import org.example.domain.user.entity.User;
 import org.example.domain.user.repository.UserRepository;
 import org.example.global.event.EmailSendRequestedEvent;
 import org.example.global.exception.BusinessException;
@@ -34,7 +35,12 @@ public class EmailVerificationService {
     // 회원가입 이메일 인증번호 발송 (기존 호출부 호환용 — 내부적으로 SIGN_UP 목적으로 위임)
     @Transactional
     public void sendCode(String email) {
-        if (userRepository.existsByEmail(email)) {
+        User existing = userRepository.findByEmail(email).orElse(null);
+        if (existing != null) {
+            // 탈퇴한 계정의 이메일은 재가입 기능이 없는 지금은 별도 문구로 명확히 구분해 안내한다.
+            if (existing.isWithdrawn()) {
+                throw new BusinessException(ErrorCode.WITHDRAWN_EMAIL_SIGNUP_BLOCKED);
+            }
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_REGISTERED);
         }
         String code = issueCode(email, Purpose.SIGN_UP);

@@ -35,6 +35,8 @@
   max-width: var(--content-max-width);
   margin: 0 auto;
   width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* =============================================
@@ -111,6 +113,19 @@
 .btn-ai:hover:not(:disabled) {
   background: var(--color-ai-hover);
   border-color: var(--color-ai-hover);
+}
+
+/* 회원 탈퇴처럼 "위험하지만 평소엔 눈에 띄면 안 되는" 동작 전용 — 기본은 차분한 회색,
+   hover에서만 경고색(danger)이 드러난다. */
+.btn-subtle-danger {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+.btn-subtle-danger:hover:not(:disabled) {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .btn-sm {
@@ -562,6 +577,31 @@ select {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+/* 작품 목록 페이지 루트 — 상단 콘텐츠(novel-list-body)가 flex: 1로 남은 세로 공간을
+   모두 차지해서, 아래의 회원 탈퇴 영역이 작품 수와 관계없이 항상 화면 맨 아래에 붙는다.
+   작품이 많아 콘텐츠가 뷰포트보다 길어지면 자연스럽게 콘텐츠 바로 아래로 내려온다. */
+.novel-list-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.novel-list-body {
+  flex: 1;
+}
+
+/* 작품 목록 하단 회원 탈퇴 영역 — 작품 관련 기능과 분리되도록 위쪽에 구분선 + 넉넉한 여백,
+   작품 생성/카드보다 시각적으로 확실히 덜 강조되어야 하므로 .btn-subtle-danger를 사용한다. */
+.withdraw-section {
+  margin-top: 56px;
+  padding-top: 20px;
+  padding-bottom: 24px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* =============================================
@@ -2008,6 +2048,30 @@ select {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+}
+
+/* =============================================
+   회원 탈퇴 확인 모달 (WithdrawConfirmModal)
+   ============================================= */
+/* 콘텐츠가 길어 모바일 소프트 키보드가 열렸을 때 잘릴 수 있으므로 자체 스크롤을 허용한다. */
+.withdraw-modal-box {
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.modal-warning-extra {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .withdraw-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .withdraw-modal-actions .btn {
+    width: 100%;
+  }
 }
 
 /* =============================================

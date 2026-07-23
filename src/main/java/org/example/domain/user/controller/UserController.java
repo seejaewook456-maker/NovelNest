@@ -81,4 +81,40 @@ public class UserController {
         UserInfoResponseDto response = userService.getMe(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.of("내 정보 조회 성공", response));
     }
+
+    @Operation(
+            summary = "회원 탈퇴",
+            description = "인증된 사용자 본인의 계정을 탈퇴 처리합니다(소프트 삭제). "
+                    + "탈퇴 시각(deletedAt)만 기록하며 계정을 즉시 물리 삭제하지 않고, 작성한 작품·회차·등장인물·세계관 데이터도 삭제되지 않고 그대로 유지됩니다. "
+                    + "탈퇴 이후에는 저장된 Refresh Token이 제거되어 재발급이 불가능하며, 기존 Access Token이 만료 전이더라도 더 이상 인증에 사용할 수 없습니다."
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200", description = "회원 탈퇴 성공",
+                    content = @Content(examples = @ExampleObject(
+                            name = "회원 탈퇴 성공",
+                            value = "{\"success\":true,\"code\":\"OK\",\"message\":\"회원 탈퇴가 완료되었습니다.\"}"
+                    ))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401", description = "인증 실패 (Access Token 없음/만료/유효하지 않음, 또는 이미 탈퇴한 계정의 토큰)",
+                    content = @Content(examples = @ExampleObject(
+                            name = "인증 실패",
+                            value = "{\"success\":false,\"code\":\"UNAUTHORIZED\",\"message\":\"인증이 필요합니다.\"}"
+                    ))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "409", description = "이미 탈퇴한 사용자",
+                    content = @Content(examples = @ExampleObject(
+                            name = "이미 탈퇴한 사용자",
+                            value = "{\"success\":false,\"code\":\"USER_ALREADY_WITHDRAWN\",\"message\":\"이미 탈퇴한 사용자입니다.\"}"
+                    ))
+            )
+    })
+    @DeleteMapping("/me")
+    public ResponseEntity<ApiResponse> withdraw(@AuthenticationPrincipal UserDetails userDetails) {
+        userService.withdraw(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.of("회원 탈퇴가 완료되었습니다."));
+    }
 }

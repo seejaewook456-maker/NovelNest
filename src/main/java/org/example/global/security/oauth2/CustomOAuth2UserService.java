@@ -41,12 +41,21 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     // ── Google ──────────────────────────────────────────────────────────────
 
-    private OAuth2User processGoogleUser(OAuth2User oAuth2User) {
+    // 테스트에서 super.loadUser()의 실제 HTTP 호출 없이 이 로직만 검증할 수 있도록 default 접근 제한자 유지
+    OAuth2User processGoogleUser(OAuth2User oAuth2User) {
         String email      = oAuth2User.getAttribute("email");
         String name       = oAuth2User.getAttribute("name");
         String providerId = oAuth2User.getAttribute("sub");
 
         Optional<User> existingOpt = userRepository.findByEmail(email);
+
+        // 탈퇴한 계정은 자동으로 복구하지 않는다 — 재가입 기능은 이번 범위 밖이므로 로그인 자체를 차단
+        if (existingOpt.isPresent() && existingOpt.get().isWithdrawn()) {
+            throw new OAuth2AuthenticationException(
+                new OAuth2Error("withdrawn_user"),
+                "탈퇴한 계정입니다. 다시 로그인해주세요."
+            );
+        }
 
         // 동일 이메일로 다른 Provider가 가입되어 있으면 거부
         if (existingOpt.isPresent() && existingOpt.get().getProvider() != Provider.GOOGLE) {
@@ -76,7 +85,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     // ── Kakao ───────────────────────────────────────────────────────────────
 
     @SuppressWarnings("unchecked")
-    private OAuth2User processKakaoUser(OAuth2User oAuth2User, String nameAttributeKey) {
+    OAuth2User processKakaoUser(OAuth2User oAuth2User, String nameAttributeKey) {
         String providerId = String.valueOf((Object) oAuth2User.getAttribute("id"));
 
         // 카카오 응답에서 이메일 / 닉네임 파싱 (중첩 구조)
@@ -104,6 +113,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         // provider+providerId 기준으로 기존 회원 조회 → 없으면 자동 회원가입
         User user = userRepository.findByProviderAndProviderId(Provider.KAKAO, providerId)
                 .map(existingUser -> {
+                    // 탈퇴한 계정은 자동으로 복구하지 않는다 — 재가입 기능은 이번 범위 밖이므로 로그인 자체를 차단
+                    if (existingUser.isWithdrawn()) {
+                        throw new OAuth2AuthenticationException(
+                            new OAuth2Error("withdrawn_user"),
+                            "탈퇴한 계정입니다. 다시 로그인해주세요."
+                        );
+                    }
                     log.info("Kakao OAuth2 login. userId={}", existingUser.getId());
                     return existingUser;
                 })
@@ -111,6 +127,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     // 실제 이메일이 있을 때만 다른 Provider 충돌 확인
                     if (finalEmail != null && !finalEmail.isBlank()) {
                         userRepository.findByEmail(finalEmail).ifPresent(existing -> {
+                            if (existing.isWithdrawn()) {
+                                throw new OAuth2AuthenticationException(
+                                    new OAuth2Error("withdrawn_user"),
+                                    "탈퇴한 계정입니다. 다시 로그인해주세요."
+                                );
+                            }
                             if (existing.getProvider() != Provider.KAKAO) {
                                 throw new OAuth2AuthenticationException(
                                     new OAuth2Error("email_already_exists"),

@@ -40,6 +40,12 @@ export const logout = async (): Promise<void> => {
   await fetchWithAuth('/auth/logout', { method: 'POST' });
 };
 
+// 회원 탈퇴 — 서버에서 소프트 삭제(deletedAt 기록) + Refresh Token 제거까지 처리한다.
+// 로컬 토큰/인증 상태 정리는 이 요청이 성공한 뒤 호출부에서 수행해야 한다 (먼저 지우면 인증 실패로 이어짐).
+export const withdrawUser = async (): Promise<void> => {
+  await fetchWithAuth('/users/me', { method: 'DELETE' });
+};
+
 export const signup = async (body: SignupRequest): Promise<void> => {
   const res = await fetch(`${API_BASE_URL}/users/signup`, {
     method: 'POST',
