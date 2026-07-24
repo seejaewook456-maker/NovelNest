@@ -26,10 +26,20 @@ public class OpenAiService {
      * @return AI가 생성한 텍스트
      */
     public String generateText(String instructions, String input) {
+        return generateText(instructions, input, null);
+    }
+
+    /**
+     * 최대 출력 토큰을 지정해 OpenAI Responses API를 호출한다.
+     *
+     * @param maxOutputTokens 응답 최대 출력 토큰. null이면 제한을 지정하지 않는다.
+     */
+    public String generateText(String instructions, String input, Integer maxOutputTokens) {
         OpenAiRequestDto request = OpenAiRequestDto.builder()
                 .model(openAiConfig.getModel())
                 .instructions(instructions)
                 .input(input)
+                .maxOutputTokens(maxOutputTokens)
                 .build();
 
         try {

@@ -4,23 +4,22 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.domain.character.entity.Character;
-import org.example.domain.character.repository.CharacterRepository;
 import org.example.domain.conflictdetection.dto.ConflictDetectionResponseDto;
 import org.example.domain.conflictdetection.dto.ConflictResultDto;
 import org.example.domain.conflictdetection.entity.ConflictDetectionResult;
 import org.example.domain.conflictdetection.repository.ConflictDetectionResultRepository;
 import org.example.domain.episode.entity.Episode;
 import org.example.domain.episode.repository.EpisodeRepository;
-import org.example.domain.episodesummary.entity.EpisodeSummary;
-import org.example.domain.episodesummary.repository.EpisodeSummaryRepository;
 import org.example.domain.novel.entity.Novel;
 import org.example.domain.user.entity.User;
 import org.example.domain.user.repository.UserRepository;
-import org.example.domain.worldsetting.entity.WorldSetting;
-import org.example.domain.worldsetting.repository.WorldSettingRepository;
+import org.example.global.ai.context.CharacterContext;
+import org.example.global.ai.context.EpisodeSummaryContext;
+import org.example.global.ai.context.NovelAiContext;
+import org.example.global.ai.context.NovelAiContextService;
+import org.example.global.ai.context.WorldSettingContext;
 import org.example.global.ai.service.OpenAiService;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,8 +35,23 @@ public class ConflictDetectionService {
 
     // 작가의 창작을 존중하면서 충돌 가능성만 제안하도록 역할 지시
     private static final String DETECTION_INSTRUCTIONS =
-            "당신은 소설 설정 충돌 탐지 전문가입니다. 주어진 회차 본문과 기존 설정(등장인물, 세계관, 이전 회차 요약)을 비교하여 충돌 가능성을 분석합니다.\n\n" +
-            "반드시 다음 규칙을 따르세요:\n" +
+            "당신은 소설 설정 충돌 탐지 전문가입니다. 주어진 새 회차 본문과 기존 설정(등장인물, 세계관, 직전 회차 요약)을 비교하여 충돌 가능성을 분석합니다.\n\n" +
+            "[판단 원칙]\n" +
+            "1. 제공된 기존 설정과 새 회차 본문을 비교합니다. 등록된 등장인물·세계관 설정을 가장 중요한 기준으로 삼으세요.\n" +
+            "2. 직전 회차 요약은 최근 사건과 상태 변화를 확인하는 보조 자료로만 사용하세요.\n" +
+            "3. 참고 데이터에 없는 내용을 임의로 만들어내 충돌이라고 판단하지 마세요.\n" +
+            "4. 정보가 부족해 판단할 수 없는 부분은 충돌로 단정하지 말고, 충돌이 확실한 경우에만 결과에 포함하세요.\n" +
+            "5. 설정의 자연스러운 변화(시간 경과에 따른 성장, 사건에 따른 관계 변화 등)와 실제 모순을 구분하세요.\n" +
+            "6. 새 회차 본문 자체 안에서 발생하는 내부 모순도 함께 감지하세요.\n" +
+            "7. 충돌 근거가 되는 기존 설정 또는 회차를 existingInfo에 명확히 표시하세요.\n\n" +
+            "[실제 충돌로 볼 수 있는 사례]\n" +
+            "사망한 인물이 설명 없이 다시 등장 / 파괴된 물건이 복구 설명 없이 재등장 / 기존 성별·나이·외형이 설명 없이 변경 / " +
+            "능력 제한과 맞지 않는 행동 / 세계관 규칙과 어긋나는 사건 / 인물 관계가 설명 없이 반대로 변경 / " +
+            "직전 회차의 장소·부상·소지품 상태와 불일치\n\n" +
+            "[충돌로 판단하지 말아야 할 사례]\n" +
+            "시간 경과에 따른 나이 증가 / 사건을 통한 소속·관계 변경 / 치료나 각성으로 인한 상태 변화 / " +
+            "새롭게 공개된 설정 / 의도적인 거짓말 또는 인물의 오해\n\n" +
+            "[출력 형식 규칙]\n" +
             "1. 순수 JSON 배열만 반환하세요. 설명, 마크다운 코드블록 등 다른 텍스트는 절대 포함하지 마세요.\n" +
             "2. 충돌이 없으면 빈 배열 []만 반환하세요.\n" +
             "3. 작가의 창작을 검열하거나 수정하지 마세요. 충돌 가능성만 지적하세요.\n" +
@@ -48,13 +62,14 @@ public class ConflictDetectionService {
             "8. 동일한 충돌을 중복 보고하지 마세요.";
 
     private final EpisodeRepository episodeRepository;
-    private final CharacterRepository characterRepository;
-    private final WorldSettingRepository worldSettingRepository;
-    private final EpisodeSummaryRepository episodeSummaryRepository;
     private final ConflictDetectionResultRepository conflictDetectionResultRepository;
     private final UserRepository userRepository;
+    private final NovelAiContextService novelAiContextService;
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
+
+    @Value("${app.ai.conflict.max-output-tokens}")
+    private int conflictMaxOutputTokens;
 
     // AI 충돌 탐지 실행 후 결과를 DB에 upsert
     @Transactional
@@ -65,17 +80,11 @@ public class ConflictDetectionService {
         validateOwner(novel, user);
 
         log.info("Conflict detection started. episodeId={}, userId={}", episodeId, user.getId());
-        List<Character> characters = characterRepository.findAllByNovelOrderByIsFavoriteDescNameAsc(novel);
-        List<WorldSetting> worldSettings = worldSettingRepository.findAllByNovelOrderByCategoryAscIsFavoriteDescTitleAsc(novel);
 
-        List<EpisodeSummary> recentSummaries = episodeSummaryRepository
-                .findRecentSummariesByNovel(novel, PageRequest.of(0, 10))
-                .stream()
-                .filter(s -> s.getEpisode().getEpisodeNumber() < episode.getEpisodeNumber())
-                .collect(Collectors.toList());
+        NovelAiContext context = novelAiContextService.buildForConflictDetection(novel, episode.getEpisodeNumber());
 
-        String input = buildInput(episode, novel, characters, worldSettings, recentSummaries);
-        String aiResponse = openAiService.generateText(DETECTION_INSTRUCTIONS, input);
+        String input = buildInput(episode, novel, context);
+        String aiResponse = openAiService.generateText(DETECTION_INSTRUCTIONS, input, conflictMaxOutputTokens);
         List<ConflictResultDto> conflicts = parseJson(aiResponse);
 
         // 결과를 JSON으로 직렬화해 DB에 upsert — 재분석 시 기존 결과를 덮어씀
@@ -114,11 +123,8 @@ public class ConflictDetectionService {
                 .orElse(null);
     }
 
-    // AI에게 전달하는 입력 텍스트 조립
-    private String buildInput(Episode episode, Novel novel,
-                              List<Character> characters,
-                              List<WorldSetting> worldSettings,
-                              List<EpisodeSummary> recentSummaries) {
+    // AI에게 전달하는 입력 텍스트 조립 — [기존 등장인물 설정] → [기존 세계관 설정] → [직전 회차 요약] → [검사할 새 회차 본문] 순
+    private String buildInput(Episode episode, Novel novel, NovelAiContext context) {
         StringBuilder sb = new StringBuilder();
 
         // 작품 정보
@@ -127,81 +133,63 @@ public class ConflictDetectionService {
         sb.append("장르: ").append(novel.getGenre() != null ? novel.getGenre() : "없음").append("\n");
         sb.append("설명: ").append(novel.getDescription() != null ? novel.getDescription() : "없음").append("\n\n");
 
-        // 현재 회차 본문
-        sb.append("[현재 회차]\n");
+        // 기존 등장인물 설정
+        sb.append("[기존 등장인물 설정]\n");
+        List<CharacterContext> characters = context.characters();
+        if (characters.isEmpty()) {
+            sb.append("등록된 등장인물 정보 없음\n");
+        } else {
+            sb.append(toJson(characters.stream().map(c -> {
+                Map<String, Object> map = new LinkedHashMap<>();
+                map.put("name", c.name());
+                map.put("role", c.role() != null ? c.role() : "");
+                map.put("age", c.age() != null ? c.age() : "");
+                map.put("personality", c.personality() != null ? c.personality() : "");
+                map.put("speechStyle", c.speechStyle() != null ? c.speechStyle() : "");
+                map.put("description", c.description() != null ? c.description() : "");
+                return map;
+            }).collect(Collectors.toList()))).append("\n");
+        }
+        sb.append("\n");
+
+        // 기존 세계관 설정
+        sb.append("[기존 세계관 설정]\n");
+        List<WorldSettingContext> worldSettings = context.worldSettings();
+        if (worldSettings.isEmpty()) {
+            sb.append("등록된 세계관 정보 없음\n");
+        } else {
+            sb.append(toJson(worldSettings.stream().map(w -> {
+                Map<String, Object> map = new LinkedHashMap<>();
+                map.put("category", w.category());
+                map.put("title", w.title());
+                map.put("content", w.content() != null ? w.content() : "");
+                return map;
+            }).collect(Collectors.toList()))).append("\n");
+        }
+        sb.append("\n");
+
+        // 직전 회차 요약 (회차 번호 오름차순 — 시간 순으로 맥락 파악)
+        sb.append("[직전 회차 요약]\n");
+        List<EpisodeSummaryContext> summaries = context.episodeSummaries();
+        if (summaries.isEmpty()) {
+            sb.append("이전 회차 요약이 없습니다.\n");
+        } else {
+            for (EpisodeSummaryContext es : summaries) {
+                sb.append(es.episodeNumber()).append("화 - ")
+                  .append(es.episodeTitle()).append(": ")
+                  .append(es.summary()).append("\n");
+            }
+        }
+        sb.append("\n");
+
+        // 검사할 새 회차 본문
+        sb.append("[검사할 새 회차 본문]\n");
         sb.append("회차 번호: ").append(episode.getEpisodeNumber()).append("화\n");
         sb.append("제목: ").append(episode.getTitle()).append("\n");
         sb.append("본문:\n").append(episode.getContent()).append("\n\n");
 
-        // 등장인물 목록
-        sb.append("[등장인물 목록]\n");
-        if (characters.isEmpty()) {
-            sb.append("등록된 등장인물이 없습니다.\n");
-        } else {
-            try {
-                List<Map<String, Object>> charList = characters.stream()
-                        .map(c -> {
-                            Map<String, Object> map = new LinkedHashMap<>();
-                            map.put("id", c.getId());
-                            map.put("name", c.getName());
-                            map.put("role", c.getRole() != null ? c.getRole() : "");
-                            map.put("age", c.getAge() != null ? c.getAge() : "");
-                            map.put("personality", c.getPersonality() != null ? c.getPersonality() : "");
-                            map.put("speechStyle", c.getSpeechStyle() != null ? c.getSpeechStyle() : "");
-                            map.put("description", c.getDescription() != null ? c.getDescription() : "");
-                            return map;
-                        })
-                        .collect(Collectors.toList());
-                sb.append(objectMapper.writeValueAsString(charList)).append("\n");
-            } catch (Exception e) {
-                sb.append("[]\n");
-            }
-        }
-        sb.append("\n");
-
-        // 세계관 설정 목록
-        sb.append("[세계관 설정 목록]\n");
-        if (worldSettings.isEmpty()) {
-            sb.append("등록된 세계관 설정이 없습니다.\n");
-        } else {
-            try {
-                List<Map<String, Object>> settingList = worldSettings.stream()
-                        .map(s -> {
-                            Map<String, Object> map = new LinkedHashMap<>();
-                            map.put("id", s.getId());
-                            map.put("category", s.getCategory().name());
-                            map.put("title", s.getTitle());
-                            map.put("content", s.getContent());
-                            return map;
-                        })
-                        .collect(Collectors.toList());
-                sb.append(objectMapper.writeValueAsString(settingList)).append("\n");
-            } catch (Exception e) {
-                sb.append("[]\n");
-            }
-        }
-        sb.append("\n");
-
-        // 이전 회차 요약 (회차 번호 오름차순 — 시간 순으로 맥락 파악)
-        sb.append("[이전 회차 요약 (최근 최대 10개)]\n");
-        if (recentSummaries.isEmpty()) {
-            sb.append("이전 회차 요약이 없습니다.\n");
-        } else {
-            List<EpisodeSummary> ordered = recentSummaries.stream()
-                    .sorted((a, b) -> Integer.compare(
-                            a.getEpisode().getEpisodeNumber(),
-                            b.getEpisode().getEpisodeNumber()))
-                    .collect(Collectors.toList());
-            for (EpisodeSummary es : ordered) {
-                sb.append(es.getEpisode().getEpisodeNumber()).append("화 - ")
-                  .append(es.getEpisode().getTitle()).append(": ")
-                  .append(es.getSummary()).append("\n");
-            }
-        }
-        sb.append("\n");
-
         // 출력 형식 지시
-        sb.append("위 정보를 바탕으로 현재 회차에서 발견되는 충돌 가능성을 아래 형식의 JSON 배열로만 반환하세요:\n");
+        sb.append("위 정보를 바탕으로 새 회차에서 발견되는 충돌 가능성을 아래 형식의 JSON 배열로만 반환하세요:\n");
         sb.append("[{");
         sb.append("\"type\":\"CONFLICT_TYPE\",");
         sb.append("\"severity\":\"HIGH 또는 MEDIUM 또는 LOW\",");
@@ -213,6 +201,14 @@ public class ConflictDetectionService {
         sb.append("}]");
 
         return sb.toString();
+    }
+
+    private String toJson(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (Exception e) {
+            return "[]";
+        }
     }
 
     // OpenAI 응답 텍스트 → List<ConflictResultDto> 파싱
