@@ -37,7 +37,9 @@ public class WorldSettingExtractionService {
             "4. 신규 설정은 isExistingSetting을 false로, matchedWorldSettingId를 null로 설정하세요.\n" +
             "5. newInsights는 기존 설정에만 사용하며, 기존 content에 없는 새로운 정보만 리스트로 포함하세요.\n" +
             "6. evidence는 해당 설정을 뒷받침하는 회차 내 구체적인 장면이나 대사를 기록하세요.\n" +
-            "7. category는 반드시 COUNTRY/RACE/MAGIC/ORGANIZATION/PLACE/EVENT/ITEM/RULE/ETC 중 하나로 설정하세요.";
+            "7. category는 반드시 COUNTRY/RACE/MAGIC/ORGANIZATION/PLACE/EVENT/ITEM/RULE/ETC 중 하나로 설정하세요.\n" +
+            "8. 모든 문자열 값은 유효한 JSON 문자열이어야 합니다. 값 안에 큰따옴표(\")가 필요하면 반드시 \\\"로 이스케이프하거나 " +
+            "작은따옴표(')로 바꿔 쓰세요. 줄바꿈이 필요하면 \\n으로 이스케이프하세요. 대사를 인용할 때 특히 주의하세요.";
 
     private final EpisodeRepository episodeRepository;
     private final WorldSettingRepository worldSettingRepository;
