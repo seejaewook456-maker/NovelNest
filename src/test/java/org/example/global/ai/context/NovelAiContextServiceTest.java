@@ -6,6 +6,8 @@ import org.example.domain.episode.entity.Episode;
 import org.example.domain.episodesummary.entity.EpisodeSummary;
 import org.example.domain.episodesummary.repository.EpisodeSummaryRepository;
 import org.example.domain.novel.entity.Novel;
+import org.example.domain.worldsetting.entity.WorldSetting;
+import org.example.domain.worldsetting.entity.WorldSettingCategory;
 import org.example.domain.worldsetting.repository.WorldSettingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -81,6 +83,14 @@ class NovelAiContextServiceTest {
         return character;
     }
 
+    private WorldSetting worldSetting(String title, boolean favorite, LocalDateTime updatedAt) {
+        WorldSetting worldSetting = WorldSetting.builder()
+                .novel(novel).category(WorldSettingCategory.ETC).title(title).content("내용").build();
+        worldSetting.updateFavorite(favorite);
+        ReflectionTestUtils.setField(worldSetting, "updatedAt", updatedAt);
+        return worldSetting;
+    }
+
     @Test
     void 채팅용_컨텍스트는_설정된_개수만큼_최근_회차요약만_조회한다() {
         List<EpisodeSummary> recent = List.of(
@@ -107,7 +117,8 @@ class NovelAiContextServiceTest {
         given(episodeSummaryRepository.findRecentSummariesBeforeEpisode(eq(novel), eq(100), any(Pageable.class)))
                 .willReturn(List.of(summary(episode(99, "99화"), "99화 요약")));
 
-        novelAiContextService.buildForConflictDetection(novel, 100);
+        Episode targetEpisode = episode(100, "100화");
+        novelAiContextService.buildForConflictDetection(novel, targetEpisode);
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(episodeSummaryRepository).findRecentSummariesBeforeEpisode(eq(novel), eq(100), pageableCaptor.capture());
@@ -130,6 +141,77 @@ class NovelAiContextServiceTest {
 
         assertThat(context.characters()).extracting(CharacterContext::name)
                 .containsExactly("즐겨찾기캐릭터", "최근수정캐릭터");
+    }
+
+    @Test
+    void 충돌감지에서_현재회차에_언급된_인물이_즐겨찾기보다_우선한다() {
+        Episode target = episode(100, "100화");
+        ReflectionTestUtils.setField(target, "content", "레온이 검을 뽑았다.");
+        given(episodeSummaryRepository.findRecentSummariesBeforeEpisode(any(), anyInt(), any())).willReturn(List.of());
+
+        Character mentioned = character("레온", false, LocalDateTime.now().minusDays(30));
+        Character favorite = character("이리스", true, LocalDateTime.now().minusDays(30));
+        Character neither = character("몬스터병사", false, LocalDateTime.now());
+        given(characterRepository.findAllByNovelOrderByIsFavoriteDescNameAsc(novel))
+                .willReturn(List.of(mentioned, favorite, neither));
+
+        NovelAiContext context = novelAiContextService.buildForConflictDetection(novel, target);
+
+        // 언급(100점) > 즐겨찾기(50점) > 둘 다 아님(0점, 최근수정순)
+        assertThat(context.characters()).extracting(CharacterContext::name)
+                .containsExactly("레온", "이리스", "몬스터병사");
+    }
+
+    @Test
+    void 충돌감지에서_언급되고_즐겨찾기인_인물이_최우선이다() {
+        Episode target = episode(100, "100화");
+        ReflectionTestUtils.setField(target, "content", "레온과 이리스가 함께 싸웠다.");
+        given(episodeSummaryRepository.findRecentSummariesBeforeEpisode(any(), anyInt(), any())).willReturn(List.of());
+
+        Character mentionedAndFavorite = character("레온", true, LocalDateTime.now().minusDays(30));
+        Character mentionedOnly = character("이리스", false, LocalDateTime.now().minusDays(30));
+        Character favoriteOnly = character("카인", true, LocalDateTime.now().minusDays(30));
+        given(characterRepository.findAllByNovelOrderByIsFavoriteDescNameAsc(novel))
+                .willReturn(List.of(mentionedOnly, mentionedAndFavorite, favoriteOnly));
+
+        NovelAiContext context = novelAiContextService.buildForConflictDetection(novel, target);
+
+        // 언급+즐겨찾기(150점) > 언급만(100점) > 즐겨찾기만(50점)
+        assertThat(context.characters()).extracting(CharacterContext::name)
+                .containsExactly("레온", "이리스", "카인");
+    }
+
+    @Test
+    void 세계관도_동일한_우선순위_정책이_적용된다() {
+        Episode target = episode(100, "100화");
+        ReflectionTestUtils.setField(target, "content", "고대 마법 회로가 발동했다.");
+        given(episodeSummaryRepository.findRecentSummariesBeforeEpisode(any(), anyInt(), any())).willReturn(List.of());
+
+        WorldSetting mentioned = worldSetting("고대 마법 회로", false, LocalDateTime.now().minusDays(30));
+        WorldSetting favorite = worldSetting("왕국 연대기", true, LocalDateTime.now().minusDays(30));
+        given(worldSettingRepository.findAllByNovelOrderByCategoryAscIsFavoriteDescTitleAsc(novel))
+                .willReturn(List.of(favorite, mentioned));
+
+        NovelAiContext context = novelAiContextService.buildForConflictDetection(novel, target);
+
+        assertThat(context.worldSettings()).extracting(WorldSettingContext::title)
+                .containsExactly("고대 마법 회로", "왕국 연대기");
+    }
+
+    @Test
+    void 채팅에서는_언급여부를_판단할_대상회차가_없어_즐겨찾기_우선순위만_적용된다() {
+        given(episodeSummaryRepository.findRecentSummariesByNovel(any(), any())).willReturn(List.of());
+
+        // "레온"이라는 이름이 다른 인물 설명에 우연히 등장해도, 채팅에는 기준이 될 회차 본문이 없으므로 무시되어야 한다
+        Character favorite = character("레온", true, LocalDateTime.now().minusDays(30));
+        Character nonFavorite = character("이리스", false, LocalDateTime.now());
+        given(characterRepository.findAllByNovelOrderByIsFavoriteDescNameAsc(novel))
+                .willReturn(List.of(nonFavorite, favorite));
+
+        NovelAiContext context = novelAiContextService.buildForChat(novel);
+
+        assertThat(context.characters()).extracting(CharacterContext::name)
+                .containsExactly("레온", "이리스");
     }
 
     @Test

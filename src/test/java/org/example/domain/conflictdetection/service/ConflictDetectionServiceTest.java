@@ -89,7 +89,7 @@ class ConflictDetectionServiceTest {
     void AI_호출은_한번만_실행되고_설정된_최대출력토큰이_전달된다() {
         given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(owner));
         given(episodeRepository.findById(100L)).willReturn(Optional.of(episode));
-        given(novelAiContextService.buildForConflictDetection(novel, 100)).willReturn(sampleContext());
+        given(novelAiContextService.buildForConflictDetection(novel, episode)).willReturn(sampleContext());
         given(openAiService.generateText(anyString(), anyString(), eq(MAX_OUTPUT_TOKENS))).willReturn("[]");
         given(conflictDetectionResultRepository.findByEpisode(episode)).willReturn(Optional.empty());
         given(conflictDetectionResultRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
@@ -97,14 +97,14 @@ class ConflictDetectionServiceTest {
         conflictDetectionService.detectConflicts(EMAIL, 100L);
 
         verify(openAiService, times(1)).generateText(anyString(), anyString(), eq(MAX_OUTPUT_TOKENS));
-        verify(novelAiContextService).buildForConflictDetection(novel, 100);
+        verify(novelAiContextService).buildForConflictDetection(novel, episode);
     }
 
     @Test
     void 새회차_본문과_등장인물_세계관_직전요약이_프롬프트에_포함된다() {
         given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(owner));
         given(episodeRepository.findById(100L)).willReturn(Optional.of(episode));
-        given(novelAiContextService.buildForConflictDetection(novel, 100)).willReturn(sampleContext());
+        given(novelAiContextService.buildForConflictDetection(novel, episode)).willReturn(sampleContext());
         given(openAiService.generateText(anyString(), anyString(), any())).willReturn("[]");
         given(conflictDetectionResultRepository.findByEpisode(episode)).willReturn(Optional.empty());
         given(conflictDetectionResultRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
@@ -142,7 +142,7 @@ class ConflictDetectionServiceTest {
 
         given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(owner));
         given(episodeRepository.findById(100L)).willReturn(Optional.of(episode));
-        given(novelAiContextService.buildForConflictDetection(novel, 100)).willReturn(sampleContext());
+        given(novelAiContextService.buildForConflictDetection(novel, episode)).willReturn(sampleContext());
         given(openAiService.generateText(anyString(), anyString(), any())).willReturn("[]");
         given(conflictDetectionResultRepository.findByEpisode(episode)).willReturn(Optional.of(existing));
 

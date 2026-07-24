@@ -92,8 +92,8 @@ app:
       # 참고 데이터 전체 문자 수 상한 — 회차가 아무리 많아져도 이 값을 넘지 않는다.
       chat-recent-episode-count: ${AI_CHAT_RECENT_EPISODE_COUNT:10}
       conflict-recent-episode-count: ${AI_CONFLICT_RECENT_EPISODE_COUNT:5}
-      max-character-count: ${AI_CONTEXT_MAX_CHARACTER_COUNT:100}
-      max-worldview-count: ${AI_CONTEXT_MAX_WORLDVIEW_COUNT:200}
+      max-character-count: ${AI_CONTEXT_MAX_CHARACTER_COUNT:200}
+      max-worldview-count: ${AI_CONTEXT_MAX_WORLDVIEW_COUNT:400}
       max-context-characters: ${AI_CONTEXT_MAX_CHARACTERS:50000}
 
 springdoc:

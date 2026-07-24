@@ -81,7 +81,7 @@ public class ConflictDetectionService {
 
         log.info("Conflict detection started. episodeId={}, userId={}", episodeId, user.getId());
 
-        NovelAiContext context = novelAiContextService.buildForConflictDetection(novel, episode.getEpisodeNumber());
+        NovelAiContext context = novelAiContextService.buildForConflictDetection(novel, episode);
 
         String input = buildInput(episode, novel, context);
         String aiResponse = openAiService.generateText(DETECTION_INSTRUCTIONS, input, conflictMaxOutputTokens);
