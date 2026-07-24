@@ -59,7 +59,11 @@ public class ConflictDetectionService {
             "5. '검토 필요', '충돌 가능성이 있습니다' 같은 표현을 사용하고 단정하지 마세요.\n" +
             "6. type은 CHARACTER_CONFLICT / PERSONALITY_CONFLICT / RELATIONSHIP_CONFLICT / WORLD_SETTING_CONFLICT / ABILITY_CONFLICT / TIMELINE_CONFLICT 중 하나로 설정하세요.\n" +
             "7. severity 기준: HIGH(사망/생존 충돌, 나이 등 명확한 정보 충돌, 세계관 규칙 위반), MEDIUM(성격 급변, 관계 설정 애매, 능력 조건 불명확), LOW(추가 설명 권장, 독자 혼동 우려).\n" +
-            "8. 동일한 충돌을 중복 보고하지 마세요.";
+            "8. 동일한 충돌을 중복 보고하지 마세요.\n" +
+            "9. 모든 문자열 값은 유효한 JSON 문자열이어야 합니다. 값 안에 큰따옴표(\")가 필요하면 반드시 \\\"로 이스케이프하거나 " +
+            "작은따옴표(')로 바꿔 쓰세요. 줄바꿈이 필요하면 \\n으로 이스케이프하세요. 대사를 인용할 때 특히 주의하세요.\n" +
+            "10. 응답 길이 제한을 넘겨 JSON이 잘리지 않도록, 충돌은 최대 10개까지만 severity가 높은 순으로 보고하고, " +
+            "각 필드(특히 description, suggestion)는 1~2문장으로 간결하게 작성하세요.";
 
     private final EpisodeRepository episodeRepository;
     private final ConflictDetectionResultRepository conflictDetectionResultRepository;

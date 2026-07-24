@@ -38,7 +38,9 @@ public class CharacterExtractionService {
             "4. 신규 인물은 isExistingCharacter를 false로, matchedCharacterId를 null로 설정하세요.\n" +
             "5. newInsights는 기존 인물에만 사용하며, 기존 정보에 없는 새로운 성격·말투만 리스트로 포함하세요.\n" +
             "6. evidence는 해당 특성을 뒷받침하는 회차 내 구체적인 장면이나 대사를 기록하세요.\n" +
-            "7. age는 반드시 숫자(정수) 또는 null로 설정하세요. 문자열로 작성하지 마세요.";
+            "7. age는 반드시 숫자(정수) 또는 null로 설정하세요. 문자열로 작성하지 마세요.\n" +
+            "8. 모든 문자열 값은 유효한 JSON 문자열이어야 합니다. 값 안에 큰따옴표(\")가 필요하면 반드시 \\\"로 이스케이프하거나 " +
+            "작은따옴표(')로 바꿔 쓰세요. 줄바꿈이 필요하면 \\n으로 이스케이프하세요. 대사를 인용할 때 특히 주의하세요.";
 
     private final EpisodeRepository episodeRepository;
     private final CharacterRepository characterRepository;
