@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createCharacter, updateCharacter } from '../api/characterApi';
 import { linkCharacterToEpisode } from '../api/episodeCharacterApi';
@@ -78,6 +78,11 @@ export default function CharacterReviewPage() {
       setEditedDescription(c.description ?? '');
     }
     setError('');
+  }, [currentIndex]);
+
+  // 새 후보 카드가 표시될 때마다 스크롤을 맨 위로 즉시 이동 (부드러운 스크롤 없이)
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
   }, [currentIndex]);
 
   const goNext = () => {

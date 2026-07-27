@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createWorldSetting, updateWorldSetting } from '../api/worldSettingApi';
 import { linkWorldSettingToEpisode } from '../api/episodeWorldSettingApi';
@@ -58,6 +58,11 @@ export default function WorldSettingReviewPage() {
     setEditedTitle(current.title);
     setEditedContent(current.content);
     setError('');
+  }, [currentIndex]);
+
+  // 새 후보 카드가 표시될 때마다 스크롤을 맨 위로 즉시 이동 (부드러운 스크롤 없이)
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
   }, [currentIndex]);
 
   // 모든 훅 호출이 끝난 뒤에만 조기 반환한다 — isValid가 false인 렌더에서도
