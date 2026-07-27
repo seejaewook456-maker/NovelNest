@@ -399,7 +399,13 @@ export default function EpisodeDetailPage() {
         </EpisodeWorkspace>
       ) : (
         <>
+        {/* 본문 박스 / AI 도구 박스 — 넓은 화면(1200px~)에서는 좌우 2열(6:4), 좁은 화면에서는 세로 스택 */}
+        <div className="episode-detail-layout">
+        {/* "← 회차 목록" — 좁은 화면에서는 맨 위에 그대로 표시되고, 1200px 이상에서는
+            CSS로 AI 도구 박스 우측 상단에 재배치된다(컴포넌트 중복 렌더링 없음). */}
+        <div className="episode-detail-back-link">
           <BackLink label="← 회차 목록" onClick={() => navigate(`/novels/${episode.novelId}/episodes`)} />
+        </div>
         <div className="episode-detail">
           <div className="ep-header">
             <div>
@@ -422,20 +428,22 @@ export default function EpisodeDetailPage() {
               <Button variant="ghost" size="sm" onClick={handleCopyContent}>
                 {copied ? '✓ 복사됨' : '📋 본문 복사'}
               </Button>
-              <Button variant="ghost" size="sm" onClick={scrollToAiTools}>
+              {/* 데스크톱 2열 레이아웃에서는 AI 도구가 이미 오른쪽에 보이므로 CSS로 숨김(.ai-tools-jump-btn) */}
+              <Button variant="ghost" size="sm" onClick={scrollToAiTools} className="ai-tools-jump-btn">
                 ▼ AI 도구로 이동
               </Button>
             </div>
           </div>
 
           <div className="episode-content">{episode.content}</div>
+        </div>
 
-          {/* AI 도구 영역 — 스크롤 대상 */}
-          <div ref={aiToolsRef}>
+          {/* AI 도구 영역 — 독립된 박스. 좁은 화면에서 scrollToAiTools의 스크롤 대상이기도 하다 */}
+          <div className="episode-ai-tools-box" ref={aiToolsRef}>
             <div className="ai-tools-header">
               <h3 className="ai-tools-title">AI 도구</h3>
               <p className="ai-tools-desc">
-                이 회차를 요약하고, 등장인물/세계관을 추출하고, 설정 충돌을 감지할 수 있습니다.
+                이 회차를 요약하고, 설정 충돌을 감지하고, 등장인물/세계관을 추출할 수 있습니다.
               </p>
             </div>
 
@@ -462,63 +470,7 @@ export default function EpisodeDetailPage() {
             )}
           </div>
 
-          {/* AI 등장인물 추출 섹션 */}
-          <div className="ai-section">
-            <div className="ai-section-header">
-              <h3>AI 등장인물 추출</h3>
-              <Button variant="primary" size="sm" onClick={handleExtractCharacters} disabled={extractionLoading}>
-                {extractionLoading ? '분석 중...' : 'AI 등장인물 추출'}
-              </Button>
-            </div>
-            {extractionError && <p className="error-message">{extractionError}</p>}
-            {episodeCharacters.length > 0 ? (
-              <div className="episode-character-list">
-                {episodeCharacters.map((c) => (
-                  <div key={c.id} className="episode-character-card">
-                    <div className="episode-character-name">{c.name}</div>
-                    {c.role && <div className="episode-character-role">{c.role}</div>}
-                    <span className="badge-ai-extracted">AI 추출</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              !extractionLoading && (
-                <p className="summary-empty">
-                  AI가 이 회차의 등장인물을 분석합니다. 추출 후 1명씩 검토해 저장할 수 있습니다.
-                </p>
-              )
-            )}
-          </div>
-
-          {/* 세계관 AI 추출 섹션 */}
-          <div className="ai-section">
-            <div className="ai-section-header">
-              <h3>AI 세계관 추출</h3>
-              <Button variant="primary" size="sm" onClick={handleExtractWorldSettings} disabled={wsExtractionLoading}>
-                {wsExtractionLoading ? '분석 중...' : 'AI 세계관 추출'}
-              </Button>
-            </div>
-            {wsExtractionError && <p className="error-message">{wsExtractionError}</p>}
-            {episodeWorldSettings.length > 0 ? (
-              <div className="episode-character-list">
-                {episodeWorldSettings.map((ws) => (
-                  <div key={ws.id} className="episode-character-card">
-                    <div className="episode-character-name">{ws.title}</div>
-                    <div className="episode-character-role">{CATEGORY_LABELS[ws.category]}</div>
-                    <span className="badge-ai-extracted">AI 추출</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              !wsExtractionLoading && (
-                <p className="summary-empty">
-                  AI가 이 회차의 세계관/설정 정보를 분석합니다. 추출 후 1개씩 검토해 저장할 수 있습니다.
-                </p>
-              )
-            )}
-          </div>
-
-          {/* 설정 충돌 감지 섹션 */}
+          {/* 설정 충돌 감지 섹션 — 인물/세계관 추출보다 먼저 실행하는 것을 권장하므로 그 위에 배치 */}
           <div className="ai-section">
             <div className="ai-section-header">
               <h3>설정 충돌 감지</h3>
@@ -557,9 +509,63 @@ export default function EpisodeDetailPage() {
             )}
           </div>
 
-          {/* 최상단 이동 버튼 */}
+          {/* AI 등장인물 추출 섹션 */}
+          <div className="ai-section">
+            <div className="ai-section-header">
+              <h3>AI 등장인물 추출</h3>
+              <Button variant="primary" size="sm" onClick={handleExtractCharacters} disabled={extractionLoading}>
+                {extractionLoading ? '분석 중...' : 'AI 등장인물 추출'}
+              </Button>
+            </div>
+            {extractionError && <p className="error-message">{extractionError}</p>}
+            {episodeCharacters.length > 0 ? (
+              <div className="episode-character-list">
+                {episodeCharacters.map((c) => (
+                  <div key={c.id} className="episode-character-card">
+                    <div className="episode-character-name">{c.name}</div>
+                    {c.role && <div className="episode-character-role">{c.role}</div>}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              !extractionLoading && (
+                <p className="summary-empty">
+                  AI가 이 회차의 등장인물을 분석합니다. 추출 후 1명씩 검토해 저장할 수 있습니다.
+                </p>
+              )
+            )}
+          </div>
+
+          {/* 세계관 AI 추출 섹션 */}
+          <div className="ai-section">
+            <div className="ai-section-header">
+              <h3>AI 세계관 추출</h3>
+              <Button variant="primary" size="sm" onClick={handleExtractWorldSettings} disabled={wsExtractionLoading}>
+                {wsExtractionLoading ? '분석 중...' : 'AI 세계관 추출'}
+              </Button>
+            </div>
+            {wsExtractionError && <p className="error-message">{wsExtractionError}</p>}
+            {episodeWorldSettings.length > 0 ? (
+              <div className="episode-character-list">
+                {episodeWorldSettings.map((ws) => (
+                  <div key={ws.id} className="episode-character-card">
+                    <div className="episode-character-name">{ws.title}</div>
+                    <div className="episode-character-role">{CATEGORY_LABELS[ws.category]}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              !wsExtractionLoading && (
+                <p className="summary-empty">
+                  AI가 이 회차의 세계관/설정 정보를 분석합니다. 추출 후 1개씩 검토해 저장할 수 있습니다.
+                </p>
+              )
+            )}
+          </div>
+
+          {/* 최상단 이동 버튼 — 데스크톱 2열 레이아웃에서는 CSS로 숨김(.scroll-to-top-btn) */}
           <div className="ai-tools-footer">
-            <Button variant="ghost" size="sm" onClick={scrollToTop}>
+            <Button variant="ghost" size="sm" onClick={scrollToTop} className="scroll-to-top-btn">
               ▲ 최상단으로 이동
             </Button>
           </div>
