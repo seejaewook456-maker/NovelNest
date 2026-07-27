@@ -2,6 +2,7 @@ package org.example.domain.worldsettingextraction.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,6 +19,8 @@ import org.example.domain.worldsetting.entity.WorldSettingCategory;
 public class WorldSettingCandidateDto {
 
     // COUNTRY / RACE / MAGIC / ORGANIZATION / PLACE / EVENT / ITEM / RULE / ETC
+    // AI가 프롬프트 규칙을 벗어난 값을 반환해도 예외 대신 ETC로 대체 (WorldSettingCategoryDeserializer)
+    @JsonDeserialize(using = WorldSettingCategoryDeserializer.class)
     private WorldSettingCategory category;
 
     private String title;
