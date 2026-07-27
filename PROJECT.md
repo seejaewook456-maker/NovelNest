@@ -258,6 +258,18 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
   - 괄호형 특수문자(『』「」〈〉) 클릭 시 커서 자동으로 괄호 가운데 이동
   - 선택 영역 있으면 삽입 문자로 대체, 없으면 커서 위치 삽입
   - 공통 컴포넌트(WritingAssistToolbar.tsx) — props: content / onChange / textareaRef
+* Episode Detail Page 반응형 2열 레이아웃 — 회차 본문 / AI 도구를 독립된 박스로 분리
+  - 브레이크포인트 **1200px** 이상: `.episode-detail-layout`이 CSS Grid(`minmax(0,3fr) minmax(0,2fr)`)로 좌우 2열 배치 — **본문 60% : AI 도구 40%** 비율
+    - `.main-content`(최대 800px)로는 두 박스가 나란히 표시될 폭이 부족해, `.episode-workspace`(회차 작성/수정 화면)와 동일한 breakout 기법(width:100vw + max-width + left:50% + translateX(-50%))으로 뷰포트 기준 폭을 확장
+    - 1200px은 두 박스가 각각 실질적인 폭을 확보할 수 있는 지점으로 선택 (본문 가독성 + AI 도구 폼/카드 모두 고려)
+  - 1200px 미만: 세로 스택 유지(본문 박스 → AI 도구 박스), 두 박스는 동일하게 독립된 카드로 표시
+  - **AI 도구 순서** — 화면 크기와 무관하게 항상 동일한 DOM 순서: ① AI 회차 요약 → ② 설정 충돌 감지 → ③ AI 등장인물 추출 → ④ AI 세계관 추출 (설정 충돌 감지를 인물/세계관 추출보다 먼저 실행하도록 권장하는 흐름에 맞춰 배치, `order` 없이 렌더링 순서 자체를 정렬)
+  - **인물/세계관 추출 결과 카드**(`.episode-character-list`) — 화면 크기와 무관하게 항상 한 행에 1개(`grid-template-columns: minmax(0,1fr)`). 카드 내 "AI 추출" 배지는 제거됨(이름/역할만 표시)
+  - **`← 회차 목록` 버튼** — 1200px 이상에서는 `.episode-detail-back-link`가 `position:absolute`로 AI 도구 박스 우측 상단(그리드 컨테이너 기준 top/right 36px)에 재배치되어 AI 도구 박스 헤더와 겹쳐 보이도록 배치(그리드 자동 배치에서 제외되어 본문/AI 도구 컬럼 배치에 영향 없음). 1200px 미만에서는 기존처럼 레이아웃 맨 위에 정적으로 표시. 컴포넌트는 한 곳에서만 렌더링하고 CSS로만 재배치(중복 렌더링 없음)
+  - `▼ AI 도구로 이동` / `▲ 최상단으로 이동` 버튼: 1200px 이상(2열 동시 노출)에서는 각각 `.ai-tools-jump-btn`, `.scroll-to-top-btn`에 `display: none`으로 완전히 숨김(공간 차지 없음), 1200px 미만에서는 기존과 동일하게 표시 + 스크롤 이동 동작 유지
+  - 순수 CSS 미디어쿼리로 처리 — `window.innerWidth` 감시 없음
+  - 회차 조회/수정/저장/삭제, AI 요약/설정 충돌 감지/등장인물·세계관 추출의 API 호출·로딩·오류 처리 로직은 변경 없음 (레이아웃과 표시 순서만 변경)
+  - 관련 파일: `frontend/src/pages/EpisodeDetailPage.tsx`, `frontend/src/App.css`
 
 ## 아직 구현되지 않음
 

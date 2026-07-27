@@ -732,12 +732,56 @@ select {
 /* =============================================
    회차 상세
    ============================================= */
+/* 본문 박스 + AI 도구 박스를 감싸는 레이아웃 컨테이너.
+   기본(좁은 화면)은 세로 스택 — 지금까지의 모바일 레이아웃과 동일하다.
+   1200px 이상에서만 좌우 2열로 전환한다(아래 미디어쿼리). */
+.episode-detail-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+/* 데스크톱 2열 레이아웃 — 본문(왼쪽) 60% : AI 도구(오른쪽) 40%.
+   .main-content(최대 800px)로는 두 박스가 나란히 표시될 실질적인 폭을 확보할 수 없어,
+   .episode-workspace(회차 작성/수정 화면)의 breakout 기법을 그대로 재사용해 뷰포트 기준으로
+   폭을 넓히고 다시 중앙 정렬한다. 1200px은 두 박스가 각각 최소한의 여유 폭을 확보할 수 있는
+   지점으로, 회차 본문(가독성)과 AI 도구(폼/카드)가 모두 좁아 보이지 않는 기준으로 선택했다.
+   .episode-detail-back-link(← 회차 목록 버튼 래퍼)는 position:absolute로 그리드 자동 배치에서
+   제외되므로, 아래 두 박스(.episode-detail/.episode-ai-tools-box)만 1·2번째 컬럼에 순서대로
+   배치된다. */
+@media (min-width: 1200px) {
+  .episode-detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+    gap: 32px;
+    width: 100vw;
+    max-width: 1200px;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
 .episode-detail {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
   padding: 36px;
   box-shadow: var(--shadow-sm);
+  min-width: 0;
+}
+
+/* AI 도구 박스 — 본문 박스(.episode-detail)와 동일한 카드 스타일을 공유해
+   "각각 독립된 카드"로 보이면서도 디자인 시스템이 일관되게 유지되도록 한다. */
+.episode-ai-tools-box {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 36px;
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
 }
 
 .ep-header {
@@ -774,11 +818,55 @@ select {
   flex-wrap: wrap;
 }
 
-/* AI 도구 섹션 헤더 */
+/* AI 도구 섹션 헤더 — 이제 AI 도구는 본문과 분리된 독립 박스(.episode-ai-tools-box)의
+   맨 위에 오므로, 박스 경계와 겹치는 상단 구분선(border-top)은 더 이상 필요하지 않다. */
 .ai-tools-header {
-  padding: 20px 0 4px;
-  border-top: 1px solid var(--color-border);
+  padding: 0 0 4px;
   margin-bottom: 4px;
+}
+
+/* "AI 도구로 이동" 버튼 — 데스크톱 2열 레이아웃(본문/AI 도구가 이미 동시에 보임)에서는
+   불필요하므로 완전히 숨긴다. 레이아웃 전환 기준(1200px)과 동일한 미디어쿼리를 사용해
+   버튼 표시 여부와 2열 전환이 항상 함께 일어나도록 한다. display:none으로 처리해
+   공간도 차지하지 않는다. */
+@media (min-width: 1200px) {
+  .ai-tools-jump-btn {
+    display: none;
+  }
+}
+
+/* "← 회차 목록" 버튼 래퍼 — 좁은 화면(기본)에서는 지금까지와 동일하게 레이아웃 맨 위에
+   정적으로 표시된다(.episode-detail-layout의 첫 번째 자식). 1200px 이상에서는
+   .episode-detail-layout(이미 position:relative + breakout으로 AI 도구 박스와 같은 폭/위치를
+   공유) 기준으로 우측 상단에 절대 위치시켜, 시각적으로 AI 도구 박스 헤더 우측 상단에 있는
+   것처럼 보이게 한다. position:absolute가 되는 순간 CSS Grid 자동 배치 대상에서 제외되므로
+   본문/AI 도구 박스의 컬럼 배치에는 영향을 주지 않는다("박스 내부 스크롤을 따라다니는" 실제
+   sticky 동작이 필요한 별도 스크롤 영역은 없어 absolute로 충분하다). */
+@media (min-width: 1200px) {
+  .episode-detail-back-link {
+    position: absolute;
+    top: 36px;
+    right: 36px;
+    z-index: 1;
+  }
+
+  .episode-detail-back-link .back-link {
+    margin-bottom: 0;
+  }
+
+  /* 절대 위치로 옮겨진 "← 회차 목록" 버튼과 AI 도구 제목/설명 문구가 겹치지 않도록 여백 확보 */
+  .ai-tools-header {
+    padding-right: 120px;
+  }
+}
+
+/* AI 도구 박스 하단 "▲ 최상단으로 이동" 버튼 — 데스크톱 2열 레이아웃에서는 본문과 AI 도구가
+   이미 나란히 보여 페이지 최상단으로 이동할 필요가 크지 않으므로 숨긴다(.ai-tools-jump-btn과
+   동일한 이유·동일한 기준). display:none으로 공간도 차지하지 않는다. */
+@media (min-width: 1200px) {
+  .scroll-to-top-btn {
+    display: none;
+  }
 }
 
 .ai-tools-title {
@@ -1140,10 +1228,10 @@ select {
   line-height: 1.6;
 }
 
-/* 회차별 추출 인물 목록 */
+/* 회차별 추출 인물/세계관 목록 — 화면 크기와 무관하게 한 행에 1개씩 배치 */
 .episode-character-list {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   margin-top: 4px;
 }
@@ -1153,7 +1241,7 @@ select {
   border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 12px 16px;
-  min-width: 120px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -1168,19 +1256,6 @@ select {
 .episode-character-role {
   font-size: 12px;
   color: var(--color-text-secondary);
-}
-
-.badge-ai-extracted {
-  margin-top: 6px;
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-primary);
-  background: var(--color-primary-light);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-badge);
-  padding: 2px 8px;
-  width: fit-content;
 }
 
 /* =============================================
