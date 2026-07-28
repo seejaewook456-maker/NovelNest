@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Table(
     name = "users",
     indexes = {
-        // OAuth 로그인 시 findByProviderAndProviderId 쿼리 성능 보장
+        // OAuth 로그인 시 findByProviderAndProviderIdAndDeletedAtIsNull 등 조회 성능 보장
         @Index(name = "idx_users_provider_provider_id", columnList = "provider, provider_id")
     }
 )
@@ -25,7 +25,9 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    // 실제 유니크 보장은 DB의 생성 컬럼 부분 유니크 인덱스(uq_users_email_active_key, V5 마이그레이션)로 이전했다.
+    // 탈퇴 회원의 이메일 값은 계속 남겨두되, 활성 회원끼리만 유일하도록 해 재가입(새 User 생성)을 허용하기 위함이다.
+    @Column(nullable = false)
     private String email;
 
     @Column // Google 회원은 null

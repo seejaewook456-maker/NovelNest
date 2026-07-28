@@ -23,14 +23,16 @@ Schema-validation: missing column [refresh_token] in table [users]
 
 - 마이그레이션 파일 위치: `src/main/resources/db/migration/V{번호}__{설명}.sql`
 - 운영(`prod`): `flyway.enabled=true`, `ddl-auto=validate` — Flyway로만 스키마 변경
-- 로컬(`local`): `flyway.enabled=false`, `ddl-auto=update` — 기존처럼 Hibernate가 자동 반영 (개발 편의성 유지)
+- 로컬(`local`): `flyway.enabled=true`, `ddl-auto=update` — Flyway가 먼저 적용되고, 이후 Hibernate가
+  엔티티 기준으로 나머지 차이를 자동 반영 (개발 편의성 유지)
 
-### 로컬에서 Flyway를 끈 이유
+### 로컬에서도 Flyway를 켜둔 이유
 
-Flyway는 Hibernate보다 먼저 실행된다. 완전히 새로 만든 빈 로컬 DB에는 `users` 테이블 자체가
-없는 상태이므로, `ALTER TABLE users ...` 형태의 마이그레이션이 실패한다. 로컬은 지금처럼
-Hibernate(`update`)가 스키마를 만들도록 두는 대신, **운영에 반영해야 하는 스키마 변경은 반드시
-Flyway SQL 파일로도 작성**해야 한다 (아래 체크리스트 참고).
+초기에는 로컬에서 Flyway를 껐었지만(빈 DB에는 `users` 테이블 자체가 없어 `ALTER TABLE users ...`가
+실패하는 문제), 지금은 로컬 DB도 Hibernate가 이미 최신 스키마를 만들어둔 상태이므로 Flyway를 켜서
+운영과 동일하게 마이그레이션 SQL을 검증할 수 있게 했다. V1~V5는 모두 "이미 존재하면 건너뛰기"
+체크가 있어 기존 스키마와 충돌 없이 no-op으로 통과하거나, 아직 반영 안 된 부분만 적용한다.
+**운영에 반영해야 하는 스키마 변경은 반드시 Flyway SQL 파일로도 작성**해야 한다 (아래 체크리스트 참고).
 
 ### baseline-on-migrate
 
@@ -58,8 +60,8 @@ version 1` 오류가 여기서 발생한다.)
   통과한다.
 - **새로 세팅한 운영 DB** (완전히 빈 스키마): baseline 0을 잡은 뒤 V1, V2가 실제로 컬럼 추가/테이블
   생성을 수행해 스키마를 처음부터 구성한다.
-- **로컬 DB**: `application-local.yml`에서 `flyway.enabled=false`이므로 Flyway는 아예 관여하지
-  않고, 기존처럼 Hibernate(`ddl-auto=update`)가 스키마를 자동 반영한다.
+- **로컬 DB**: `application-local.yml`에서도 `flyway.enabled=true`이므로 Flyway가 먼저 적용되고,
+  Flyway가 다루지 않는 나머지 차이는 Hibernate(`ddl-auto=update`)가 자동 반영한다.
 
 ## Entity 필드 추가/수정 시 배포 전 체크리스트
 
@@ -72,6 +74,19 @@ version 1` 오류가 여기서 발생한다.)
 4. 로컬에서 `./gradlew bootRun`으로 Hibernate가 정상 반영되는지 확인
 5. 운영 `ddl-auto`는 `validate` 유지 (절대 `update`로 바꾸지 말 것)
 6. 배포 후 서버 로그에서 Flyway 마이그레이션 적용 로그(`Migrating schema` / `Successfully applied`) 확인
+
+## V5 — 탈퇴 후 14일 재가입 허용 (생성 컬럼 기반 부분 유니크 인덱스)
+
+`users.email`의 단순 UNIQUE 제약을 제거하고, "활성 회원(`deleted_at IS NULL`)일 때만 값을 갖는"
+생성 컬럼(`email_active_key`, `provider_identity_active_key`)에 UNIQUE 인덱스를 걸어 "활성 회원끼리만
+유일"을 DB 레벨에서 강제한다(MySQL은 UNIQUE 인덱스에서 NULL을 여러 번 허용하므로, 탈퇴 회원들끼리는
+같은 이메일이어도 충돌하지 않는다). 자세한 배경은 `V5__allow_email_reuse_after_withdrawal.sql`의
+주석 참고.
+
+**주의**: 이 생성 컬럼들은 JPA `User` 엔티티에 매핑되어 있지 않다(DB 전용, Flyway로만 관리). 로컬도
+`flyway.enabled=true`라 V5가 그대로 적용되므로, 로컬에서도 운영과 동일하게 "활성 회원끼리만 이메일
+유일"이라는 DB 레벨 제약이 걸린다. 다만 Hibernate `ddl-auto=update`는 엔티티에 없는 이 생성 컬럼을
+알지 못하므로, 스키마 동기화는 항상 Flyway가 담당하고 Hibernate는 건드리지 않는다.
 
 ## 실패한 마이그레이션 복구 절차
 

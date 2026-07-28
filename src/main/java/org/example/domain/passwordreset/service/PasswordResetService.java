@@ -51,7 +51,7 @@ public class PasswordResetService {
     // 컨트롤러는 이 메서드의 실행 결과와 무관하게 항상 동일한 성공 메시지를 반환한다.
     @Transactional
     public void sendCode(String email) {
-        User user = userRepository.findByEmail(email).orElse(null);
+        User user = userRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
         if (user == null || user.getProvider() != Provider.LOCAL) {
             log.info("Password reset code requested for non-resettable account. resettable=false");
             return;
@@ -107,7 +107,7 @@ public class PasswordResetService {
             throw new BusinessException(ErrorCode.PASSWORD_RESET_TOKEN_EXPIRED);
         }
 
-        User user = userRepository.findByEmail(token.getEmail())
+        User user = userRepository.findByEmailAndDeletedAtIsNull(token.getEmail())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         user.updatePassword(passwordEncoder.encode(newPassword));

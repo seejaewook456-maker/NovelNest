@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.domain.emailverification.entity.EmailVerification;
 import org.example.domain.emailverification.entity.Purpose;
 import org.example.domain.emailverification.repository.EmailVerificationRepository;
-import org.example.domain.user.entity.User;
+import org.example.domain.user.policy.UserRejoinPolicy;
 import org.example.domain.user.repository.UserRepository;
 import org.example.global.event.EmailSendRequestedEvent;
 import org.example.global.exception.BusinessException;
@@ -29,20 +29,20 @@ public class EmailVerificationService {
 
     private final EmailVerificationRepository emailVerificationRepository;
     private final UserRepository userRepository;
+    private final UserRejoinPolicy userRejoinPolicy;
     private final ApplicationEventPublisher eventPublisher;
     private final SecureRandom secureRandom = new SecureRandom();
 
     // 회원가입 이메일 인증번호 발송 (기존 호출부 호환용 — 내부적으로 SIGN_UP 목적으로 위임)
+    // UserService.signup()과 동일하게 "활성 회원 확인 → 탈퇴 회원 확인 → 재가입 제한 기간 경과 확인" 순서로 검증한다.
     @Transactional
     public void sendCode(String email) {
-        User existing = userRepository.findByEmail(email).orElse(null);
-        if (existing != null) {
-            // 탈퇴한 계정의 이메일은 재가입 기능이 없는 지금은 별도 문구로 명확히 구분해 안내한다.
-            if (existing.isWithdrawn()) {
-                throw new BusinessException(ErrorCode.WITHDRAWN_EMAIL_SIGNUP_BLOCKED);
-            }
+        if (userRepository.findByEmailAndDeletedAtIsNull(email).isPresent()) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_REGISTERED);
         }
+        userRejoinPolicy.assertRejoinAllowed(
+                userRepository.findTopByEmailAndDeletedAtIsNotNullOrderByDeletedAtDesc(email));
+
         String code = issueCode(email, Purpose.SIGN_UP);
         sendSignUpMail(email, code);
     }
