@@ -87,7 +87,7 @@ class ConflictDetectionServiceTest {
 
     @Test
     void AI_호출은_한번만_실행되고_설정된_최대출력토큰이_전달된다() {
-        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(owner));
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(owner));
         given(episodeRepository.findById(100L)).willReturn(Optional.of(episode));
         given(novelAiContextService.buildForConflictDetection(novel, episode)).willReturn(sampleContext());
         given(openAiService.generateText(anyString(), anyString(), eq(MAX_OUTPUT_TOKENS))).willReturn("[]");
@@ -102,7 +102,7 @@ class ConflictDetectionServiceTest {
 
     @Test
     void 새회차_본문과_등장인물_세계관_직전요약이_프롬프트에_포함된다() {
-        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(owner));
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(owner));
         given(episodeRepository.findById(100L)).willReturn(Optional.of(episode));
         given(novelAiContextService.buildForConflictDetection(novel, episode)).willReturn(sampleContext());
         given(openAiService.generateText(anyString(), anyString(), any())).willReturn("[]");
@@ -126,7 +126,7 @@ class ConflictDetectionServiceTest {
         User other = User.builder().email("other@example.com").password("encoded").nickname("다른사람").provider(Provider.LOCAL).build();
         ReflectionTestUtils.setField(other, "id", 2L);
 
-        given(userRepository.findByEmail("other@example.com")).willReturn(Optional.of(other));
+        given(userRepository.findByEmailAndDeletedAtIsNull("other@example.com")).willReturn(Optional.of(other));
         given(episodeRepository.findById(100L)).willReturn(Optional.of(episode));
 
         assertThatThrownBy(() -> conflictDetectionService.detectConflicts("other@example.com", 100L))
@@ -140,7 +140,7 @@ class ConflictDetectionServiceTest {
         ConflictDetectionResult existing = ConflictDetectionResult.builder()
                 .episode(episode).conflictsJson("[]").conflictCount(0).build();
 
-        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(owner));
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(owner));
         given(episodeRepository.findById(100L)).willReturn(Optional.of(episode));
         given(novelAiContextService.buildForConflictDetection(novel, episode)).willReturn(sampleContext());
         given(openAiService.generateText(anyString(), anyString(), any())).willReturn("[]");

@@ -3,8 +3,10 @@ package org.example.domain.emailverification.service;
 import org.example.domain.emailverification.entity.EmailVerification;
 import org.example.domain.emailverification.entity.Purpose;
 import org.example.domain.emailverification.repository.EmailVerificationRepository;
+import org.example.domain.user.config.RejoinPolicyProperties;
 import org.example.domain.user.entity.Provider;
 import org.example.domain.user.entity.User;
+import org.example.domain.user.policy.UserRejoinPolicy;
 import org.example.domain.user.repository.UserRepository;
 import org.example.global.event.EmailSendRequestedEvent;
 import org.example.global.exception.BusinessException;
@@ -40,15 +42,21 @@ class EmailVerificationServiceTest {
     private EmailVerificationService emailVerificationService;
 
     private static final String EMAIL = "user@example.com";
+    private static final int BLOCK_DAYS = 14;
 
+    // UserRejoinPolicy는 날짜 계산 로직 자체를 검증해야 하므로 Mock이 아닌 실제 객체를 사용한다.
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
-        emailVerificationService = new EmailVerificationService(emailVerificationRepository, userRepository, eventPublisher);
+        RejoinPolicyProperties properties = new RejoinPolicyProperties();
+        properties.setBlockDays(BLOCK_DAYS);
+        UserRejoinPolicy userRejoinPolicy = new UserRejoinPolicy(properties);
+        emailVerificationService = new EmailVerificationService(emailVerificationRepository, userRepository, userRejoinPolicy, eventPublisher);
     }
 
     @Test
     void 신규_이메일이면_인증번호를_발송하고_저장한다() {
-        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.empty());
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.empty());
+        given(userRepository.findTopByEmailAndDeletedAtIsNotNullOrderByDeletedAtDesc(EMAIL)).willReturn(Optional.empty());
         given(emailVerificationRepository.findByEmailAndPurpose(EMAIL, Purpose.SIGN_UP)).willReturn(Optional.empty());
 
         emailVerificationService.sendCode(EMAIL);
@@ -58,8 +66,8 @@ class EmailVerificationServiceTest {
     }
 
     @Test
-    void 이미_가입된_이메일이면_발송을_거부한다() {
-        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(activeUser()));
+    void 활성_회원이_존재하면_발송을_거부한다() {
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(activeUser()));
 
         assertThatThrownBy(() -> emailVerificationService.sendCode(EMAIL))
                 .isInstanceOf(BusinessException.class)
@@ -70,20 +78,36 @@ class EmailVerificationServiceTest {
     }
 
     @Test
-    void 탈퇴한_이메일이면_전용_메시지로_발송을_거부한다() {
-        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(withdrawnUser()));
+    void 탈퇴_후_7일이면_발송을_거부한다() {
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.empty());
+        given(userRepository.findTopByEmailAndDeletedAtIsNotNullOrderByDeletedAtDesc(EMAIL))
+                .willReturn(Optional.of(withdrawnUser(LocalDateTime.now().minusDays(7))));
 
         assertThatThrownBy(() -> emailVerificationService.sendCode(EMAIL))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
-                .isEqualTo(ErrorCode.WITHDRAWN_EMAIL_SIGNUP_BLOCKED);
+                .isEqualTo(ErrorCode.USER_REJOIN_BLOCKED);
 
         verifyNoInteractions(eventPublisher);
     }
 
     @Test
+    void 탈퇴_후_14일이_지나면_발송에_성공한다() {
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.empty());
+        given(userRepository.findTopByEmailAndDeletedAtIsNotNullOrderByDeletedAtDesc(EMAIL))
+                .willReturn(Optional.of(withdrawnUser(LocalDateTime.now().minusDays(15))));
+        given(emailVerificationRepository.findByEmailAndPurpose(EMAIL, Purpose.SIGN_UP)).willReturn(Optional.empty());
+
+        emailVerificationService.sendCode(EMAIL);
+
+        verify(emailVerificationRepository).save(any(EmailVerification.class));
+        verify(eventPublisher).publishEvent(any(EmailSendRequestedEvent.class));
+    }
+
+    @Test
     void 재전송_요청이_60초_이내면_거부한다() {
-        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.empty());
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.empty());
+        given(userRepository.findTopByEmailAndDeletedAtIsNotNullOrderByDeletedAtDesc(EMAIL)).willReturn(Optional.empty());
         EmailVerification recent = createVerification(EMAIL, "111111", Purpose.SIGN_UP, LocalDateTime.now().minusSeconds(10),
                 LocalDateTime.now().plusMinutes(5));
         given(emailVerificationRepository.findByEmailAndPurpose(EMAIL, Purpose.SIGN_UP)).willReturn(Optional.of(recent));
@@ -183,9 +207,10 @@ class EmailVerificationServiceTest {
                 .build();
     }
 
-    private User withdrawnUser() {
+    private User withdrawnUser(LocalDateTime deletedAt) {
         User user = activeUser();
         user.withdraw();
+        org.springframework.test.util.ReflectionTestUtils.setField(user, "deletedAt", deletedAt);
         return user;
     }
 }

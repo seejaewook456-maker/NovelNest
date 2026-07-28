@@ -76,7 +76,7 @@ class PasswordResetServiceTest {
 
     @Test
     void LOCAL_계정이면_인증번호를_발급하고_이메일_이벤트를_발행한다() {
-        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(localUser()));
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(localUser()));
         given(emailVerificationService.issueCode(EMAIL, Purpose.PASSWORD_RESET)).willReturn("123456");
 
         passwordResetService.sendCode(EMAIL);
@@ -87,7 +87,7 @@ class PasswordResetServiceTest {
 
     @Test
     void 가입되지_않은_이메일이면_아무_일도_하지_않는다() {
-        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.empty());
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.empty());
 
         passwordResetService.sendCode(EMAIL);
 
@@ -103,7 +103,7 @@ class PasswordResetServiceTest {
                 .provider(Provider.GOOGLE)
                 .providerId("google-id")
                 .build();
-        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(googleUser));
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(googleUser));
 
         passwordResetService.sendCode(EMAIL);
 
@@ -211,7 +211,7 @@ class PasswordResetServiceTest {
         given(passwordResetTokenRepository.findByTokenHash(sha256("good-token"))).willReturn(Optional.of(token));
         User user = localUser();
         user.updateRefreshToken("someRefreshToken");
-        given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(user));
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(user));
         given(passwordEncoder.encode("newPw123")).willReturn("encodedNewPw");
 
         passwordResetService.confirmPassword("good-token", "newPw123", "newPw123");

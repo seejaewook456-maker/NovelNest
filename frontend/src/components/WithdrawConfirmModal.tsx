@@ -83,10 +83,9 @@ export default function WithdrawConfirmModal({
         </h2>
         <p className="modal-description" id="withdraw-modal-desc">
           회원 탈퇴 후에는 더 이상 로그인하거나 작품에 접근할 수 없습니다.
-          현재 저장된 작품과 회차는 즉시 삭제되지 않지만, 탈퇴한 계정으로 다시 이용할 수 없습니다.
         </p>
         <p className="modal-description modal-warning-extra">
-          현재는 탈퇴한 이메일과 소셜 계정으로 재가입할 수 없습니다.
+          탈퇴한 이메일 또는 소셜 계정으로는 탈퇴 후 14일이 지나야 재가입이 가능합니다.
         </p>
 
         <div className="modal-confirm-section">

@@ -31,8 +31,6 @@ public enum ErrorCode {
 
     // 이메일 인증
     EMAIL_ALREADY_REGISTERED(HttpStatus.CONFLICT, "EMAIL_ALREADY_REGISTERED", "이미 가입된 이메일입니다."),
-    // 탈퇴한 계정의 이메일로 인증번호 발송/회원가입을 시도한 경우 — 재가입 기능은 아직 없으므로 명확히 안내
-    WITHDRAWN_EMAIL_SIGNUP_BLOCKED(HttpStatus.CONFLICT, "WITHDRAWN_EMAIL_SIGNUP_BLOCKED", "회원 탈퇴한 이메일로는 재가입할 수 없습니다."),
     EMAIL_CODE_RESEND_TOO_SOON(HttpStatus.TOO_MANY_REQUESTS, "EMAIL_CODE_RESEND_TOO_SOON", "인증번호는 60초 이후에 재전송할 수 있습니다."),
     EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "EMAIL_SEND_FAILED", "인증 이메일 발송에 실패했습니다."),
     EMAIL_VERIFICATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "EMAIL_VERIFICATION_NOT_FOUND", "인증번호 발송 이력이 없습니다. 인증번호를 다시 요청해주세요."),
@@ -60,6 +58,12 @@ public enum ErrorCode {
     // 회원 탈퇴
     USER_ALREADY_WITHDRAWN(HttpStatus.CONFLICT, "USER_ALREADY_WITHDRAWN", "이미 탈퇴한 사용자입니다."),
     WITHDRAWN_USER(HttpStatus.UNAUTHORIZED, "WITHDRAWN_USER", "탈퇴한 계정입니다. 다시 로그인해주세요."),
+    // 이메일 로그인 시, 활성 회원은 아니지만 탈퇴 이력이 있는 이메일로 로그인을 시도한 경우 전용 안내
+    WITHDRAWN_ACCOUNT_LOGIN(HttpStatus.BAD_REQUEST, "WITHDRAWN_ACCOUNT_LOGIN", "회원 탈퇴 처리된 이메일입니다."),
+    // 탈퇴 후 재가입 제한 기간(app.user.rejoin.block-days)이 지나지 않은 계정으로 재가입을 시도한 경우.
+    // 실제 발생 시에는 BusinessException(ErrorCode, 커스텀 메시지)로 설정된 기간(N일)을 담은 메시지를 사용하며,
+    // 아래 기본 메시지는 설정값을 알 수 없는 상황을 위한 fallback이다.
+    USER_REJOIN_BLOCKED(HttpStatus.CONFLICT, "USER_REJOIN_BLOCKED", "회원 탈퇴 후 14일이 지나야 다시 가입할 수 있습니다."),
 
     // 서버 오류
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다.");

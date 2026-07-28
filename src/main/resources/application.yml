@@ -69,6 +69,9 @@ openai:
   model: gpt-4.1-mini
 
 app:
+  user:
+    rejoin:
+      block-days: 14 # 회원 탈퇴 후 재가입 제한 기간(일)
   password-reset:
     code-expiration-minutes: 5
     resend-cooldown-seconds: 60

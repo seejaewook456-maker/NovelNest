@@ -127,6 +127,9 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
   - OAuth2AuthenticationSuccessHandler — JWT 발급 후 `/oauth2/callback?token=...` 리다이렉트
   - OAuth2AuthenticationFailureHandler — 에러 메시지 URL 인코딩 후 `/login?error=...` 리다이렉트
   - SessionCreationPolicy.IF_REQUIRED — OAuth2 state 파라미터 세션 저장 필요
+* 회원 탈퇴 후 재가입 제한 정책 — 탈퇴 후 설정된 기간(기본 14일, `app.user.rejoin.block-days`) 동안은
+  동일 이메일/소셜 계정(provider+providerId)으로 재가입이 차단되고, 기간 경과 후에는 기존 회원을
+  복구하지 않고 새 User를 생성해 재가입을 허용한다(이메일 회원가입/Google/Kakao 공통 적용).
 
 ### Frontend (MVP 1차)
 * React 19 + TypeScript + Vite (frontend/ 폴더)
