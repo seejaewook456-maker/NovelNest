@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createNovel } from '../api/novelApi';
+import { trackEvent } from '../lib/analytics';
+import { ANALYTICS_EVENTS } from '../constants/analyticsEvents';
 import Button from '../components/Button';
 import BackLink from '../components/BackLink';
 import Card from '../components/Card';
@@ -19,6 +21,7 @@ export default function NovelCreatePage() {
     setLoading(true);
     try {
       await createNovel({ title, genre, description: description || undefined });
+      trackEvent(ANALYTICS_EVENTS.NOVEL_CREATE);
       navigate('/novels');
     } catch (err) {
       setError(err instanceof Error ? err.message : '작품 생성에 실패했습니다.');

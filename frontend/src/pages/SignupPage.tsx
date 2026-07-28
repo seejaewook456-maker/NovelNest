@@ -2,6 +2,9 @@ import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signup, sendEmailVerificationCode, verifyEmailCode } from '../api/authApi';
 import { BACKEND_BASE_URL } from '../api/config';
+import { markOAuthProvider } from '../utils/oauthProvider';
+import { trackEvent } from '../lib/analytics';
+import { ANALYTICS_EVENTS, AUTH_METHOD } from '../constants/analyticsEvents';
 import Button from '../components/Button';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -133,6 +136,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await signup({ email, password, passwordConfirm, nickname });
+      trackEvent(ANALYTICS_EVENTS.SIGN_UP, { method: AUTH_METHOD.EMAIL });
       // 완료 메시지를 보여준 뒤 짧은 안내 후 로그인 화면으로 이동 (버튼은 계속 비활성 상태로 유지해 중복 제출 방지)
       setSuccessMessage('회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.');
       setTimeout(() => navigate('/login'), 1500);
@@ -272,6 +276,7 @@ export default function SignupPage() {
         <a
           href={`${BACKEND_BASE_URL}/oauth2/authorization/google`}
           className="btn-google"
+          onClick={() => markOAuthProvider('google')}
         >
           <GoogleIcon />
           Google로 회원가입
@@ -281,6 +286,7 @@ export default function SignupPage() {
         <a
           href={`${BACKEND_BASE_URL}/oauth2/authorization/kakao`}
           className="btn-kakao"
+          onClick={() => markOAuthProvider('kakao')}
         >
           <KakaoIcon />
           카카오로 회원가입

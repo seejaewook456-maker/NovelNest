@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, type KeyboardEvent, type ReactNode } from 
 import { getContextStats, sendChatMessage } from '../api/chatApi';
 import type { ContextStats, ChatMessage } from '../types/chat';
 import { useNavigate } from 'react-router-dom';
+import { trackEvent } from '../lib/analytics';
+import { ANALYTICS_EVENTS } from '../constants/analyticsEvents';
 
 // 간단한 인라인 마크다운 파싱 — bold, italic, code 처리
 function parseInline(text: string): ReactNode[] {
@@ -146,6 +148,7 @@ export default function AiChatPanel({ novelId }: AiChatPanelProps) {
         content: answer,
       };
       setMessages(prev => [...prev, assistantMsg]);
+      trackEvent(ANALYTICS_EVENTS.AI_CHAT_MESSAGE_SEND);
     } catch (err) {
       setChatError(err instanceof Error ? err.message : 'AI 답변 생성에 실패했습니다.');
     } finally {

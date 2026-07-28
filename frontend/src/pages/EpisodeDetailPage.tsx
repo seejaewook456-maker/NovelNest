@@ -9,6 +9,8 @@ import { extractWorldSettings } from '../api/worldSettingExtractionApi';
 import { getEpisodeCharacters } from '../api/episodeCharacterApi';
 import { getEpisodeWorldSettings } from '../api/episodeWorldSettingApi';
 import { detectConflicts, getConflictResult } from '../api/conflictDetectionApi';
+import { trackEvent } from '../lib/analytics';
+import { ANALYTICS_EVENTS } from '../constants/analyticsEvents';
 import type { Episode } from '../types/episode';
 import type { EpisodeSummary } from '../types/episodeSummary';
 import type { Character } from '../types/character';
@@ -139,6 +141,7 @@ export default function EpisodeDetailPage() {
     try {
       const result = await generateSummary(Number(episodeId));
       setSummary(result);
+      trackEvent(ANALYTICS_EVENTS.AI_SUMMARY_RUN);
     } catch (err) {
       setSummaryError(err instanceof Error ? err.message : '요약 생성 실패');
     } finally {
@@ -152,6 +155,7 @@ export default function EpisodeDetailPage() {
     setExtractionError('');
     try {
       const result = await extractCharacters(episode.id);
+      trackEvent(ANALYTICS_EVENTS.AI_CHARACTER_EXTRACT_RUN);
       navigate(`/episodes/${episode.id}/character-review`, {
         state: { candidates: result.candidates, novelId: episode.novelId, episodeId: episode.id, episodeTitle: result.episodeTitle },
       });
@@ -167,6 +171,7 @@ export default function EpisodeDetailPage() {
     setWsExtractionError('');
     try {
       const result = await extractWorldSettings(episode.id);
+      trackEvent(ANALYTICS_EVENTS.AI_WORLDVIEW_EXTRACT_RUN);
       navigate(`/episodes/${episode.id}/world-setting-review`, {
         state: { candidates: result.candidates, novelId: episode.novelId, episodeId: episode.id, episodeTitle: result.episodeTitle },
       });
@@ -181,7 +186,10 @@ export default function EpisodeDetailPage() {
   const handleUpdate = async (e: FormEvent) => {
     e.preventDefault();
     const ok = await autoSave.saveNow();
-    if (ok) setIsEditing(false);
+    if (ok) {
+      trackEvent(ANALYTICS_EVENTS.EPISODE_UPDATE);
+      setIsEditing(false);
+    }
   };
 
   // 수정 시작 — "취소" 시 되돌아갈 기준값을 이 시점의 episode로 고정해둔다.
@@ -275,6 +283,7 @@ export default function EpisodeDetailPage() {
       setConflicts(result.conflicts);
       setLastAnalyzedAt(result.analyzedAt);
       setHasAnalyzed(true);
+      trackEvent(ANALYTICS_EVENTS.AI_CONFLICT_CHECK_RUN);
     } catch (err) {
       setConflictError(err instanceof Error ? err.message : '분석 중 오류가 발생했습니다.');
     } finally {
@@ -287,6 +296,7 @@ export default function EpisodeDetailPage() {
     try {
       await navigator.clipboard.writeText(episode.content);
       setCopied(true);
+      trackEvent(ANALYTICS_EVENTS.EPISODE_COPY);
       showToast('회차 본문이 복사되었습니다.', 'success');
       setTimeout(() => setCopied(false), 2000);
     } catch {

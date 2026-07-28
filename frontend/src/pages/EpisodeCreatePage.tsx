@@ -1,6 +1,8 @@
 import { useState, useRef, useMemo, type FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { createEpisode } from '../api/episodeApi';
+import { trackEvent } from '../lib/analytics';
+import { ANALYTICS_EVENTS } from '../constants/analyticsEvents';
 import { useEpisodeDraftAutoSave, type DraftAutoSaveStatus } from '../hooks/useEpisodeDraftAutoSave';
 import { loadEpisodeDraft, saveEpisodeDraft, clearEpisodeDraft } from '../utils/episodeDraftStorage';
 import type { EpisodeDraftFields } from '../utils/episodeDraftStorage';
@@ -71,6 +73,7 @@ export default function EpisodeCreatePage() {
         content,
       });
       clearEpisodeDraft(numericNovelId);
+      trackEvent(ANALYTICS_EVENTS.EPISODE_CREATE);
       setJustCreated(true);
       // 생성 직후의 navigate()는 이동 차단 대상이 아니므로, 리렌더를 기다리지 않고 즉시 경고를 억제한다.
       draftAutoSave.suppressLeaveWarning();
