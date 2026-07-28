@@ -3,6 +3,9 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { login, logout } from '../api/authApi';
 import { BACKEND_BASE_URL } from '../api/config';
 import { saveTokens, clearTokens, isLoggedIn } from '../utils/token';
+import { markOAuthProvider } from '../utils/oauthProvider';
+import { trackEvent } from '../lib/analytics';
+import { ANALYTICS_EVENTS, AUTH_METHOD } from '../constants/analyticsEvents';
 import Button from '../components/Button';
 
 // 브랜드 연필 아이콘 (favicon.svg와 동일한 컨셉의 인라인 SVG)
@@ -114,6 +117,7 @@ export default function LoginPage() {
     try {
       const { accessToken, refreshToken } = await login({ email, password });
       saveTokens(accessToken, refreshToken);
+      trackEvent(ANALYTICS_EVENTS.LOGIN, { method: AUTH_METHOD.EMAIL });
       navigate('/novels');
     } catch (err) {
       setError(err instanceof Error ? err.message : '로그인에 실패했습니다.');
@@ -181,6 +185,7 @@ export default function LoginPage() {
         <a
           href={`${BACKEND_BASE_URL}/oauth2/authorization/google`}
           className="btn-google login-google-btn"
+          onClick={() => markOAuthProvider('google')}
         >
           <GoogleIcon />
           Google로 로그인
@@ -190,6 +195,7 @@ export default function LoginPage() {
         <a
           href={`${BACKEND_BASE_URL}/oauth2/authorization/kakao`}
           className="btn-kakao login-kakao-btn"
+          onClick={() => markOAuthProvider('kakao')}
         >
           <KakaoIcon />
           카카오로 로그인

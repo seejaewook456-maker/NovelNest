@@ -5,6 +5,8 @@ import { getMyNovels, deleteNovel } from '../api/novelApi';
 import { withdrawUser } from '../api/authApi';
 import { ApiError, NetworkError } from '../api/fetchWithAuth';
 import { clearTokens, isLoggedIn } from '../utils/token';
+import { trackEvent } from '../lib/analytics';
+import { ANALYTICS_EVENTS } from '../constants/analyticsEvents';
 import type { Novel } from '../types/novel';
 import Button from '../components/Button';
 import PageHeader from '../components/PageHeader';
@@ -79,6 +81,7 @@ export default function NovelListPage() {
   // (서버 탈퇴 API가 이미 Refresh Token을 제거했으므로, 여기서 별도로 로그아웃 API를 호출하지 않는다.)
   const finishWithdrawSuccess = () => {
     setIsWithdrawModalOpen(false);
+    trackEvent(ANALYTICS_EVENTS.ACCOUNT_DELETE);
     clearTokens();
     setToast({ message: '회원 탈퇴가 완료되었습니다.', type: 'success' });
     withdrawRedirectTimerRef.current = window.setTimeout(() => {

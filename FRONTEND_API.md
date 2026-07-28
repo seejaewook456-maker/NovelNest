@@ -804,6 +804,64 @@ function PrivateRoute({ children }) {
 
 ---
 
+## GA4 애널리틱스 연동
+
+### 구조
+
+| 파일 | 역할 |
+|---|---|
+| `src/lib/analytics.ts` | GA4 연동 모듈 — `initializeAnalytics()` / `trackPageView()` / `trackEvent()` 제공. `ReactGA.event`/`ReactGA.send`를 직접 호출하는 곳은 이 파일뿐이다 |
+| `src/constants/analyticsEvents.ts` | 이벤트명 상수(`ANALYTICS_EVENTS`), 인증 수단 상수(`AUTH_METHOD`) — 오타 방지용, 이벤트 전송 시 항상 이 상수를 사용 |
+| `src/utils/oauthProvider.ts` | Google/카카오 로그인 버튼 클릭 시점의 provider를 세션에 잠깐 저장해, OAuth 콜백에서 `login` 이벤트의 `method`를 채우는 용도 |
+| `src/router/index.tsx` | `router.subscribe`로 페이지 이동을 감지해 `page_view`를 전송 (하단 참고) |
+
+### 초기화
+
+`initializeAnalytics()`는 `VITE_GA_MEASUREMENT_ID` 환경변수가 설정된 경우에만 GA4를 초기화하고, 없으면 `console.warn`만 남기고 아무 것도 하지 않는다(로컬 개발 환경 기본값). 자동 `page_view`는 끄고(`send_page_view: false`) 아래 방식으로 React Router 쪽에서 직접 전송한다.
+
+`router/index.tsx` 최상단에서 호출한다 — `main.tsx`가 아니라 여기서 호출하는 이유는, ES 모듈은 import된 모듈의 최상위 코드를 import한 쪽의 코드보다 먼저 실행하기 때문에 `main.tsx`에서 호출하면 라우터 모듈의 최초 `page_view` 전송이 초기화보다 먼저 일어날 수 있기 때문이다. `initializeAnalytics()`는 중복 호출해도 한 번만 초기화된다.
+
+### 페이지 추적 (page_view)
+
+이 프로젝트는 `createBrowserRouter`(데이터 라우터) 구조라 `<BrowserRouter>` 하위에 추적용 컴포넌트를 둘 root 레이아웃이 없다. 대신 `router.subscribe`로 위치 변화를 구독해서, 라우트 구성을 바꾸지 않고 모든 경로의 이동을 추적한다.
+
+- **동적 라우트 정규화**: `/novels/123` → `/novels/:novelId`처럼, 실제 pathname 대신 매칭된 라우트의 `route.path` 패턴을 그대로 사용한다. 별도 정규식 없이 라우터 설정과 항상 일치한다.
+- **쿼리스트링(search)**: 전송하지 않는다. `/oauth2/callback?token=...&refreshToken=...`처럼 민감한 값이 쿼리에 실리는 라우트가 있어, page_path에는 pathname만 사용한다.
+- **중복 방지**: `location.key`(history 엔트리별 고유값)로 실제 이동 여부를 판단한다. 정규화된 경로 문자열이 아니라 key로 비교하므로, `/novels/1` → `/novels/2`처럼 같은 라우트 패턴이라도 실제 이동이면 각각 정상 집계되고, StrictMode 등으로 인한 동일 상태 재통지는 무시된다.
+
+### 이벤트 (trackEvent)
+
+`trackEvent(ANALYTICS_EVENTS.XXX, params?)` 형태로 호출하며, 모두 **API 성공 이후**(버튼 클릭 시점이 아님) 호출부에서 직접 전송한다. 실패한 작업은 이벤트를 전송하지 않는다.
+
+| 이벤트 | 호출 위치 | 비고 |
+|---|---|---|
+| `sign_up` | `SignupPage` (이메일 가입 성공) | `method: 'email'` |
+| `login` | `LoginPage` (이메일 로그인 성공), `OAuth2CallbackPage` (OAuth 콜백 성공) | `method: 'email' \| 'google' \| 'kakao'`. OAuth는 신규가입/기존로그인을 백엔드가 구분해 내려주지 않아 항상 `login`으로 전송 |
+| `novel_create` | `NovelCreatePage` | |
+| `episode_create` | `EpisodeCreatePage` | |
+| `episode_update` | `EpisodeDetailPage` (수동 저장 제출 성공) | 자동저장(autosave)은 전송하지 않음 |
+| `episode_copy` | `EpisodeDetailPage` (본문 복사 버튼) | |
+| `ai_summary_run` | `EpisodeDetailPage` (AI 요약 생성) | |
+| `ai_conflict_check_run` | `EpisodeDetailPage` (설정 충돌 감지) | |
+| `ai_character_extract_run` | `EpisodeDetailPage` (AI 등장인물 추출) | |
+| `ai_worldview_extract_run` | `EpisodeDetailPage` (AI 세계관 추출) | |
+| `ai_chat_message_send` | `AiChatPanel` (채팅 전송 성공) | |
+| `account_delete` | `NovelListPage` (회원 탈퇴 성공) | |
+
+### 개인정보 보호
+
+이벤트 파라미터에는 이메일, Access/Refresh Token, providerId, 사용자 ID, 소설 제목/본문, AI 질문/응답, 등장인물/세계관 정보 등 사용자 콘텐츠·개인정보를 절대 포함하지 않는다. 위 표의 이벤트는 `method` 외에는 파라미터 없이 전송된다.
+
+### 환경변수
+
+| 변수 | 설명 |
+|---|---|
+| `VITE_GA_MEASUREMENT_ID` | GA4 Measurement ID (예: `G-XXXXXXX`). 없으면 GA4 비활성화(경고 로그만 출력) |
+
+`frontend/.env.production`에 기본값이 커밋되어 있다(다른 `VITE_*` 값과 동일한 관례). Vercel 배포 시 대시보드에 동일한 키로 등록해두면 코드 변경 없이 값을 교체할 수 있다.
+
+---
+
 ## 실행 방법
 
 ### 백엔드 실행

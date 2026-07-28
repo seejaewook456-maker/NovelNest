@@ -274,6 +274,13 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
   - 회차 조회/수정/저장/삭제, AI 요약/설정 충돌 감지/등장인물·세계관 추출의 API 호출·로딩·오류 처리 로직은 변경 없음 (레이아웃과 표시 순서만 변경)
   - 관련 파일: `frontend/src/pages/EpisodeDetailPage.tsx`, `frontend/src/App.css`
 
+### Frontend (GA4 애널리틱스)
+* react-ga4 기반 GA4 연동 — `src/lib/analytics.ts`(initializeAnalytics/trackPageView/trackEvent), `src/constants/analyticsEvents.ts`(이벤트명 상수)
+* React Router(`createBrowserRouter`) 페이지 이동 자동 추적 — `router.subscribe`로 구현, 동적 라우트는 `/novels/:novelId`처럼 라우트 패턴으로 정규화, 쿼리스트링은 미전송(토큰 등 민감정보 유출 방지)
+* sign_up / login(email·google·kakao) / novel_create / episode_create·update·copy / ai_summary_run / ai_conflict_check_run / ai_character_extract_run / ai_worldview_extract_run / ai_chat_message_send / account_delete 이벤트를 각 API 성공 시점에 전송(실패 시 미전송)
+* 이벤트 파라미터에 개인정보·사용자 콘텐츠(제목/본문/AI 응답 등) 미포함
+* 상세 내용은 `FRONTEND_API.md`의 "GA4 애널리틱스 연동" 섹션 참고
+
 ## 아직 구현되지 않음
 
 ### AI 기능 (미구현)
