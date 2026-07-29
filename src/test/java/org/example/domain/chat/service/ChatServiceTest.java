@@ -1,5 +1,7 @@
 package org.example.domain.chat.service;
 
+import org.example.domain.aiusage.enums.AiFeatureType;
+import org.example.domain.aiusage.service.AiUsageService;
 import org.example.domain.character.repository.CharacterRepository;
 import org.example.domain.chat.dto.ChatResponseDto;
 import org.example.domain.episode.repository.EpisodeRepository;
@@ -34,6 +36,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -56,6 +60,8 @@ class ChatServiceTest {
     private NovelAiContextService novelAiContextService;
     @Mock
     private OpenAiService openAiService;
+    @Mock
+    private AiUsageService aiUsageService;
 
     @InjectMocks
     private ChatService chatService;
@@ -129,5 +135,35 @@ class ChatServiceTest {
                 .isInstanceOf(SecurityException.class);
 
         verify(openAiService, times(0)).generateText(anyString(), anyString(), any());
+        // OpenAI 호출 이전(권한 검증 단계)에 실패했으므로 사용량 차감 자체가 시도되지 않아야 한다.
+        verify(aiUsageService, never()).checkAndIncrement(any(), any());
+    }
+
+    @Test
+    void OpenAI_호출_전에_사용량을_차감한다() {
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(owner));
+        given(novelRepository.findById(10L)).willReturn(Optional.of(novel));
+        given(novelAiContextService.buildForChat(novel)).willReturn(sampleContext());
+        given(openAiService.generateText(anyString(), anyString(), any())).willReturn("AI 답변");
+
+        chatService.chat(EMAIL, 10L, "질문입니다");
+
+        verify(aiUsageService).checkAndIncrement(owner.getId(), AiFeatureType.AI_CHAT);
+    }
+
+    @Test
+    void OpenAI_호출_이후_오류가_발생해도_이미_차감된_사용량은_그대로_유지된다() {
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(owner));
+        given(novelRepository.findById(10L)).willReturn(Optional.of(novel));
+        given(novelAiContextService.buildForChat(novel)).willReturn(sampleContext());
+        willThrow(new IllegalArgumentException("OpenAI 오류"))
+                .given(openAiService).generateText(anyString(), anyString(), any());
+
+        assertThatThrownBy(() -> chatService.chat(EMAIL, 10L, "질문입니다"))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        // 사용량 차감은 OpenAI 호출 "직전"에 이미 커밋되는 별도 트랜잭션이라, 이후 발생한 오류와 무관하게
+        // 정확히 한 번만 호출되어야 하며(중복 차감 없음), 이를 되돌리는 호출은 존재하지 않는다.
+        verify(aiUsageService, times(1)).checkAndIncrement(owner.getId(), AiFeatureType.AI_CHAT);
     }
 }

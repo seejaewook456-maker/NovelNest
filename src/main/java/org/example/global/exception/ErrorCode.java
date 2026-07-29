@@ -65,6 +65,11 @@ public enum ErrorCode {
     // 아래 기본 메시지는 설정값을 알 수 없는 상황을 위한 fallback이다.
     USER_REJOIN_BLOCKED(HttpStatus.CONFLICT, "USER_REJOIN_BLOCKED", "회원 탈퇴 후 14일이 지나야 다시 가입할 수 있습니다."),
 
+    // AI 하루 사용량 제한 — 기본 메시지는 fallback이며, 실제로는 기능명을 담은 커스텀 메시지로 던진다
+    // (AiUsageService 참고). EMAIL_CODE_RESEND_TOO_SOON과 동일하게 429 Too Many Requests를 사용한다.
+    AI_DAILY_FEATURE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "AI_DAILY_FEATURE_LIMIT_EXCEEDED",
+            "오늘 사용할 수 있는 AI 기능 이용 횟수를 모두 사용했습니다. AI 도구 이용권은 매일 00:00에 충전됩니다."),
+
     // 서버 오류
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다.");
 

@@ -100,6 +100,15 @@ app:
       max-character-count: ${AI_CONTEXT_MAX_CHARACTER_COUNT:200}
       max-worldview-count: ${AI_CONTEXT_MAX_WORLDVIEW_COUNT:400}
       max-context-characters: ${AI_CONTEXT_MAX_CHARACTERS:50000}
+    usage:
+      # 사용자별 AI 기능 하루 사용량 제한 — 운영 중 코드 수정 없이 조정할 수 있도록 환경변수로 관리한다.
+      # 전체 합계 제한은 두지 않고 기능별 제한만 적용한다.
+      daily-limit:
+        summary: ${AI_DAILY_SUMMARY_LIMIT:20}
+        conflict: ${AI_DAILY_CONFLICT_LIMIT:15}
+        character: ${AI_DAILY_CHARACTER_LIMIT:15}
+        worldview: ${AI_DAILY_WORLDVIEW_LIMIT:15}
+        chat: ${AI_DAILY_CHAT_LIMIT:20}
 
 springdoc:
   swagger-ui:

@@ -2,6 +2,8 @@ package org.example.domain.chat.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.domain.aiusage.enums.AiFeatureType;
+import org.example.domain.aiusage.service.AiUsageService;
 import org.example.domain.chat.dto.ChatResponseDto;
 import org.example.domain.chat.dto.ContextStatsDto;
 import org.example.domain.character.repository.CharacterRepository;
@@ -64,6 +66,7 @@ public class ChatService {
     private final UserRepository userRepository;
     private final NovelAiContextService novelAiContextService;
     private final OpenAiService openAiService;
+    private final AiUsageService aiUsageService;
 
     @Value("${app.ai.chat.max-output-tokens}")
     private int chatMaxOutputTokens;
@@ -79,6 +82,8 @@ public class ChatService {
 
         log.info("Chat request. novelId={}, userId={}", novelId, user.getId());
         String input = buildContext(novel, context, message);
+        // OpenAI 호출 직전에만 사용량을 차감한다 — 그 이전의 검증 실패는 횟수에 포함되지 않는다.
+        aiUsageService.checkAndIncrement(user.getId(), AiFeatureType.AI_CHAT);
         String answer = openAiService.generateText(CHAT_INSTRUCTIONS, input, chatMaxOutputTokens);
 
         return new ChatResponseDto(answer);

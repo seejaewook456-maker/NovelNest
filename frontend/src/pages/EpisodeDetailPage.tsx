@@ -11,6 +11,9 @@ import { getEpisodeWorldSettings } from '../api/episodeWorldSettingApi';
 import { detectConflicts, getConflictResult } from '../api/conflictDetectionApi';
 import { trackEvent } from '../lib/analytics';
 import { ANALYTICS_EVENTS } from '../constants/analyticsEvents';
+import { useAiDailyUsage } from '../hooks/useAiDailyUsage';
+import AiUsageHint from '../components/AiUsageHint';
+import AiUsageRechargeNote from '../components/AiUsageRechargeNote';
 import type { Episode } from '../types/episode';
 import type { EpisodeSummary } from '../types/episodeSummary';
 import type { Character } from '../types/character';
@@ -80,6 +83,15 @@ export default function EpisodeDetailPage() {
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [lastAnalyzedAt, setLastAnalyzedAt] = useState<string | null>(null);
 
+  // AI 기능 오늘 사용 가능 횟수 — 4개 섹션이 같은 훅(공유 저장소)을 구독해 한 번만 조회하고,
+  // 아래 각 handle*에서 실행 성공/실패 직후 refetch()로 최신값을 즉시 반영한다.
+  const { usage: aiUsage, loading: aiUsageLoading, error: aiUsageError, refetch: refetchAiUsage } = useAiDailyUsage();
+  // 사용량을 아직 못 불러온 상태(로딩/오류)에서는 무제한으로 간주하지 않고 보수적으로 실행을 막는다.
+  const canRunSummary = !!aiUsage && aiUsage.summary.remaining > 0;
+  const canRunConflictCheck = !!aiUsage && aiUsage.conflict.remaining > 0;
+  const canRunCharacterExtraction = !!aiUsage && aiUsage.character.remaining > 0;
+  const canRunWorldviewExtraction = !!aiUsage && aiUsage.worldview.remaining > 0;
+
   // 본문 복사 상태
   const [copied, setCopied] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -142,8 +154,12 @@ export default function EpisodeDetailPage() {
       const result = await generateSummary(Number(episodeId));
       setSummary(result);
       trackEvent(ANALYTICS_EVENTS.AI_SUMMARY_RUN);
+      void refetchAiUsage();
     } catch (err) {
       setSummaryError(err instanceof Error ? err.message : '요약 생성 실패');
+      // 사용량이 서버에서 이미 차감된 뒤 실패했을 수도 있으므로(오늘 이용 가능 횟수 초과 포함)
+      // 항상 최신값으로 다시 맞춘다.
+      void refetchAiUsage();
     } finally {
       setSummaryLoading(false);
     }
@@ -156,12 +172,14 @@ export default function EpisodeDetailPage() {
     try {
       const result = await extractCharacters(episode.id);
       trackEvent(ANALYTICS_EVENTS.AI_CHARACTER_EXTRACT_RUN);
+      void refetchAiUsage();
       navigate(`/episodes/${episode.id}/character-review`, {
         state: { candidates: result.candidates, novelId: episode.novelId, episodeId: episode.id, episodeTitle: result.episodeTitle },
       });
     } catch (err) {
       setExtractionError(err instanceof Error ? err.message : '등장인물 추출 실패');
       setExtractionLoading(false);
+      void refetchAiUsage();
     }
   };
 
@@ -172,12 +190,14 @@ export default function EpisodeDetailPage() {
     try {
       const result = await extractWorldSettings(episode.id);
       trackEvent(ANALYTICS_EVENTS.AI_WORLDVIEW_EXTRACT_RUN);
+      void refetchAiUsage();
       navigate(`/episodes/${episode.id}/world-setting-review`, {
         state: { candidates: result.candidates, novelId: episode.novelId, episodeId: episode.id, episodeTitle: result.episodeTitle },
       });
     } catch (err) {
       setWsExtractionError(err instanceof Error ? err.message : '세계관 추출 실패');
       setWsExtractionLoading(false);
+      void refetchAiUsage();
     }
   };
 
@@ -284,8 +304,10 @@ export default function EpisodeDetailPage() {
       setLastAnalyzedAt(result.analyzedAt);
       setHasAnalyzed(true);
       trackEvent(ANALYTICS_EVENTS.AI_CONFLICT_CHECK_RUN);
+      void refetchAiUsage();
     } catch (err) {
       setConflictError(err instanceof Error ? err.message : '분석 중 오류가 발생했습니다.');
+      void refetchAiUsage();
     } finally {
       setIsAnalyzing(false);
     }
@@ -438,7 +460,22 @@ export default function EpisodeDetailPage() {
             <span className="episode-content-label">회차 본문</span>
             <div className="episode-content-actions">
               <Button variant="ghost" size="sm" onClick={handleCopyContent}>
-                {copied ? '✓ 복사됨' : '📋 본문 복사'}
+                {copied ? (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    복사됨
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                    본문 복사
+                  </>
+                )}
               </Button>
               {/* 데스크톱 2열 레이아웃에서는 AI 도구가 이미 오른쪽에 보이므로 CSS로 숨김(.ai-tools-jump-btn) */}
               <Button variant="ghost" size="sm" onClick={scrollToAiTools} className="ai-tools-jump-btn">
@@ -464,10 +501,21 @@ export default function EpisodeDetailPage() {
           <div className="ai-section">
             <div className="ai-section-header">
               <h3>AI 회차 요약</h3>
-              <Button variant="primary" size="sm" onClick={handleGenerateSummary} disabled={summaryLoading}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleGenerateSummary}
+                disabled={summaryLoading || !canRunSummary}
+              >
                 {summaryLoading ? '생성 중...' : summary ? '재생성' : 'AI 요약 생성'}
               </Button>
             </div>
+            <AiUsageHint
+              detail={aiUsage?.summary}
+              loading={aiUsageLoading}
+              error={aiUsageError}
+              depletedMessage="오늘 이용 가능한 횟수를 모두 사용했습니다."
+            />
             {summaryError && <p className="error-message">{summaryError}</p>}
             {summary ? (
               <div className="summary-box">
@@ -488,10 +536,21 @@ export default function EpisodeDetailPage() {
           <div className="ai-section">
             <div className="ai-section-header">
               <h3>설정 충돌 감지</h3>
-              <Button variant="primary" size="sm" onClick={handleDetectConflicts} disabled={isAnalyzing}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleDetectConflicts}
+                disabled={isAnalyzing || !canRunConflictCheck}
+              >
                 {isAnalyzing ? 'AI가 충돌을 분석 중...' : hasAnalyzed ? '재분석' : '설정 충돌 감지'}
               </Button>
             </div>
+            <AiUsageHint
+              detail={aiUsage?.conflict}
+              loading={aiUsageLoading}
+              error={aiUsageError}
+              depletedMessage="오늘 이용 가능한 횟수를 모두 사용했습니다."
+            />
             {conflictError && <p className="error-message">{conflictError}</p>}
             {hasAnalyzed && !isAnalyzing && (
               <>
@@ -527,10 +586,21 @@ export default function EpisodeDetailPage() {
           <div className="ai-section">
             <div className="ai-section-header">
               <h3>AI 등장인물 추출</h3>
-              <Button variant="primary" size="sm" onClick={handleExtractCharacters} disabled={extractionLoading}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleExtractCharacters}
+                disabled={extractionLoading || !canRunCharacterExtraction}
+              >
                 {extractionLoading ? '분석 중...' : 'AI 등장인물 추출'}
               </Button>
             </div>
+            <AiUsageHint
+              detail={aiUsage?.character}
+              loading={aiUsageLoading}
+              error={aiUsageError}
+              depletedMessage="오늘 이용 가능한 횟수를 모두 사용했습니다."
+            />
             {extractionError && <p className="error-message">{extractionError}</p>}
             {episodeCharacters.length > 0 ? (
               // 등장인물 이름/역할은 사용자·AI가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다
@@ -555,10 +625,21 @@ export default function EpisodeDetailPage() {
           <div className="ai-section">
             <div className="ai-section-header">
               <h3>AI 세계관 추출</h3>
-              <Button variant="primary" size="sm" onClick={handleExtractWorldSettings} disabled={wsExtractionLoading}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleExtractWorldSettings}
+                disabled={wsExtractionLoading || !canRunWorldviewExtraction}
+              >
                 {wsExtractionLoading ? '분석 중...' : 'AI 세계관 추출'}
               </Button>
             </div>
+            <AiUsageHint
+              detail={aiUsage?.worldview}
+              loading={aiUsageLoading}
+              error={aiUsageError}
+              depletedMessage="오늘 이용 가능한 횟수를 모두 사용했습니다."
+            />
             {wsExtractionError && <p className="error-message">{wsExtractionError}</p>}
             {episodeWorldSettings.length > 0 ? (
               // 세계관 설정 제목/카테고리는 사용자·AI가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다
@@ -581,6 +662,7 @@ export default function EpisodeDetailPage() {
 
           {/* 최상단 이동 버튼 — 데스크톱 2열 레이아웃에서는 CSS로 숨김(.scroll-to-top-btn) */}
           <div className="ai-tools-footer">
+            <AiUsageRechargeNote />
             <Button variant="ghost" size="sm" onClick={scrollToTop} className="scroll-to-top-btn">
               ▲ 최상단으로 이동
             </Button>

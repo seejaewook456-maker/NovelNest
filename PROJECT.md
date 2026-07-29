@@ -297,6 +297,16 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * Docker Compose는 `env_file`로 `.env` 전체를 이미 전달하므로 별도 수정 없음 — EC2 `.env`에 `SENTRY_DSN`/`SENTRY_ENVIRONMENT` 추가 후 컨테이너 재생성(`docker compose up -d`) 필요, 단순 restart로는 반영 안 됨
 * 상세 내용은 `docs/SENTRY.md` 참고
 
+### AI 하루 사용량 제한 (사용자별 일일 제한 + 잔여 횟수 표시)
+* 백엔드: `domain/aiusage` 패키지 신규 — `AiFeatureType` enum(5개 기능 중앙 관리), `AiDailyUsage` 엔티티(사용자별·날짜별 카운터, `user_id`+`usage_date` 유니크), `AiUsageService`(검사·원자적 증가·조회 단일 창구), `AiUsageLimitProperties`(제한값 환경변수 바인딩)
+* 기본 제한: 요약 20회, 충돌감지·인물추출·세계관추출 각 15회, 챗봇 20회(최초 50회 → 하향 조정) — `AI_DAILY_*_LIMIT` 환경변수로 조정. **전체 합계 제한은 두지 않음**(최초에 100회 합계 제한도 있었으나 불필요하다고 판단해 제거, 기능별 제한만 독립적으로 적용)
+* Asia/Seoul 자정 초기화는 스케줄러 없이 `(user_id, usage_date)` 유니크 제약으로 구현 — 날짜가 바뀌면 새 행이 자연스럽게 생성됨, `Clock` 빈 주입으로 테스트 가능
+* 동시성은 조건부 UPDATE(`WHERE count < limit`)로 원자적 처리, `checkAndIncrement`는 `REQUIRES_NEW`로 OpenAI 호출 직전 커밋 — 호출 실패해도 이미 차감된 횟수는 복구하지 않음. 개발 중 발견한 Hibernate 세션 오염 문제로 행 생성 로직을 별도 빈(`AiDailyUsageRowInitializer`)으로 분리
+* `GET /api/ai/usage/daily` 조회 API 추가, 제한 초과 시 429(`AI_DAILY_FEATURE_LIMIT_EXCEEDED`)
+* 프론트엔드: `useAiDailyUsage` 공통 훅 + `aiUsageStore`(pub-sub 캐시) + `AiUsageHint` 공통 컴포넌트 — 회차 상세 AI 도구 4종 + 3개 페이지가 공유하는 `AiChatPanel`에 잔여 횟수 표시 및 0일 때 버튼 비활성화
+* Flyway `V6__add_ai_daily_usage.sql`(테이블 생성) → `V7__remove_ai_daily_usage_total_count.sql`(전체 합계 컬럼 제거) — 로컬 실제 MySQL에 순서대로 적용 및 스키마 확인 완료
+* 상세 내용은 `docs/AI_USAGE_LIMIT.md` 참고
+
 ## 아직 구현되지 않음
 
 ### AI 기능 (미구현)

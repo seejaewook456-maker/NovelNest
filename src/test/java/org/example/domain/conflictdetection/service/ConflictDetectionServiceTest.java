@@ -1,6 +1,8 @@
 package org.example.domain.conflictdetection.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.domain.aiusage.enums.AiFeatureType;
+import org.example.domain.aiusage.service.AiUsageService;
 import org.example.domain.conflictdetection.dto.ConflictDetectionResponseDto;
 import org.example.domain.conflictdetection.entity.ConflictDetectionResult;
 import org.example.domain.conflictdetection.repository.ConflictDetectionResultRepository;
@@ -50,6 +52,8 @@ class ConflictDetectionServiceTest {
     private NovelAiContextService novelAiContextService;
     @Mock
     private OpenAiService openAiService;
+    @Mock
+    private AiUsageService aiUsageService;
 
     private ConflictDetectionService conflictDetectionService;
 
@@ -64,7 +68,7 @@ class ConflictDetectionServiceTest {
     void setUp() {
         conflictDetectionService = new ConflictDetectionService(
                 episodeRepository, conflictDetectionResultRepository, userRepository,
-                novelAiContextService, openAiService, new ObjectMapper());
+                novelAiContextService, openAiService, new ObjectMapper(), aiUsageService);
         ReflectionTestUtils.setField(conflictDetectionService, "conflictMaxOutputTokens", MAX_OUTPUT_TOKENS);
 
         owner = User.builder().email(EMAIL).password("encoded").nickname("작가").provider(Provider.LOCAL).build();
@@ -133,6 +137,22 @@ class ConflictDetectionServiceTest {
                 .isInstanceOf(SecurityException.class);
 
         verify(openAiService, never()).generateText(anyString(), anyString(), any());
+        // OpenAI 호출 이전(권한 검증 단계)에 실패했으므로 사용량 차감 자체가 시도되지 않아야 한다.
+        verify(aiUsageService, never()).checkAndIncrement(any(), any());
+    }
+
+    @Test
+    void OpenAI_호출_전에_사용량을_차감한다() {
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(owner));
+        given(episodeRepository.findById(100L)).willReturn(Optional.of(episode));
+        given(novelAiContextService.buildForConflictDetection(novel, episode)).willReturn(sampleContext());
+        given(openAiService.generateText(anyString(), anyString(), any())).willReturn("[]");
+        given(conflictDetectionResultRepository.findByEpisode(episode)).willReturn(Optional.empty());
+        given(conflictDetectionResultRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
+
+        conflictDetectionService.detectConflicts(EMAIL, 100L);
+
+        verify(aiUsageService).checkAndIncrement(owner.getId(), AiFeatureType.CONFLICT_DETECTION);
     }
 
     @Test

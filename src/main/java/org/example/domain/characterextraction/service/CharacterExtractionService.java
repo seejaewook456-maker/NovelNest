@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.domain.aiusage.enums.AiFeatureType;
+import org.example.domain.aiusage.service.AiUsageService;
 import org.example.domain.character.dto.CharacterResponseDto;
 import org.example.domain.character.entity.Character;
 import org.example.domain.character.repository.CharacterRepository;
@@ -47,6 +49,7 @@ public class CharacterExtractionService {
     private final UserRepository userRepository;
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
+    private final AiUsageService aiUsageService;
 
     @Transactional(readOnly = true)
     public CharacterExtractionResponseDto extractCharacters(String email, Long episodeId) {
@@ -60,6 +63,9 @@ public class CharacterExtractionService {
 
         // OpenAI 호출 — DB 저장 없음
         String input = buildInput(episode, novel, existingCharacters);
+        // OpenAI 호출 직전에만 사용량을 차감한다 — 그 이전의 검증 실패는 횟수에 포함되지 않는다.
+        // (이 메서드는 readOnly 트랜잭션이지만 checkAndIncrement는 REQUIRES_NEW로 독립 커밋되므로 문제없다.)
+        aiUsageService.checkAndIncrement(user.getId(), AiFeatureType.CHARACTER_EXTRACTION);
         String aiResponse = openAiService.generateText(EXTRACTION_INSTRUCTIONS, input);
         List<CharacterCandidateDto> candidates = parseJson(aiResponse);
 

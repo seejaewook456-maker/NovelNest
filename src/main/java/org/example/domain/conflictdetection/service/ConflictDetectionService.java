@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.domain.aiusage.enums.AiFeatureType;
+import org.example.domain.aiusage.service.AiUsageService;
 import org.example.domain.conflictdetection.dto.ConflictDetectionResponseDto;
 import org.example.domain.conflictdetection.dto.ConflictResultDto;
 import org.example.domain.conflictdetection.entity.ConflictDetectionResult;
@@ -71,6 +73,7 @@ public class ConflictDetectionService {
     private final NovelAiContextService novelAiContextService;
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
+    private final AiUsageService aiUsageService;
 
     @Value("${app.ai.conflict.max-output-tokens}")
     private int conflictMaxOutputTokens;
@@ -88,6 +91,8 @@ public class ConflictDetectionService {
         NovelAiContext context = novelAiContextService.buildForConflictDetection(novel, episode);
 
         String input = buildInput(episode, novel, context);
+        // OpenAI 호출 직전에만 사용량을 차감한다 — 그 이전의 검증 실패는 횟수에 포함되지 않는다.
+        aiUsageService.checkAndIncrement(user.getId(), AiFeatureType.CONFLICT_DETECTION);
         String aiResponse = openAiService.generateText(DETECTION_INSTRUCTIONS, input, conflictMaxOutputTokens);
         List<ConflictResultDto> conflicts = parseJson(aiResponse);
 
