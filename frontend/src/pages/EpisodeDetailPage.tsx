@@ -342,7 +342,8 @@ export default function EpisodeDetailPage() {
             statusBadge={<AutoSaveStatusBadge autoSave={autoSave} />}
           />
           <Card>
-            <form onSubmit={handleUpdate}>
+            {/* 회차 번호/제목/본문은 사용자가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다 */}
+            <form onSubmit={handleUpdate} data-clarity-mask="true">
               <div className="form-row">
                 <div className="form-group">
                   <label>회차 번호</label>
@@ -418,7 +419,8 @@ export default function EpisodeDetailPage() {
         </div>
         <div className="episode-detail">
           <div className="ep-header">
-            <div>
+            {/* 회차 제목은 사용자가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다 (회차 번호는 마스킹 대상 아님) */}
+            <div data-clarity-mask="true">
               <h2>{episode.title}</h2>
               <p className="ep-num-badge">{episode.episodeNumber}화</p>
             </div>
@@ -445,7 +447,8 @@ export default function EpisodeDetailPage() {
             </div>
           </div>
 
-          <div className="episode-content">{episode.content}</div>
+          {/* 회차 본문은 사용자가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다 */}
+          <div className="episode-content" data-clarity-mask="true">{episode.content}</div>
         </div>
 
           {/* AI 도구 영역 — 독립된 박스. 좁은 화면에서 scrollToAiTools의 스크롤 대상이기도 하다 */}
@@ -468,7 +471,8 @@ export default function EpisodeDetailPage() {
             {summaryError && <p className="error-message">{summaryError}</p>}
             {summary ? (
               <div className="summary-box">
-                <p className="summary-text">{summary.summary}</p>
+                {/* AI 회차 요약은 회차 본문에서 파생된 사용자 콘텐츠이므로 세션 리플레이에서 마스킹한다 */}
+                <p className="summary-text" data-clarity-mask="true">{summary.summary}</p>
                 <p className="summary-date">
                   마지막 생성: {new Date(summary.updatedAt).toLocaleString('ko-KR')}
                 </p>
@@ -529,7 +533,8 @@ export default function EpisodeDetailPage() {
             </div>
             {extractionError && <p className="error-message">{extractionError}</p>}
             {episodeCharacters.length > 0 ? (
-              <div className="episode-character-list">
+              // 등장인물 이름/역할은 사용자·AI가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다
+              <div className="episode-character-list" data-clarity-mask="true">
                 {episodeCharacters.map((c) => (
                   <div key={c.id} className="episode-character-card">
                     <div className="episode-character-name">{c.name}</div>
@@ -556,7 +561,8 @@ export default function EpisodeDetailPage() {
             </div>
             {wsExtractionError && <p className="error-message">{wsExtractionError}</p>}
             {episodeWorldSettings.length > 0 ? (
-              <div className="episode-character-list">
+              // 세계관 설정 제목/카테고리는 사용자·AI가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다
+              <div className="episode-character-list" data-clarity-mask="true">
                 {episodeWorldSettings.map((ws) => (
                   <div key={ws.id} className="episode-character-card">
                     <div className="episode-character-name">{ws.title}</div>
@@ -676,8 +682,10 @@ function ConflictCard({ conflict }: { conflict: ConflictResult }) {
   const typeLabel = CONFLICT_TYPE_LABELS[conflict.type as keyof typeof CONFLICT_TYPE_LABELS]
     ?? conflict.type;
 
+  // 설정 충돌 감지 결과(제목/기존 설정/현재 회차 내용/AI 설명/제안)는 사용자·AI가 작성한
+  // 콘텐츠를 담고 있으므로 세션 리플레이에서 마스킹한다.
   return (
-    <div className={`conflict-card conflict-card-${sev}`}>
+    <div className={`conflict-card conflict-card-${sev}`} data-clarity-mask="true">
       <div className="conflict-card-header">
         <span className={`severity-badge severity-badge-${sev}`}>{conflict.severity}</span>
         <span className="conflict-type-label">{typeLabel}</span>

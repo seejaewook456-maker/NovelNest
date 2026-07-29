@@ -136,7 +136,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         {step === 'email' && (
-          <form onSubmit={handleSendCodeSubmit}>
+          <form onSubmit={handleSendCodeSubmit} data-clarity-mask="true">
             <p style={{ color: 'var(--color-text-primary)', marginBottom: 16 }}>
               가입할 때 사용한 이메일을 입력해주세요.
             </p>
@@ -167,7 +167,7 @@ export default function ForgotPasswordPage() {
         )}
 
         {step === 'code' && (
-          <form onSubmit={handleVerifyCode}>
+          <form onSubmit={handleVerifyCode} data-clarity-mask="true">
             <p style={{ color: 'var(--color-text-primary)', marginBottom: 16 }}>
               <strong>{email}</strong>(으)로 발송된 인증번호를 입력해주세요.
               <br />
@@ -214,7 +214,7 @@ export default function ForgotPasswordPage() {
         )}
 
         {step === 'password' && (
-          <form onSubmit={handleConfirmPassword}>
+          <form onSubmit={handleConfirmPassword} data-clarity-mask="true">
             <div className="form-group">
               <label>새 비밀번호</label>
               <div className="input-with-button">

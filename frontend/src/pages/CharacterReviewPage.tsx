@@ -186,13 +186,17 @@ export default function CharacterReviewPage() {
 
       <ProgressBar current={currentIndex + 1} total={total} />
 
-      <p className="review-episode-title" style={{ marginBottom: 8 }}>{episodeTitle}</p>
+      {/* 회차 제목도 사용자가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다 */}
+      <p className="review-episode-title" style={{ marginBottom: 8 }} data-clarity-mask="true">{episodeTitle}</p>
       <h2 className="review-section-title">
         {isExisting ? '기존 인물 — 새 정보 발견' : '신규 인물 발견'}
       </h2>
 
-      {/* 인물 카드 */}
-      <div className={`candidate-card ${isExisting ? 'card-existing' : 'card-new'}`}>
+      {/* 인물 카드 — 이름/역할/성격/말투/설명/근거 장면은 사용자·AI가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다 */}
+      <div
+        className={`candidate-card ${isExisting ? 'card-existing' : 'card-new'}`}
+        data-clarity-mask="true"
+      >
         <div className="candidate-name-row">
           <h3 className="candidate-name">{current.name}</h3>
           {isExisting

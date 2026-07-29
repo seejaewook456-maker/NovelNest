@@ -115,8 +115,9 @@ export default function WorldSettingReferencePanel({ novelId }: WorldSettingRefe
       ) : (
         filtered.map((s) => {
           const isExpanded = expandedId === s.id;
+          // 세계관 설정 제목/내용은 사용자가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다
           return (
-            <div key={s.id} className="item-card workspace-ref-card">
+            <div key={s.id} className="item-card workspace-ref-card" data-clarity-mask="true">
               <div
                 className="item-card-header workspace-ref-card-header"
                 role="button"

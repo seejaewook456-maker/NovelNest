@@ -141,7 +141,8 @@ export default function LoginPage() {
             체계적으로 관리하세요.
           </p>
         </div>
-        <form onSubmit={handleSubmit}>
+        {/* 이메일/비밀번호 입력 및 로그인 실패 메시지에는 개인정보가 포함될 수 있어 세션 리플레이에서 마스킹한다 */}
+        <form onSubmit={handleSubmit} data-clarity-mask="true">
           <div className="form-group">
             <label>이메일</label>
             <input

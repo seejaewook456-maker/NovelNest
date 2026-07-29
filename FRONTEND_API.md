@@ -862,6 +862,62 @@ function PrivateRoute({ children }) {
 
 ---
 
+## Microsoft Clarity 연동
+
+### 구조
+
+| 파일 | 역할 |
+|---|---|
+| `src/lib/clarity.ts` | Clarity 연동 모듈 — `initializeClarity()` 하나만 제공. Clarity 공식 추적 스크립트를 동적으로 `<head>`에 삽입하는 코드는 이 파일뿐이다 |
+| `src/main.tsx` | 앱 진입점에서 `initializeClarity()`를 한 번 호출 |
+
+### 초기화
+
+`initializeClarity()`는 `VITE_CLARITY_PROJECT_ID` 환경변수가 있을 때만 Clarity 스크립트를 삽입한다. 없으면(로컬 개발 환경 기본값) GA4와 달리 경고조차 남기지 않고 조용히 아무 것도 하지 않는다.
+
+- **중복 삽입 방지**: 모듈 내부 `isInitialized` 플래그 + 스크립트 태그 `id`(`ms-clarity-script`) 존재 여부를 이중으로 확인해, StrictMode 이중 실행이나 재호출에도 스크립트를 두 번 삽입하지 않는다.
+- **초기화 실패 격리**: DOM 조작 전체를 `try/catch`로 감싸 Clarity 쪽 오류가 앱 렌더링에 영향을 주지 않는다.
+- **호출 위치**: `main.tsx` 최상단(`App` 렌더링 전)에서 한 번 호출한다. GA4(`initializeAnalytics`)는 `router/index.tsx`에서 첫 `page_view`를 보내기 직전에 호출해야 하는 특수한 순서 제약이 있지만, Clarity는 페이지 이동마다 다시 호출할 API가 없어(스크립트 1회 삽입이 전부) 이런 제약이 없다. 두 모듈은 서로 다른 파일에서 독립적으로 초기화되어 충돌하지 않는다.
+
+### SPA 페이지 이동
+
+Clarity는 브라우저의 실제 클릭/스크롤/DOM 변화를 관찰하는 세션 리플레이 도구라, GA4의 `page_view`처럼 라우트 변경마다 별도로 호출해야 하는 API가 없다. 스크립트를 앱 시작 시 1회만 삽입하면 React Router의 클라이언트 사이드 이동도 같은 세션 안에서 자동으로 기록되므로, 라우터 쪽에는 별도 연동 코드가 없다.
+
+### 개인정보 마스킹 정책
+
+민감한 사용자 콘텐츠를 렌더링하는 최상위 컨테이너에 `data-clarity-mask="true"`를 적용해, Clarity 세션 리플레이에서 해당 영역의 텍스트/이미지가 가려지도록 했다. 버튼명·메뉴명·랜딩페이지 문구처럼 분석에 필요한 일반 UI 텍스트는 마스킹하지 않았다.
+
+| 화면 | 마스킹 대상 |
+|---|---|
+| 로그인 / 회원가입 / 비밀번호 찾기 | 이메일·비밀번호·인증번호 입력 폼(`<form>`) 전체 |
+| 작품 생성/상세/목록 | 제목·장르·설명이 담긴 카드(`.novel-info-card`, `.novel-card`) 및 생성 폼 |
+| 회차 작성/수정/상세 | 번호·제목·본문 입력 폼, 회차 제목(`<h2>`), 본문(`.episode-content`) |
+| AI 회차 요약 | 요약 텍스트(`.summary-text`) |
+| 설정 충돌 감지 결과 | 충돌 카드(`ConflictCard` 루트, 기존 설정/현재 내용/AI 설명/제안 포함) |
+| AI 등장인물·세계관 추출 결과 (회차 상세) | 결과 목록(`.episode-character-list`) |
+| 등장인물 관리 / 참고 패널 | 인물 카드(`.item-card`, 이름·역할·나이·성격·말투·설명) |
+| 세계관 관리 / 참고 패널 | 설정 카드(`.item-card`, 제목·내용) — 카테고리 목록 카드는 개수만 표시하므로 마스킹 제외 |
+| 등장인물·세계관 AI 추출 검토 | 후보 카드(`.candidate-card`), 회차 제목(`.review-episode-title`) |
+| AI 채팅 | 대화 영역(`.chat-messages`), 입력 영역(`.chat-input-area`) |
+
+Access Token / Refresh Token / providerId / 사용자 ID는 애초에 화면에 렌더링되지 않으므로(로그인 로직 내부에서만 사용) 별도 마스킹 대상이 아니다.
+
+### 환경변수
+
+| 변수 | 설명 |
+|---|---|
+| `VITE_CLARITY_PROJECT_ID` | Microsoft Clarity 프로젝트 ID. 없으면 Clarity 비활성화(조용히 스킵) |
+
+GA4와 달리 `.env.development`/`.env.production`에 값을 커밋하지 않는다 — Vercel Environment Variables(Production)에만 등록해서 로컬 개발 환경에서는 항상 비활성화되도록 한다.
+
+### 운영 배포 후 확인 방법
+
+1. Vercel 대시보드 → 해당 프로젝트 → Settings → Environment Variables → `VITE_CLARITY_PROJECT_ID` 등록 (Production 환경) → 재배포. Vite는 빌드 시점에 `import.meta.env.VITE_*` 값을 번들에 굳히므로, 등록 후 반드시 재배포해야 반영된다.
+2. `https://www.novelnestia.com` 접속 → 브라우저 개발자 도구 → Network 탭에서 `clarity.ms/tag/<프로젝트ID>` 요청이 정확히 1번만 발생하는지 확인 (라우트를 여러 번 이동해도 추가 요청이 없어야 한다).
+3. [Clarity 대시보드](https://clarity.microsoft.com) → 해당 프로젝트 → Recordings에서 몇 분 내로 새 세션이 잡히는지 확인하고, 로그인/회차 작성 등 마스킹 대상 화면을 리플레이로 열어 텍스트가 가려져 보이는지 육안으로 확인한다.
+
+---
+
 ## 실행 방법
 
 ### 백엔드 실행

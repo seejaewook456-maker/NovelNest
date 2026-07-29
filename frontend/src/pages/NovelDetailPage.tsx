@@ -30,7 +30,8 @@ export default function NovelDetailPage() {
     <div>
       <BackLink label="← 작품 목록" onClick={() => navigate('/novels')} />
 
-      <div className="novel-info-card">
+      {/* 작품 제목/장르/소개는 사용자가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다 */}
+      <div className="novel-info-card" data-clarity-mask="true">
         <h2>{novel.title}</h2>
         <span className="genre-badge">{novel.genre}</span>
         {novel.description && <p className="description">{novel.description}</p>}
