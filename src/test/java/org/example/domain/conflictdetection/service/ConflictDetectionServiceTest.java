@@ -1,6 +1,7 @@
 package org.example.domain.conflictdetection.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.domain.airatelimit.service.AiRateLimitService;
 import org.example.domain.aiusage.enums.AiFeatureType;
 import org.example.domain.aiusage.service.AiUsageService;
 import org.example.domain.conflictdetection.dto.ConflictDetectionResponseDto;
@@ -18,10 +19,13 @@ import org.example.global.ai.context.NovelAiContext;
 import org.example.global.ai.context.NovelAiContextService;
 import org.example.global.ai.context.WorldSettingContext;
 import org.example.global.ai.service.OpenAiService;
+import org.example.global.exception.BusinessException;
+import org.example.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -35,6 +39,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -54,6 +60,8 @@ class ConflictDetectionServiceTest {
     private OpenAiService openAiService;
     @Mock
     private AiUsageService aiUsageService;
+    @Mock
+    private AiRateLimitService aiRateLimitService;
 
     private ConflictDetectionService conflictDetectionService;
 
@@ -68,7 +76,7 @@ class ConflictDetectionServiceTest {
     void setUp() {
         conflictDetectionService = new ConflictDetectionService(
                 episodeRepository, conflictDetectionResultRepository, userRepository,
-                novelAiContextService, openAiService, new ObjectMapper(), aiUsageService);
+                novelAiContextService, openAiService, new ObjectMapper(), aiUsageService, aiRateLimitService);
         ReflectionTestUtils.setField(conflictDetectionService, "conflictMaxOutputTokens", MAX_OUTPUT_TOKENS);
 
         owner = User.builder().email(EMAIL).password("encoded").nickname("작가").provider(Provider.LOCAL).build();
@@ -142,7 +150,7 @@ class ConflictDetectionServiceTest {
     }
 
     @Test
-    void OpenAI_호출_전에_사용량을_차감한다() {
+    void OpenAI_호출_전에_분당_Rate_Limit과_사용량을_이_순서로_차감한다() {
         given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(owner));
         given(episodeRepository.findById(100L)).willReturn(Optional.of(episode));
         given(novelAiContextService.buildForConflictDetection(novel, episode)).willReturn(sampleContext());
@@ -152,7 +160,27 @@ class ConflictDetectionServiceTest {
 
         conflictDetectionService.detectConflicts(EMAIL, 100L);
 
-        verify(aiUsageService).checkAndIncrement(owner.getId(), AiFeatureType.CONFLICT_DETECTION);
+        InOrder inOrder = inOrder(aiRateLimitService, aiUsageService, openAiService);
+        inOrder.verify(aiRateLimitService).checkAndRecord(owner.getId());
+        inOrder.verify(aiUsageService).checkAndIncrement(owner.getId(), AiFeatureType.CONFLICT_DETECTION);
+        inOrder.verify(openAiService).generateText(anyString(), anyString(), any());
+    }
+
+    @Test
+    void 분당_Rate_Limit에_걸리면_하루_사용량_차감과_OpenAI_호출_모두_일어나지_않는다() {
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(owner));
+        given(episodeRepository.findById(100L)).willReturn(Optional.of(episode));
+        given(novelAiContextService.buildForConflictDetection(novel, episode)).willReturn(sampleContext());
+        willThrow(new BusinessException(ErrorCode.AI_RATE_LIMIT_EXCEEDED))
+                .given(aiRateLimitService).checkAndRecord(owner.getId());
+
+        assertThatThrownBy(() -> conflictDetectionService.detectConflicts(EMAIL, 100L))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                        .isEqualTo(ErrorCode.AI_RATE_LIMIT_EXCEEDED));
+
+        verify(aiUsageService, never()).checkAndIncrement(any(), any());
+        verify(openAiService, never()).generateText(anyString(), anyString(), any());
     }
 
     @Test

@@ -307,6 +307,16 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * Flyway `V6__add_ai_daily_usage.sql`(테이블 생성) → `V7__remove_ai_daily_usage_total_count.sql`(전체 합계 컬럼 제거) — 로컬 실제 MySQL에 순서대로 적용 및 스키마 확인 완료
 * 상세 내용은 `docs/AI_USAGE_LIMIT.md` 참고
 
+### AI 분당 Rate Limit (사용자당 최근 60초 10회, 5개 기능 전체 합계 기준)
+* 목적: 하루 사용량 제한만으로는 막지 못하는 "짧은 시간에 몰아서 요청"하는 남용을 방지. 하루 사용량 검사보다 먼저 실행되며, 여기서 막히면 하루 사용 횟수는 차감되지 않고 OpenAI도 호출되지 않음
+* 백엔드: `domain/airatelimit` 패키지 신규 — `AiRequestLog` 엔티티(요청 시각 로그, `id`/`user_id`/`requested_at` 최소 컬럼), `AiRateLimitService`(검사·기록 단일 창구, `checkAndRecord(userId)`), `AiRateLimitProperties`(`app.ai.rate-limit.max-requests`/`window-seconds`, 기본 10/60)
+* Redis 없이 DB(H2/MySQL)만으로 구현 — 최근 60초 요청 수를 COUNT로 계산하는 Sliding Window 방식, 기능별이 아니라 "AI 전체 요청" 합계로 판단
+* 동시성은 `users` 테이블 해당 행에 비관적 락(`SELECT ... FOR UPDATE`)을 걸어 "조회~기록" 구간을 직렬화, `checkAndRecord`는 `REQUIRES_NEW`로 즉시 커밋되어 잠금을 짧게 유지
+* 오래된 로그는 별도 스케줄러 없이 매 요청마다 윈도우 밖으로 나간 행을 함께 삭제(`deleteByRequestedAtBefore`)해 테이블 크기를 제한
+* 제한 초과 시 429(`AI_RATE_LIMIT_EXCEEDED`) — 프론트엔드는 기존 공통 오류 표시 경로(`err.message`)를 그대로 타므로 별도 코드 변경 없이 처리됨
+* Flyway `V8__add_ai_request_logs.sql`(테이블 생성, `users` FK + 인덱스 2개)
+* 상세 내용은 `docs/AI_RATE_LIMIT.md` 참고
+
 ## 아직 구현되지 않음
 
 ### AI 기능 (미구현)

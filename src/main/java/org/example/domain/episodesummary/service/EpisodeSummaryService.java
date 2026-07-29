@@ -2,6 +2,7 @@ package org.example.domain.episodesummary.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.domain.airatelimit.service.AiRateLimitService;
 import org.example.domain.aiusage.enums.AiFeatureType;
 import org.example.domain.aiusage.service.AiUsageService;
 import org.example.domain.episode.entity.Episode;
@@ -33,6 +34,7 @@ public class EpisodeSummaryService {
     private final UserRepository userRepository;
     private final OpenAiService openAiService;
     private final AiUsageService aiUsageService;
+    private final AiRateLimitService aiRateLimitService;
 
     // 요약 생성 (없으면 insert, 있으면 update — upsert)
     @Transactional
@@ -41,7 +43,8 @@ public class EpisodeSummaryService {
         Episode episode = findEpisodeById(episodeId);
         validateOwner(episode.getNovel(), user);
 
-        // OpenAI 호출 직전에만 사용량을 차감한다 — 그 이전의 검증 실패는 횟수에 포함되지 않는다.
+        // 분당 Rate Limit → 하루 사용량 제한 순으로 검사한 뒤에만 OpenAI를 호출한다.
+        aiRateLimitService.checkAndRecord(user.getId());
         aiUsageService.checkAndIncrement(user.getId(), AiFeatureType.EPISODE_SUMMARY);
         String summaryText = openAiService.generateText(SUMMARY_INSTRUCTIONS, episode.getContent());
 

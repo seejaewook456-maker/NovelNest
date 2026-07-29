@@ -70,6 +70,11 @@ public enum ErrorCode {
     AI_DAILY_FEATURE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "AI_DAILY_FEATURE_LIMIT_EXCEEDED",
             "오늘 사용할 수 있는 AI 기능 이용 횟수를 모두 사용했습니다. AI 도구 이용권은 매일 00:00에 충전됩니다."),
 
+    // AI 분당 Rate Limit(최근 60초 Sliding Window, 5개 AI 기능 전체 요청 합계 기준) 초과.
+    // AiRateLimitService 참고. EMAIL_CODE_RESEND_TOO_SOON과 동일하게 429 Too Many Requests를 사용한다.
+    AI_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "AI_RATE_LIMIT_EXCEEDED",
+            "AI 요청이 너무 많습니다. 잠시 후 다시 시도해주세요."),
+
     // 서버 오류
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다.");
 

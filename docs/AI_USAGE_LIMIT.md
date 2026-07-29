@@ -70,13 +70,16 @@ UI에 표시한다. **기능별 제한만 적용하며, 전체 합계 제한은 
 원자적 증가·예외 분기 로직은 전부 `AiUsageService` 하나에 모여 있어 기능별 서비스마다 같은 코드를
 복사하지 않는다.
 
-호출 순서(모든 기능 공통):
+호출 순서(모든 기능 공통, 2026-07-29 분당 Rate Limit 추가 이후):
 ```
 1. 사용자/권한/리소스 검증 (예: 회차 소유자 확인)
-   → 여기서 실패하면 checkAndIncrement 자체가 호출되지 않는다(횟수 미차감)
-2. checkAndIncrement(userId, featureType)  ← OpenAI 호출 직전
+   → 여기서 실패하면 아래 검사들이 전혀 호출되지 않는다(분당/하루 횟수 모두 미차감)
+2. aiRateLimitService.checkAndRecord(userId)  ← 분당 Rate Limit(최근 60초, 전체 요청 합계) — 이 문서가
+   다루는 하루 사용량보다 먼저 검사한다. 초과 시 BusinessException(429)으로 여기서 종료.
+   자세한 내용은 AI_RATE_LIMIT.md 참고.
+3. checkAndIncrement(userId, featureType)  ← OpenAI 호출 직전
    → 제한 초과 시 BusinessException(429)을 던지고 여기서 종료(횟수 미차감)
-3. openAiService.generateText(...)  ← 사용량은 이미 커밋된 뒤이므로,
+4. openAiService.generateText(...)  ← 사용량은 이미 커밋된 뒤이므로,
    여기서 OpenAI 오류/타임아웃/파싱 오류가 나도 방금 차감된 횟수는 복구하지 않는다.
 ```
 
@@ -350,5 +353,8 @@ AI_DAILY_CHAT_LIMIT=20
 - **정책 변경**: AI 챗봇 하루 제한을 50회에서 20회로 하향 조정
   (`AiUsageLimitProperties.chat` 기본값, `AI_DAILY_CHAT_LIMIT` 기본값). 스키마/코드 구조 변경은
   없고 제한값(설정)만 바뀐 것이라 별도 Flyway 마이그레이션은 필요하지 않다.
+- **기능 추가**: 이 하루 사용량 제한과는 별도로, 짧은 시간에 몰아서 요청하는 남용을 막기 위한
+  **분당 Rate Limit**(사용자당 최근 60초 10회, 5개 기능 전체 합계 기준)을 추가했다. 이 하루 사용량
+  검사보다 먼저 실행되며, 자세한 내용은 [AI_RATE_LIMIT.md](./AI_RATE_LIMIT.md) 참고.
 
 이 문서는 위 변경들을 모두 반영한 최종 정책을 기준으로 작성되어 있다.
