@@ -1,5 +1,6 @@
 package org.example.global.exception;
 
+import io.sentry.Sentry;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.global.common.ApiResponse;
@@ -145,11 +146,16 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.fail(ErrorCode.FORBIDDEN.getCode(), e.getMessage()));
     }
 
-    // 처리되지 않은 모든 예외 — 500
+    // 처리되지 않은 모든 예외 — 500.
+    // 이 핸들러가 Exception 전체를 잡아버려 Sentry의 자동 예외 리졸버(HandlerExceptionResolver)까지
+    // 도달하는 예외가 없으므로, 여기서만 한 번 수동으로 Sentry에 전달한다.
+    // BusinessException 등 더 구체적인 타입은 위쪽의 전용 핸들러에서 먼저 잡혀 여기 도달하지 않으므로
+    // 중복 전송되지 않는다. 요청 Body/쿠키/인증 헤더는 담지 않는다(sentry.max-request-body-size=none).
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handleException(Exception e, HttpServletRequest request) {
         log.error("[ServerError] method={}, uri={}, exception={}, message={}",
                 request.getMethod(), request.getRequestURI(), e.getClass().getName(), e.getMessage(), e);
+        Sentry.captureException(e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR.getCode(), ErrorCode.INTERNAL_SERVER_ERROR.getMessage()));
     }

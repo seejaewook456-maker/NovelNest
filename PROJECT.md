@@ -288,6 +288,15 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * GA4는 페이지 이동마다 이벤트를 보내야 해 `router/index.tsx`에서 초기화하지만, Clarity는 스크립트 1회 삽입이 전부라 `main.tsx`에서 독립적으로 초기화 — 두 모듈 간 충돌 없음
 * 상세 내용은 `FRONTEND_API.md`의 "Microsoft Clarity 연동" 섹션 참고
 
+### Sentry (프론트엔드/백엔드 운영 오류 수집)
+* 프론트엔드: `@sentry/react` — `src/lib/sentry.ts`(initializeSentry/captureApiError), `src/components/AppErrorBoundary.tsx`(렌더링 오류 Fallback UI), `main.tsx`에서 GA4/Clarity와 함께 1회 초기화
+* 프론트엔드는 `fetchWithAuth.ts` 한 곳에서만 API 오류를 캡처(500 이상/네트워크 오류만, 4xx 제외) — 개별 API 함수 수정 없음
+* 백엔드: `io.sentry:sentry-spring-boot-starter-jakarta:8.50.1`, `application-prod.yml`에만 `sentry:` 설정 추가(local/test 미적용)
+* 백엔드는 `GlobalExceptionHandler`의 catch-all(Exception.class)이 Sentry 자동 수집을 사실상 막는 구조라, 그 지점 + AsyncConfig(비동기 예외) + VerificationCleanupScheduler(정리 작업) + OpenAiService(외부 API 실패) 4곳에서만 수동 캡처 — BusinessException 등 정상 비즈니스 예외는 미전송
+* Source Map, 성능 모니터링(tracesSampleRate), 분산 추적, Sentry Replay, Release 연동은 이번 범위 아님(Replay는 Clarity와 중복이라 의도적으로 미적용)
+* Docker Compose는 `env_file`로 `.env` 전체를 이미 전달하므로 별도 수정 없음 — EC2 `.env`에 `SENTRY_DSN`/`SENTRY_ENVIRONMENT` 추가 후 컨테이너 재생성(`docker compose up -d`) 필요, 단순 restart로는 반영 안 됨
+* 상세 내용은 `docs/SENTRY.md` 참고
+
 ## 아직 구현되지 않음
 
 ### AI 기능 (미구현)

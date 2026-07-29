@@ -1,5 +1,6 @@
 package org.example.global.config;
 
+import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,9 +58,12 @@ public class AsyncConfig implements AsyncConfigurer {
     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
         // void 비동기 메서드는 예외가 호출자에게 전달되지 않으므로, 유실되지 않도록 별도로 로그를 남긴다.
         // 이메일 주소/인증번호 등 민감정보는 인자에 포함되어 있어도 절대 출력하지 않는다.
+        // (EmailSendEventListener.handle()은 이미 알려진 메일 발송 실패를 자체적으로 catch해 로그만 남기므로,
+        //  여기까지 도달하는 예외는 예상하지 못한 것들뿐이다 — Sentry에도 그대로 한 번만 전달한다.)
         return (throwable, method, params) -> {
             log.error("Uncaught async exception in method '{}': {}", method.getName(), throwable.getMessage());
             logMethodSignatureOnly(method);
+            Sentry.captureException(throwable);
         };
     }
 
