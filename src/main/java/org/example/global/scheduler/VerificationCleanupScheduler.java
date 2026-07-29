@@ -1,5 +1,6 @@
 package org.example.global.scheduler;
 
+import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -30,6 +31,7 @@ public class VerificationCleanupScheduler {
             log.info("Expired email verification cleanup done. deletedCount={}", deleted);
         } catch (Exception e) {
             log.error("Failed to clean up expired email verifications. reason={}", e.getMessage());
+            Sentry.captureException(e);
         }
 
         try {
@@ -37,6 +39,7 @@ public class VerificationCleanupScheduler {
             log.info("Expired/used password reset token cleanup done. deletedCount={}", deleted);
         } catch (Exception e) {
             log.error("Failed to clean up password reset tokens. reason={}", e.getMessage());
+            Sentry.captureException(e);
         }
     }
 }

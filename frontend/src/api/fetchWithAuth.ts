@@ -1,6 +1,7 @@
 import { getToken, getRefreshToken, saveTokens, clearTokens } from '../utils/token';
 import { notifySessionExpired } from '../state/sessionExpired';
 import { API_BASE_URL } from './config';
+import { captureApiError } from '../lib/sentry';
 
 interface ApiResponse<T = undefined> {
   message: string;
@@ -26,6 +27,30 @@ export class ApiError extends Error {
   }
 }
 
+// 경로만으로 안전하게 분류 가능한 경우에만 기능 태그를 붙인다 — 억지로 모든 경로를 분류하지 않는다.
+// AI 관련 패턴을 먼저 검사해야 한다 (예: /episodes/{id}/summary는 episode가 아니라 ai_summary).
+function deriveFeatureTag(path: string): string | undefined {
+  if (path.includes('/character-extraction')) return 'ai_character';
+  if (path.includes('/world-setting-extraction')) return 'ai_worldview';
+  if (path.includes('/conflict-detection')) return 'ai_conflict';
+  if (path.includes('/summary')) return 'ai_summary';
+  if (path.includes('/chat')) return 'ai_chat';
+  if (path.includes('/characters')) return 'character';
+  if (path.includes('/world-settings')) return 'worldsetting';
+  if (path.startsWith('/episodes')) return 'episode';
+  if (path.startsWith('/novels')) return 'novel';
+  if (path.startsWith('/auth') || path.startsWith('/users')) return 'auth';
+  return undefined;
+}
+
+// 네트워크 실패(오프라인, 서버 다운, CORS 등)를 Sentry에 남기고 NetworkError로 던진다.
+// 항상 던지므로 반환 타입을 never로 선언해, 호출부 이후 코드가 도달 불가능함을 타입 체커가 알게 한다.
+function throwNetworkError(path: string, method: string): never {
+  const error = new NetworkError('네트워크 연결을 확인해주세요.');
+  captureApiError(error, { feature: deriveFeatureTag(path), path, method });
+  throw error;
+}
+
 // Access Token 만료로 401을 받은 요청이 동시에 여러 개 발생해도
 // Refresh API는 단 한 번만 호출되도록 진행 중인 재발급 요청을 공유한다.
 let refreshPromise: Promise<string | null> | null = null;
@@ -43,7 +68,7 @@ const requestRefresh = async (): Promise<string | null> => {
     });
   } catch {
     // 네트워크 오류: refresh token 자체가 무효화된 것이 아니므로 세션 만료로 취급하지 않는다.
-    throw new NetworkError('네트워크 연결을 확인해주세요.');
+    throwNetworkError('/auth/refresh', 'POST');
   }
 
   // 서버가 명시적으로 거부한 경우에만 진짜 만료/무효로 판단한다.
@@ -91,11 +116,13 @@ export const fetchWithAuth = async <T>(
       },
     });
 
+  const method = options.method ?? 'GET';
+
   let res: Response;
   try {
     res = await callApi(getToken());
   } catch {
-    throw new NetworkError('네트워크 연결을 확인해주세요.');
+    throwNetworkError(path, method);
   }
 
   if (res.status === 401) {
@@ -103,8 +130,10 @@ export const fetchWithAuth = async <T>(
     try {
       newAccessToken = await refreshAccessToken();
     } catch (err) {
+      // NetworkError는 requestRefresh 내부(throwNetworkError)에서 이미 캡처된 뒤 올라온 것이므로
+      // 여기서 다시 캡처하면 같은 오류가 두 번 전송된다 — 그대로 재전파만 한다.
       if (err instanceof NetworkError) throw err;
-      throw new NetworkError('네트워크 연결을 확인해주세요.');
+      throwNetworkError('/auth/refresh', 'POST');
     }
 
     if (!newAccessToken) {
@@ -115,7 +144,7 @@ export const fetchWithAuth = async <T>(
     try {
       res = await callApi(newAccessToken);
     } catch {
-      throw new NetworkError('네트워크 연결을 확인해주세요.');
+      throwNetworkError(path, method);
     }
 
     if (res.status === 401) {
@@ -124,10 +153,22 @@ export const fetchWithAuth = async <T>(
     }
   }
 
-  const json: ApiResponse<T> = await res.json();
+  let json: ApiResponse<T>;
+  try {
+    json = await res.json();
+  } catch (parseError) {
+    // 응답이 JSON이 아닌 예상하지 못한 형태로 끝난 경우(예: 게이트웨이가 반환한 HTML 오류 페이지)
+    captureApiError(parseError, { feature: deriveFeatureTag(path), path, method, status: res.status });
+    throw parseError;
+  }
 
   if (!res.ok) {
-    throw new ApiError(json.message || '요청 처리 중 오류가 발생했습니다.', json.code);
+    const error = new ApiError(json.message || '요청 처리 중 오류가 발생했습니다.', json.code);
+    // 400/401/403/404 등은 예상 가능한 비즈니스 오류이므로 수집하지 않고, 500 이상만 수집한다.
+    if (res.status >= 500) {
+      captureApiError(error, { feature: deriveFeatureTag(path), path, method, status: res.status });
+    }
+    throw error;
   }
 
   return json;

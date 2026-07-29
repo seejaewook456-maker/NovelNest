@@ -43,6 +43,9 @@ dependencies {
     // Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.3'
 
+    // Sentry (운영 오류 수집 전용 — Source Map/성능 모니터링/Replay 미사용, Spring Boot 3 Jakarta 공식 스타터)
+    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.50.1'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

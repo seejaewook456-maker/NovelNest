@@ -37,3 +37,12 @@ app:
     base-url: https://api.novelnestia.com
   cors:
     allowed-origins: https://novelnestia.com,https://www.novelnestia.com
+
+# 운영 오류 수집 전용(기본 오류 수집만 사용) — Source Map/성능 모니터링/트레이싱/Replay는 사용하지 않는다.
+# 이 블록은 application-prod.yml에만 존재하므로 local/test 프로필에서는 아예 로드되지 않는다.
+# SENTRY_DSN이 EC2 .env에 없으면(빈 문자열) SDK가 이벤트를 전송하지 않는 안전한 no-op으로 동작한다.
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: ${SENTRY_ENVIRONMENT:production}
+  send-default-pii: false
+  max-request-body-size: none
