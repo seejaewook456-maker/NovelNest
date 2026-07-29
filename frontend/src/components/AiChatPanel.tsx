@@ -4,6 +4,9 @@ import type { ContextStats, ChatMessage } from '../types/chat';
 import { useNavigate } from 'react-router-dom';
 import { trackEvent } from '../lib/analytics';
 import { ANALYTICS_EVENTS } from '../constants/analyticsEvents';
+import { useAiDailyUsage } from '../hooks/useAiDailyUsage';
+import AiUsageHint from './AiUsageHint';
+import AiUsageRechargeNote from './AiUsageRechargeNote';
 
 // 간단한 인라인 마크다운 파싱 — bold, italic, code 처리
 function parseInline(text: string): ReactNode[] {
@@ -114,6 +117,10 @@ export default function AiChatPanel({ novelId }: AiChatPanelProps) {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const { usage: aiUsage, loading: aiUsageLoading, error: aiUsageError, refetch: refetchAiUsage } = useAiDailyUsage();
+  // 사용량을 아직 못 불러온 상태(로딩/오류)에서는 무제한으로 간주하지 않고 보수적으로 전송을 막는다.
+  const canSendChat = !!aiUsage && aiUsage.chat.remaining > 0;
+
   useEffect(() => {
     getContextStats(novelId)
       .then(setContextStats)
@@ -127,7 +134,7 @@ export default function AiChatPanel({ novelId }: AiChatPanelProps) {
 
   const handleSend = async () => {
     const trimmed = inputMessage.trim();
-    if (!trimmed || isChatLoading) return;
+    if (!trimmed || isChatLoading || !canSendChat) return;
 
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
@@ -149,8 +156,12 @@ export default function AiChatPanel({ novelId }: AiChatPanelProps) {
       };
       setMessages(prev => [...prev, assistantMsg]);
       trackEvent(ANALYTICS_EVENTS.AI_CHAT_MESSAGE_SEND);
+      void refetchAiUsage();
     } catch (err) {
       setChatError(err instanceof Error ? err.message : 'AI 답변 생성에 실패했습니다.');
+      // 사용량이 서버에서 이미 차감된 뒤 실패했을 수도 있으므로(오늘 이용 가능 횟수 초과 포함)
+      // 항상 최신값으로 다시 맞춘다.
+      void refetchAiUsage();
     } finally {
       setIsChatLoading(false);
     }
@@ -188,6 +199,12 @@ export default function AiChatPanel({ novelId }: AiChatPanelProps) {
       <div className="ai-section-header">
         <h3>AI Writing Assistant</h3>
       </div>
+      <AiUsageHint
+        detail={aiUsage?.chat}
+        loading={aiUsageLoading}
+        error={aiUsageError}
+        depletedMessage="오늘 이용 가능한 AI 채팅 횟수를 모두 사용했습니다."
+      />
 
       {/* AI 데이터 현황 */}
       {contextStats && (
@@ -309,18 +326,23 @@ export default function AiChatPanel({ novelId }: AiChatPanelProps) {
           value={inputMessage}
           onChange={e => setInputMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="작품에 대해 질문해 보세요... (Enter로 전송, Shift+Enter로 줄바꿈)"
+          placeholder={
+            canSendChat
+              ? '작품에 대해 질문해 보세요... (Enter로 전송, Shift+Enter로 줄바꿈)'
+              : '오늘 이용 가능한 AI 채팅 횟수를 모두 사용했습니다.'
+          }
           rows={3}
-          disabled={isChatLoading}
+          disabled={isChatLoading || !canSendChat}
         />
         <button
           className="btn btn-primary chat-send-btn"
           onClick={handleSend}
-          disabled={isChatLoading || !inputMessage.trim()}
+          disabled={isChatLoading || !inputMessage.trim() || !canSendChat}
         >
           {isChatLoading ? '생성 중...' : '전송'}
         </button>
       </div>
+      <AiUsageRechargeNote />
     </div>
   );
 }

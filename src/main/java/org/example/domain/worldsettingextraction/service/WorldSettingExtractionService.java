@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.domain.aiusage.enums.AiFeatureType;
+import org.example.domain.aiusage.service.AiUsageService;
 import org.example.domain.episode.entity.Episode;
 import org.example.domain.episode.repository.EpisodeRepository;
 import org.example.domain.novel.entity.Novel;
@@ -46,6 +48,7 @@ public class WorldSettingExtractionService {
     private final UserRepository userRepository;
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
+    private final AiUsageService aiUsageService;
 
     @Transactional(readOnly = true)
     public WorldSettingExtractionResponseDto extractWorldSettings(String email, Long episodeId) {
@@ -59,6 +62,8 @@ public class WorldSettingExtractionService {
 
         // OpenAI 호출 — DB 저장 없음
         String input = buildInput(episode, novel, existingSettings);
+        // OpenAI 호출 직전에만 사용량을 차감한다 — 그 이전의 검증 실패는 횟수에 포함되지 않는다.
+        aiUsageService.checkAndIncrement(user.getId(), AiFeatureType.WORLDVIEW_EXTRACTION);
         String aiResponse = openAiService.generateText(EXTRACTION_INSTRUCTIONS, input);
         List<WorldSettingCandidateDto> candidates = parseJson(aiResponse);
 

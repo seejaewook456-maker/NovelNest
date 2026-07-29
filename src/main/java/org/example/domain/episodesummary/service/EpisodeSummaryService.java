@@ -2,6 +2,8 @@ package org.example.domain.episodesummary.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.domain.aiusage.enums.AiFeatureType;
+import org.example.domain.aiusage.service.AiUsageService;
 import org.example.domain.episode.entity.Episode;
 import org.example.domain.episode.repository.EpisodeRepository;
 import org.example.domain.episodesummary.dto.EpisodeSummaryResponseDto;
@@ -30,6 +32,7 @@ public class EpisodeSummaryService {
     private final EpisodeRepository episodeRepository;
     private final UserRepository userRepository;
     private final OpenAiService openAiService;
+    private final AiUsageService aiUsageService;
 
     // 요약 생성 (없으면 insert, 있으면 update — upsert)
     @Transactional
@@ -38,6 +41,8 @@ public class EpisodeSummaryService {
         Episode episode = findEpisodeById(episodeId);
         validateOwner(episode.getNovel(), user);
 
+        // OpenAI 호출 직전에만 사용량을 차감한다 — 그 이전의 검증 실패는 횟수에 포함되지 않는다.
+        aiUsageService.checkAndIncrement(user.getId(), AiFeatureType.EPISODE_SUMMARY);
         String summaryText = openAiService.generateText(SUMMARY_INSTRUCTIONS, episode.getContent());
 
         // 기존 요약이 있으면 덮어쓰고, 없으면 새로 저장

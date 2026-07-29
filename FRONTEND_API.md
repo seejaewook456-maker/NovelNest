@@ -773,6 +773,86 @@ Authorization: Bearer {accessToken}
 
 ---
 
+## AI 사용량(AiUsage) API
+
+사용자별 AI 기능 하루 사용량 제한과 잔여 횟수 조회. 정책/제한값/일일 초기화 방식 등 전체 내용은
+`docs/AI_USAGE_LIMIT.md`를 참고. 이 문서에는 프론트 연동에 필요한 부분만 요약한다.
+
+### 오늘의 AI 사용량 조회
+
+```
+GET /api/ai/usage/daily
+Authorization: Bearer {accessToken}
+```
+
+**설명**: 이 조회 자체는 사용 횟수에 포함되지 않는다.
+
+**Response (200)**
+```json
+{
+  "message": "AI 사용량 조회 성공",
+  "data": {
+    "usageDate": "2026-07-29",
+    "timezone": "Asia/Seoul",
+    "nextResetAt": "2026-07-30T00:00:00+09:00",
+    "summary": { "used": 1, "remaining": 19, "limit": 20 },
+    "conflict": { "used": 1, "remaining": 14, "limit": 15 },
+    "character": { "used": 1, "remaining": 14, "limit": 15 },
+    "worldview": { "used": 1, "remaining": 14, "limit": 15 },
+    "chat": { "used": 2, "remaining": 18, "limit": 20 }
+  }
+}
+```
+
+전체 합계 제한은 없다 — 각 기능의 `remaining`은 그 기능 자체의 잔여 횟수 그대로다. 프론트엔드는 이
+값을 그대로 표시하면 되고, 별도로 다시 계산하지 않는다.
+
+### AI 기능 실행 시 제한 초과 응답 (429)
+
+회차 요약/설정 충돌 감지/등장인물 추출/세계관 추출/AI 챗봇 API를 호출했을 때, 해당 기능의 오늘 사용
+가능한 횟수를 모두 소진한 상태면 아래처럼 `429 Too Many Requests`가 반환된다(OpenAI 호출 자체가
+일어나지 않으므로 과금도 발생하지 않는다).
+
+```json
+{
+  "success": false,
+  "code": "AI_DAILY_FEATURE_LIMIT_EXCEEDED",
+  "message": "오늘 사용할 수 있는 회차 요약 횟수를 모두 사용했습니다. AI 도구 이용권은 매일 00:00에 충전됩니다."
+}
+```
+
+프론트엔드는 이 `message`를 그대로 사용자에게 보여준다(`fetchWithAuth`가 던지는 `ApiError.message`).
+
+### 프론트 연동 흐름
+
+```
+useAiDailyUsage() (여러 컴포넌트가 공유하는 훅)
+→ 최초 마운트 시 GET /api/ai/usage/daily 1회 조회 (aiUsageStore에 캐시)
+→ AI 실행 성공/실패 직후 refetch() 호출 → store가 갱신되며 이를 구독 중인 모든 컴포넌트가 즉시 리렌더
+
+EpisodeDetailPage (AI 도구 4종)
+→ 각 섹션에 <AiUsageHint detail={aiUsage?.summary|conflict|character|worldview} .../> 표시
+→ remaining <= 0이면 실행 버튼 disabled
+
+AiChatPanel (작품 상세/회차 작성/회차 수정 3개 페이지 공유)
+→ <AiUsageHint detail={aiUsage?.chat} .../> 표시
+→ remaining <= 0이면 입력창/전송 버튼 disabled
+```
+
+### 관련 파일
+
+| 파일 | 역할 |
+|------|------|
+| `src/types/aiUsage.ts` | `AiDailyUsage`/`AiUsageDetail` 타입 |
+| `src/api/aiUsageApi.ts` | `GET /api/ai/usage/daily` 호출 |
+| `src/state/aiUsageStore.ts` | 여러 컴포넌트가 공유하는 조회 결과 캐시(pub-sub) — `sessionExpired.ts`와 동일한 패턴 |
+| `src/hooks/useAiDailyUsage.ts` | 공통 훅(`usage`/`loading`/`error`/`refetch`) |
+| `src/components/AiUsageHint.tsx` | "오늘 남은 횟수" 표시 공통 컴포넌트 (로딩/에러/소진 상태 포함) |
+| `src/pages/EpisodeDetailPage.tsx` | AI 도구 4종 섹션에 훅/컴포넌트 적용 |
+| `src/components/AiChatPanel.tsx` | 챗봇 입력 제한에 훅/컴포넌트 적용 |
+
+---
+
 ## 페이지 라우팅 구조
 
 | 경로 | 페이지 |

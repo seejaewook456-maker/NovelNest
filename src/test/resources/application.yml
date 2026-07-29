@@ -1,0 +1,14 @@
+# @DataJpaTest 등 실제 JPA 컨텍스트를 띄우는 테스트 전용 설정.
+# 운영/로컬은 MySQL + Flyway를 그대로 쓰고, 테스트는 인메모리 H2 + Hibernate 자동 스키마 생성을 쓴다.
+# V1~V6 마이그레이션은 information_schema/PREPARE 등 MySQL 전용 동적 SQL을 사용해 H2에서 실행할 수
+# 없으므로, 테스트에서는 Flyway를 끄고 엔티티 기준으로 스키마를 즉석 생성한다(기존 순수 Mockito
+# 단위 테스트는 Spring 컨텍스트 자체를 띄우지 않으므로 이 설정의 영향을 받지 않는다).
+spring:
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect

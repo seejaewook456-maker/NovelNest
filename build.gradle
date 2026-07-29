@@ -54,6 +54,9 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // AI 하루 사용량의 동시성(원자적 조건부 UPDATE) 테스트 전용 — 운영은 MySQL을 그대로 사용하며,
+    // H2는 테스트 클래스패스에만 존재해 프로덕션 런타임에는 영향이 없다.
+    testRuntimeOnly 'com.h2database:h2'
 }
 
 test {

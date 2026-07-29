@@ -1,15 +1,40 @@
+import type { ReactNode } from 'react';
+
 export type EpisodeWorkspacePanelKey = 'characters' | 'worldSettings' | 'chat';
 
 interface MenuItem {
   key: EpisodeWorkspacePanelKey;
   label: string;
-  icon: string;
+  icon: ReactNode;
 }
 
+// 이모지 대신 CDN 의존 없는 인라인 SVG 라인 아이콘을 사용해 OS/브라우저마다 다르게 보이지 않고
+// 항상 같은 모습으로, 브랜드 색(currentColor)을 그대로 상속받아 보이도록 한다.
+const CharacterIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21v-1a8 8 0 0 1 16 0v1" />
+  </svg>
+);
+
+const WorldviewIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </svg>
+);
+
+const ChatIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
 const MENU_ITEMS: MenuItem[] = [
-  { key: 'characters', label: '등장인물', icon: '👤' },
-  { key: 'worldSettings', label: '세계관', icon: '🌍' },
-  { key: 'chat', label: 'AI 채팅', icon: '🤖' },
+  { key: 'characters', label: '등장인물', icon: <CharacterIcon /> },
+  { key: 'worldSettings', label: '세계관', icon: <WorldviewIcon /> },
+  { key: 'chat', label: 'AI 채팅', icon: <ChatIcon /> },
 ];
 
 interface EpisodeToolRailProps {
