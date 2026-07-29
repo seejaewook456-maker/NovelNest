@@ -77,8 +77,9 @@ export default function CharacterReferencePanel({ novelId }: CharacterReferenceP
         filtered.map((c) => {
           const isExpanded = expandedId === c.id;
           const hasDetail = c.age != null || c.personality || c.speechStyle || c.description;
+          // 등장인물 이름/역할/성격/말투/설명은 사용자가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다
           return (
-            <div key={c.id} className="item-card workspace-ref-card">
+            <div key={c.id} className="item-card workspace-ref-card" data-clarity-mask="true">
               <div
                 className="item-card-header workspace-ref-card-header"
                 role="button"

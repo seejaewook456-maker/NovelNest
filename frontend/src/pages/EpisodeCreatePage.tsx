@@ -110,7 +110,8 @@ export default function EpisodeCreatePage() {
         }
       />
       <Card>
-          <form onSubmit={handleSubmit}>
+          {/* 회차 번호/제목/본문은 사용자가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다 */}
+          <form onSubmit={handleSubmit} data-clarity-mask="true">
             <div className="form-row">
               <div className="form-group">
                 <label>회차 번호</label>

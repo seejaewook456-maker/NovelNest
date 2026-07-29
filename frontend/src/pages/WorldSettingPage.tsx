@@ -251,7 +251,8 @@ export default function WorldSettingPage() {
           </div>
 
           {selectedSettings.map((s) => (
-            <div key={s.id} className="item-card">
+            // 세계관 설정 제목/내용은 사용자가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다
+            <div key={s.id} className="item-card" data-clarity-mask="true">
               <div className="item-card-header">
                 <h3>{s.title}</h3>
                 <div className="item-card-actions">

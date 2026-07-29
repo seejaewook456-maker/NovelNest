@@ -35,7 +35,8 @@ export default function NovelCreatePage() {
       <BackLink label="← 작품 목록" onClick={() => navigate('/novels')} />
       <h2 style={{ marginBottom: 24 }}>새 작품 만들기</h2>
       <Card>
-        <form onSubmit={handleSubmit}>
+        {/* 작품 제목/장르/소개는 사용자가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다 */}
+        <form onSubmit={handleSubmit} data-clarity-mask="true">
           <div className="form-group">
             <label>제목</label>
             <input

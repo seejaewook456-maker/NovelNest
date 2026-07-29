@@ -281,6 +281,13 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * 이벤트 파라미터에 개인정보·사용자 콘텐츠(제목/본문/AI 응답 등) 미포함
 * 상세 내용은 `FRONTEND_API.md`의 "GA4 애널리틱스 연동" 섹션 참고
 
+### Frontend (Microsoft Clarity)
+* `src/lib/clarity.ts`의 `initializeClarity()`를 `main.tsx` 진입점에서 1회 호출 — Clarity 공식 추적 스크립트를 동적 삽입, 스크립트 태그 존재 여부 + 플래그로 중복 삽입 방지, 실패해도 앱 렌더링에 영향 없음
+* `VITE_CLARITY_PROJECT_ID`가 없으면 조용히 초기화를 건너뜀 — `.env.development`/`.env.production`에 값을 커밋하지 않고 Vercel Production 환경변수로만 관리해 로컬 개발에서는 항상 비활성화
+* 로그인/회원가입/작품/회차/등장인물/세계관/AI 채팅/설정 충돌 결과 등 사용자 작성·AI 생성 콘텐츠가 표시되는 컨테이너에 `data-clarity-mask="true"` 적용, 버튼명/메뉴명 등 일반 UI는 마스킹 제외
+* GA4는 페이지 이동마다 이벤트를 보내야 해 `router/index.tsx`에서 초기화하지만, Clarity는 스크립트 1회 삽입이 전부라 `main.tsx`에서 독립적으로 초기화 — 두 모듈 간 충돌 없음
+* 상세 내용은 `FRONTEND_API.md`의 "Microsoft Clarity 연동" 섹션 참고
+
 ## 아직 구현되지 않음
 
 ### AI 기능 (미구현)

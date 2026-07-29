@@ -166,7 +166,13 @@ export default function NovelListPage() {
         ) : (
           <div className="novel-grid">
             {novels.map((novel) => (
-              <div key={novel.id} className="novel-card" onClick={() => navigate(`/novels/${novel.id}`)}>
+              // 작품 제목/장르/소개는 사용자가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다
+              <div
+                key={novel.id}
+                className="novel-card"
+                onClick={() => navigate(`/novels/${novel.id}`)}
+                data-clarity-mask="true"
+              >
                 <h3>{novel.title}</h3>
                 <span className="genre">{novel.genre}</span>
                 {novel.description && <p className="description">{novel.description}</p>}

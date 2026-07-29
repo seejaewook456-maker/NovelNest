@@ -240,8 +240,8 @@ export default function AiChatPanel({ novelId }: AiChatPanelProps) {
         </div>
       )}
 
-      {/* 대화 영역 */}
-      <div className="chat-messages">
+      {/* 대화 영역 — AI 질문/응답은 사용자·AI가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다 */}
+      <div className="chat-messages" data-clarity-mask="true">
         {messages.length === 0 && (
           <div className="chat-empty">
             <p className="chat-empty-text">
@@ -302,8 +302,8 @@ export default function AiChatPanel({ novelId }: AiChatPanelProps) {
 
       {chatError && <p className="error-message">{chatError}</p>}
 
-      {/* 입력 영역 */}
-      <div className="chat-input-area">
+      {/* 입력 영역 — 작성 중인 질문도 사용자 콘텐츠이므로 세션 리플레이에서 마스킹한다 */}
+      <div className="chat-input-area" data-clarity-mask="true">
         <textarea
           className="chat-textarea"
           value={inputMessage}

@@ -227,7 +227,8 @@ export default function CharacterPage() {
         <EmptyState message="등록된 인물이 없습니다." />
       ) : (
         characters.map((c) => (
-          <div key={c.id} className="item-card">
+          // 등장인물 이름/역할/성격/말투/설명은 사용자가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다
+          <div key={c.id} className="item-card" data-clarity-mask="true">
             <div className="item-card-header">
               <h3>{c.name}</h3>
               <div className="item-card-actions">

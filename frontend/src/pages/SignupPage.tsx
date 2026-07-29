@@ -163,7 +163,8 @@ export default function SignupPage() {
           <p className="auth-brand">노벨네스트</p>
           <h2 className="auth-title">회원가입</h2>
         </div>
-        <form onSubmit={handleSubmit}>
+        {/* 이메일/인증번호/비밀번호/닉네임 등 개인정보 입력 영역 전체를 세션 리플레이에서 마스킹한다 */}
+        <form onSubmit={handleSubmit} data-clarity-mask="true">
           <div className="form-group">
             <label>이메일</label>
             <div className="input-with-button">
