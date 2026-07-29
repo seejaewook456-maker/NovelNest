@@ -109,6 +109,11 @@ app:
         character: ${AI_DAILY_CHARACTER_LIMIT:15}
         worldview: ${AI_DAILY_WORLDVIEW_LIMIT:15}
         chat: ${AI_DAILY_CHAT_LIMIT:20}
+    rate-limit:
+      # 사용자당 AI 전체 요청(5개 기능 합계)에 대한 분당 제한 — 최근 60초 Sliding Window 기준.
+      # 기능별이 아니라 전체 합계로 계산되며, 하루 사용량 제한(daily-limit)보다 먼저 검사한다.
+      max-requests: ${AI_RATE_LIMIT_MAX_REQUESTS:10}
+      window-seconds: ${AI_RATE_LIMIT_WINDOW_SECONDS:60}
 
 springdoc:
   swagger-ui:

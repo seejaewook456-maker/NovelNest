@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.domain.airatelimit.service.AiRateLimitService;
 import org.example.domain.aiusage.enums.AiFeatureType;
 import org.example.domain.aiusage.service.AiUsageService;
 import org.example.domain.episode.entity.Episode;
@@ -49,6 +50,7 @@ public class WorldSettingExtractionService {
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
     private final AiUsageService aiUsageService;
+    private final AiRateLimitService aiRateLimitService;
 
     @Transactional(readOnly = true)
     public WorldSettingExtractionResponseDto extractWorldSettings(String email, Long episodeId) {
@@ -62,7 +64,8 @@ public class WorldSettingExtractionService {
 
         // OpenAI 호출 — DB 저장 없음
         String input = buildInput(episode, novel, existingSettings);
-        // OpenAI 호출 직전에만 사용량을 차감한다 — 그 이전의 검증 실패는 횟수에 포함되지 않는다.
+        // 분당 Rate Limit → 하루 사용량 제한 순으로 검사한 뒤에만 OpenAI를 호출한다.
+        aiRateLimitService.checkAndRecord(user.getId());
         aiUsageService.checkAndIncrement(user.getId(), AiFeatureType.WORLDVIEW_EXTRACTION);
         String aiResponse = openAiService.generateText(EXTRACTION_INSTRUCTIONS, input);
         List<WorldSettingCandidateDto> candidates = parseJson(aiResponse);

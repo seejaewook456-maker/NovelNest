@@ -1,5 +1,6 @@
 package org.example.domain.chat.service;
 
+import org.example.domain.airatelimit.service.AiRateLimitService;
 import org.example.domain.aiusage.enums.AiFeatureType;
 import org.example.domain.aiusage.service.AiUsageService;
 import org.example.domain.character.repository.CharacterRepository;
@@ -18,10 +19,13 @@ import org.example.global.ai.context.NovelAiContext;
 import org.example.global.ai.context.NovelAiContextService;
 import org.example.global.ai.context.WorldSettingContext;
 import org.example.global.ai.service.OpenAiService;
+import org.example.global.exception.BusinessException;
+import org.example.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,6 +41,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -62,6 +67,8 @@ class ChatServiceTest {
     private OpenAiService openAiService;
     @Mock
     private AiUsageService aiUsageService;
+    @Mock
+    private AiRateLimitService aiRateLimitService;
 
     @InjectMocks
     private ChatService chatService;
@@ -140,7 +147,7 @@ class ChatServiceTest {
     }
 
     @Test
-    void OpenAI_호출_전에_사용량을_차감한다() {
+    void OpenAI_호출_전에_분당_Rate_Limit과_사용량을_이_순서로_차감한다() {
         given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(owner));
         given(novelRepository.findById(10L)).willReturn(Optional.of(novel));
         given(novelAiContextService.buildForChat(novel)).willReturn(sampleContext());
@@ -148,7 +155,27 @@ class ChatServiceTest {
 
         chatService.chat(EMAIL, 10L, "질문입니다");
 
-        verify(aiUsageService).checkAndIncrement(owner.getId(), AiFeatureType.AI_CHAT);
+        InOrder inOrder = inOrder(aiRateLimitService, aiUsageService, openAiService);
+        inOrder.verify(aiRateLimitService).checkAndRecord(owner.getId());
+        inOrder.verify(aiUsageService).checkAndIncrement(owner.getId(), AiFeatureType.AI_CHAT);
+        inOrder.verify(openAiService).generateText(anyString(), anyString(), any());
+    }
+
+    @Test
+    void 분당_Rate_Limit에_걸리면_하루_사용량_차감과_OpenAI_호출_모두_일어나지_않는다() {
+        given(userRepository.findByEmailAndDeletedAtIsNull(EMAIL)).willReturn(Optional.of(owner));
+        given(novelRepository.findById(10L)).willReturn(Optional.of(novel));
+        given(novelAiContextService.buildForChat(novel)).willReturn(sampleContext());
+        willThrow(new BusinessException(ErrorCode.AI_RATE_LIMIT_EXCEEDED))
+                .given(aiRateLimitService).checkAndRecord(owner.getId());
+
+        assertThatThrownBy(() -> chatService.chat(EMAIL, 10L, "질문입니다"))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                        .isEqualTo(ErrorCode.AI_RATE_LIMIT_EXCEEDED));
+
+        verify(aiUsageService, never()).checkAndIncrement(any(), any());
+        verify(openAiService, never()).generateText(anyString(), anyString(), any());
     }
 
     @Test

@@ -823,6 +823,25 @@ Authorization: Bearer {accessToken}
 
 프론트엔드는 이 `message`를 그대로 사용자에게 보여준다(`fetchWithAuth`가 던지는 `ApiError.message`).
 
+### AI 요청 분당 Rate Limit 초과 응답 (429)
+
+5개 AI 기능(회차 요약/설정 충돌 감지/등장인물 추출/세계관 추출/AI 챗봇) 중 어느 것이든, 같은 사용자가
+**최근 60초 동안 전체 합계 10회**를 초과해 요청하면 아래처럼 `429 Too Many Requests`가 반환된다(하루
+사용량 제한보다 먼저 검사되므로, 이 경우 하루 사용 횟수는 차감되지 않고 OpenAI도 호출되지 않는다).
+
+```json
+{
+  "success": false,
+  "code": "AI_RATE_LIMIT_EXCEEDED",
+  "message": "AI 요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
+}
+```
+
+위의 하루 사용량 제한 초과 응답과 동일하게, 프론트엔드는 이 `message`를 그대로 보여준다. 5개 AI 기능
+호출부는 이미 모든 오류를 `err.message`로 표시하는 공통 catch 처리를 쓰고 있어 별도의 프론트엔드
+코드 변경 없이 자동으로 처리된다. 카운트다운 등 추가 UI는 없다. 자세한 내용은 백엔드
+`docs/AI_RATE_LIMIT.md` 참고.
+
 ### 프론트 연동 흐름
 
 ```
