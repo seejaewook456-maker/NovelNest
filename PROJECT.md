@@ -317,6 +317,13 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * Flyway `V8__add_ai_request_logs.sql`(테이블 생성, `users` FK + 인덱스 2개)
 * 상세 내용은 `docs/AI_RATE_LIMIT.md` 참고
 
+### 일회성 데이터 정리 로직 점검 (이메일 인증번호 / Refresh Token / AI 요청 로그)
+* 세 데이터 모두 정리 로직이 이미 구현되어 있음을 확인 — 코드 변경 없음(점검 및 문서화만 수행)
+* 이메일 인증번호: 재발급 시 기존 행 갱신(`renew`, 중복 불가 — `(email, purpose)` 유니크), 회원가입 완료 시 즉시 소비(`consume`), 만료 행은 `VerificationCleanupScheduler`가 매 정각 정리
+* Refresh Token: 별도 테이블이 아닌 `users.refresh_token` 단일 컬럼이라 애초에 누적이 불가능, 로그아웃/탈퇴 시 즉시 `null`, 재발급 시 Rotation으로 즉시 교체
+* AI 요청 로그: 위 AI 분당 Rate Limit 절 참고 — 매 요청 시 윈도우 밖 로그를 함께 삭제하는 방식으로 이미 구현됨
+* 상세 내용은 `docs/DATA_CLEANUP.md` 참고
+
 ## 아직 구현되지 않음
 
 ### AI 기능 (미구현)
