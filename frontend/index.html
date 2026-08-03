@@ -94,6 +94,18 @@
     <meta name="naver-site-verification" content="50bd245ef1f57753d1b27b3bc39be10a6c3d06fd" />
   </head>
   <body>
+    <!-- 테마 깜빡임(FOUC) 방지: React가 로드되기 전에 저장된 테마를 먼저 적용한다.
+         localStorage 키('theme')는 frontend/src/state/themeStore.ts와 반드시 일치해야 한다.
+         기본값은 항상 라이트이므로, 사용자가 다크를 선택해 저장해 둔 경우에만 속성을 붙인다. -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

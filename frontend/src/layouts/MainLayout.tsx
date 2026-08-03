@@ -1,5 +1,6 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function MainLayout() {
   const navigate = useNavigate();
@@ -19,9 +20,12 @@ export default function MainLayout() {
         <span className="header-logo" onClick={() => navigate('/novels')}>
           노벨네스트
         </span>
-        <Button variant="ghost" size="sm" onClick={handleLogout}>
-          로그아웃
-        </Button>
+        <div className="header-actions">
+          <ThemeToggle />
+          <Button variant="ghost" size="sm" onClick={handleLogout}>
+            로그아웃
+          </Button>
+        </div>
       </header>
       <main className="main-content">
         <Outlet />
