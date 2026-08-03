@@ -1,3 +1,7 @@
+/* 테마 토큰(--color-*, --shadow-*, --radius-* 등)과 다크 모드 오버라이드는
+   전부 src/index.css의 :root / 다크 오버라이드 블록에서 관리한다.
+   여기서는 새 색상을 hex/rgba로 하드코딩하지 말고 해당 파일의 토큰을 사용한다. */
+
 /* =============================================
    레이아웃
    ============================================= */
@@ -27,6 +31,33 @@
   color: var(--color-primary);
   cursor: pointer;
   letter-spacing: -0.2px;
+}
+
+/* 라이트/다크/시스템 설정 순환 토글(🌓/☀️/🌙) — 로그인 후 헤더, 랜딩 헤더 공용 */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  font-size: 16px;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border-strong);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .main-content {
@@ -66,13 +97,13 @@
 }
 
 .btn-primary {
-  background: var(--color-primary);
+  background: var(--color-primary-deep);
   color: #ffffff;
-  border: 1px solid var(--color-primary);
+  border: 1px solid var(--color-primary-deep);
 }
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
+  background: var(--color-primary-deep-hover);
+  border-color: var(--color-primary-deep-hover);
 }
 
 .btn-secondary {
@@ -107,13 +138,13 @@
 }
 
 .btn-ai {
-  background: var(--color-ai);
+  background: var(--color-ai-deep);
   color: #ffffff;
-  border: 1px solid var(--color-ai);
+  border: 1px solid var(--color-ai-deep);
 }
 .btn-ai:hover:not(:disabled) {
-  background: var(--color-ai-hover);
-  border-color: var(--color-ai-hover);
+  background: var(--color-ai-deep-hover);
+  border-color: var(--color-ai-deep-hover);
 }
 
 /* 회원 탈퇴처럼 "위험하지만 평소엔 눈에 띄면 안 되는" 동작 전용 — 기본은 차분한 회색,
@@ -147,15 +178,15 @@
   border-radius: var(--radius-btn);
   font-size: 14px;
   font-weight: 600;
-  background: var(--color-primary);
+  background: var(--color-primary-deep);
   color: #ffffff;
-  border: 1px solid var(--color-primary);
+  border: 1px solid var(--color-primary-deep);
   cursor: pointer;
   transition: background 0.15s;
   font-family: var(--font-sans);
   line-height: 1;
 }
-.btn-save:hover:not(:disabled) { background: var(--color-primary-hover); }
+.btn-save:hover:not(:disabled) { background: var(--color-primary-deep-hover); }
 .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* =============================================
@@ -195,7 +226,7 @@ select {
   border-radius: var(--radius-input);
   font-size: 15px;
   outline: none;
-  background: var(--color-bg-card);
+  background: var(--color-bg-input);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -206,7 +237,7 @@ select {
 .form-group select:focus,
 select:focus {
   border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.12);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .form-group textarea {
@@ -221,6 +252,12 @@ select {
   background-position: right 14px center;
   padding-right: 38px;
   cursor: pointer;
+}
+
+/* select 화살표 SVG는 background-image data URI라 var()를 쓸 수 없어,
+   다크 모드에서는 밝은 회색(--color-text-secondary 다크 값)으로 그린 SVG로 통째로 교체한다. */
+[data-theme='dark'] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23B4B9C2' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
 .form-row {
@@ -512,7 +549,7 @@ select {
 .login-card {
   border-radius: 26px;
   padding: 48px 40px;
-  box-shadow: 0 24px 60px -12px rgba(47, 42, 38, 0.18);
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.18);
 }
 
 .login-submit-btn {
@@ -941,7 +978,7 @@ select {
   padding: 16px 20px;
   margin-bottom: 20px;
   background: transparent;
-  border: 2px dashed #C4B8AE;
+  border: 2px dashed var(--color-border-strong);
   border-radius: var(--radius-card);
   color: var(--color-text-secondary);
   font-size: 14px;
@@ -1070,12 +1107,12 @@ select {
 }
 
 .favorite-btn:hover {
-  color: #D4A017;
+  color: var(--color-star);
   transform: scale(1.15);
 }
 
 .favorite-btn.favorited {
-  color: #D4A017;
+  color: var(--color-star);
 }
 
 /* 카테고리 그룹 목록 뷰 */
@@ -1100,7 +1137,7 @@ select {
 .category-group-card:hover,
 .category-group-card:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 2px 8px rgba(139, 94, 60, 0.12);
+  box-shadow: 0 2px 8px var(--color-focus-ring);
   background: var(--color-primary-light);
 }
 
@@ -1170,7 +1207,7 @@ select {
   padding: 22px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  background: var(--color-primary-light);
+  background: var(--color-ai-light);
 }
 
 .ai-section-header {
@@ -1201,7 +1238,7 @@ select {
   border-radius: 10px;
   padding: 20px 22px;
   border: 1px solid var(--color-border);
-  border-left: 3px solid #C4A07A;
+  border-left: 3px solid var(--color-ai-border);
 }
 
 .summary-text {
@@ -1262,9 +1299,9 @@ select {
 }
 
 .ai-usage-hint-count-depleted {
-  background: #FEF2F2;
-  color: #B91C1C;
-  border-color: #FECACA;
+  background: var(--color-danger-light);
+  color: var(--color-danger-hover);
+  border-color: var(--color-danger-border);
 }
 
 .ai-usage-hint-depleted-text {
@@ -1286,7 +1323,7 @@ select {
   font-weight: 500;
   line-height: 1.5;
   color: var(--color-primary-hover);
-  background: var(--color-primary-light);
+  background: var(--color-ai-light);
   border-radius: 8px;
   padding: 8px 14px;
   margin: 10px auto 0;
@@ -1411,7 +1448,7 @@ select {
 }
 
 .card-new      { border-left: 4px solid var(--color-ai); }
-.card-existing { border-left: 4px solid #D97706; }
+.card-existing { border-left: 4px solid var(--color-warning); }
 
 .candidate-name-row {
   display: flex;
@@ -1438,12 +1475,12 @@ select {
 
 .badge-existing {
   font-size: 11px;
-  background: #FEF3C7;
-  color: #92400E;
+  background: var(--color-warning-light);
+  color: var(--color-warning-hover);
   padding: 3px 10px;
   border-radius: var(--radius-badge);
   font-weight: 700;
-  border: 1px solid #FDE68A;
+  border: 1px solid var(--color-warning-border);
 }
 
 .candidate-fields {
@@ -1681,15 +1718,15 @@ select {
 }
 
 .conflict-count-badge-high {
-  background: #FEF2F2;
-  color: #B91C1C;
-  border: 1px solid #FECACA;
+  background: var(--color-danger-light);
+  color: var(--color-danger-hover);
+  border: 1px solid var(--color-danger-border);
 }
 
 .conflict-count-badge-medium {
-  background: #FFFBEB;
-  color: #92400E;
-  border: 1px solid #FDE68A;
+  background: var(--color-warning-light);
+  color: var(--color-warning-hover);
+  border: 1px solid var(--color-warning-border);
 }
 
 .conflict-count-badge-low {
@@ -1708,8 +1745,8 @@ select {
   box-shadow: var(--shadow-sm);
 }
 
-.conflict-card-high   { border-left: 4px solid #EF4444; }
-.conflict-card-medium { border-left: 4px solid #D97706; }
+.conflict-card-high   { border-left: 4px solid var(--color-danger); }
+.conflict-card-medium { border-left: 4px solid var(--color-warning); }
 .conflict-card-low    { border-left: 4px solid var(--color-primary); }
 
 .conflict-card-header {
@@ -1731,15 +1768,15 @@ select {
 }
 
 .severity-badge-high {
-  background: #FEF2F2;
-  color: #B91C1C;
-  border: 1px solid #FECACA;
+  background: var(--color-danger-light);
+  color: var(--color-danger-hover);
+  border: 1px solid var(--color-danger-border);
 }
 
 .severity-badge-medium {
-  background: #FFFBEB;
-  color: #92400E;
-  border: 1px solid #FDE68A;
+  background: var(--color-warning-light);
+  color: var(--color-warning-hover);
+  border: 1px solid var(--color-warning-border);
 }
 
 .severity-badge-low {
@@ -1876,8 +1913,8 @@ select {
   justify-content: space-between;
   gap: 12px;
   padding: 12px 16px;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
+  background: var(--color-warning-light);
+  border: 1px solid var(--color-warning-border);
   border-radius: 10px;
   margin-bottom: 12px;
   flex-wrap: wrap;
@@ -1885,7 +1922,7 @@ select {
 
 .chat-warning-text {
   font-size: 13px;
-  color: #92400E;
+  color: var(--color-warning-hover);
   line-height: 1.5;
   flex: 1;
   min-width: 200px;
@@ -2075,14 +2112,14 @@ select {
   line-height: 1.6;
   resize: none;
   outline: none;
-  background: var(--color-bg-card);
+  background: var(--color-bg-input);
   color: var(--color-text-primary);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .chat-textarea:focus {
   border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.12);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .chat-textarea:disabled {
@@ -2137,7 +2174,7 @@ select {
 
 .modal-confirm-section {
   background: var(--color-danger-light);
-  border: 1px solid #FECACA;
+  border: 1px solid var(--color-danger-border);
   border-radius: 10px;
   padding: 16px;
   margin-bottom: 20px;
@@ -2155,7 +2192,7 @@ select {
   font-size: 14px;
   font-weight: 700;
   color: var(--color-danger);
-  background: #FEE2E2;
+  background: var(--color-danger-light);
   border-radius: 6px;
   padding: 4px 10px;
   margin-bottom: 12px;
@@ -2171,7 +2208,7 @@ select {
   font-size: 14px;
   font-family: var(--font-sans);
   outline: none;
-  background: var(--color-bg-card);
+  background: var(--color-bg-input);
   color: var(--color-text-primary);
   transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
@@ -2721,7 +2758,7 @@ select {
 
 .workspace-ref-search:focus {
   border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.12);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .workspace-ref-manage-link {
@@ -2834,7 +2871,7 @@ select {
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(47, 42, 38, 0.35);
+    background: var(--color-overlay);
     opacity: 0;
     transition: opacity 0.25s ease;
   }
@@ -2936,7 +2973,7 @@ select {
     display: block;
     position: absolute;
     inset: 0;
-    background: rgba(47, 42, 38, 0.45);
+    background: var(--color-overlay-strong);
     opacity: 0;
     transition: opacity 0.25s ease;
   }
@@ -2993,7 +3030,7 @@ select {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--color-header-bg);
   backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--color-border);
 }

@@ -1,12 +1,24 @@
+/* =============================================
+   테마 토큰 (라이트 기본값)
+   다크 모드 값은 이 파일 하단의 [data-theme='dark'] 오버라이드 블록 참고.
+   새 색상 토큰을 추가할 때는 반드시 그 블록에도 값을 추가한다.
+   ============================================= */
 :root {
   /* Primary — Warm Brown */
   --color-primary:        #8B5E3C;
   --color-primary-hover:  #70492E;
   --color-primary-light:  #F5EFE8;
+  /* 흰 글씨를 얹는 단색 버튼(.btn-primary/.btn-save) 전용 배경 — 라이트에서는 --color-primary와
+     동일해 변화가 없다. 다크에서는 밝은 블루(--color-primary)를 그대로 버튼 배경에 쓰면
+     흰 글씨와의 명암 대비가 부족해져(약 3.2:1, WCAG AA 미달) 훨씬 짙은 남색을 따로 둔다. */
+  --color-primary-deep:       #8B5E3C;
+  --color-primary-deep-hover: #70492E;
 
   /* Background */
   --color-bg:             #FAF8F5;
   --color-bg-card:        #FFFFFF;
+  --color-bg-input:       #FFFFFF;
+  --color-bg-hover:       #F5EFE8;
 
   /* Text */
   --color-text-primary:   #2F2A26;
@@ -15,18 +27,39 @@
 
   /* Border */
   --color-border:         #E7DDD3;
+  --color-border-strong:  #C4B8AE;
   --color-border-focus:   #8B5E3C;
+  --color-focus-ring:     rgba(139, 94, 60, 0.12);
 
   /* AI — Warm Brown */
   --color-ai:             #8B5E3C;
   --color-ai-hover:       #70492E;
   --color-ai-light:       #F5EFE8;
   --color-ai-border:      #C4A882;
+  --color-ai-deep:        #8B5E3C;
+  --color-ai-deep-hover:  #70492E;
 
-  /* Danger */
+  /* 상태 색상 */
   --color-danger:         #EF4444;
   --color-danger-hover:   #DC2626;
   --color-danger-light:   #FEF2F2;
+  --color-danger-border:  #FECACA;
+
+  --color-warning:        #D97706;
+  --color-warning-hover:  #92400E;
+  --color-warning-light:  #FFFBEB;
+  --color-warning-border: #FDE68A;
+
+  --color-success:        #16A34A;
+  --color-success-hover:  #15803D;
+  --color-success-light:  #F0FDF4;
+  --color-success-border: #BBF7D0;
+
+  /* 기타 */
+  --color-star:            #D4A017;
+  --color-overlay:         rgba(47, 42, 38, 0.35);
+  --color-overlay-strong:  rgba(47, 42, 38, 0.45);
+  --color-header-bg:       rgba(255, 255, 255, 0.92);
 
   /* Shadow */
   --shadow-sm: 0 1px 3px rgba(47, 42, 38, 0.08);
@@ -44,6 +77,68 @@
 
   /* Layout */
   --content-max-width: 800px;
+
+  color-scheme: light;
+}
+
+/* =============================================
+   다크 모드 — 무채색(검정/회색) 기반 + Blue/Green/Orange/Red 상태색.
+   시스템 설정과는 동기화하지 않는다 — 사용자가 헤더 토글로 직접 선택한 값만
+   localStorage('theme')에 저장되고, 그 값에 따라 data-theme 속성이 붙는다
+   (기본값은 항상 라이트, index.html의 인라인 스크립트가 초기 반영을 담당한다).
+   ============================================= */
+[data-theme='dark'] {
+  --color-primary:        #4C8DFF;
+  --color-primary-hover:  #6FA2FF;
+  --color-primary-light:  #17223B;
+  --color-primary-deep:       #1B3A73;
+  --color-primary-deep-hover: #2A5091;
+
+  --color-bg:             #0F1115;
+  --color-bg-card:        #1A1D23;
+  --color-bg-input:       #22262E;
+  --color-bg-hover:       #262B33;
+
+  --color-text-primary:   #F5F6F7;
+  --color-text-secondary: #B4B9C2;
+  --color-text-muted:     #6B7280;
+
+  --color-border:         #2E333C;
+  --color-border-strong:  #3A4049;
+  --color-border-focus:   #4C8DFF;
+  --color-focus-ring:     rgba(76, 141, 255, 0.25);
+
+  --color-ai:             #4C8DFF;
+  --color-ai-hover:       #6FA2FF;
+  --color-ai-light:       #101B30;
+  --color-ai-border:      #26375C;
+  --color-ai-deep:        #1B3A73;
+  --color-ai-deep-hover:  #2A5091;
+
+  --color-danger:         #F87171;
+  --color-danger-hover:   #FCA5A5;
+  --color-danger-light:   #2A1618;
+  --color-danger-border:  #5C2327;
+
+  --color-warning:        #FBA23A;
+  --color-warning-hover:  #FCD34D;
+  --color-warning-light:  #2B2013;
+  --color-warning-border: #5A431F;
+
+  --color-success:        #22C55E;
+  --color-success-hover:  #4ADE80;
+  --color-success-light:  #142A1C;
+  --color-success-border: #1F5136;
+
+  --color-star:            #F2C14E;
+  --color-overlay:         rgba(0, 0, 0, 0.5);
+  --color-overlay-strong:  rgba(0, 0, 0, 0.65);
+  --color-header-bg:       rgba(15, 17, 21, 0.85);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
 }
 
 * {
@@ -63,6 +158,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -82,4 +178,31 @@ a {
 button {
   cursor: pointer;
   font-family: var(--font-sans);
+}
+
+/* 스크롤바 — 다크 모드에서도 배경에 묻히지 않도록 톤을 함께 조정 */
+* {
+  scrollbar-color: var(--color-border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-strong);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-muted);
+  background-clip: padding-box;
 }

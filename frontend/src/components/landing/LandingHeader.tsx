@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../Button';
+import ThemeToggle from '../ThemeToggle';
 
 // LoginPage의 브랜드 연필 아이콘과 동일한 컨셉의 인라인 SVG로, 로고 표기를 일관되게 유지한다.
 function BrandMark() {
@@ -25,6 +26,7 @@ export default function LandingHeader() {
           <span>노벨네스트</span>
         </Link>
         <nav className="landing-header-actions" aria-label="시작하기">
+          <ThemeToggle />
           <Button variant="primary" size="sm" onClick={() => navigate('/login')}>
             무료로 시작하기
           </Button>
