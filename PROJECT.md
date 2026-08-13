@@ -329,6 +329,25 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * AI 요청 로그: 위 AI 분당 Rate Limit 절 참고 — 매 요청 시 윈도우 밖 로그를 함께 삭제하는 방식으로 이미 구현됨
 * 상세 내용은 `docs/DATA_CLEANUP.md` 참고
 
+### 메모(Memo) 관리 기능 추가
+* 작품별 개인 텍스트 메모장 — 아이디어/복선/장면 구상/TODO를 자유롭게 기록. 회차와 달리 순번(episodeNumber) 개념이 없고, **AI 도구(요약/충돌감지/인물·세계관 추출/챗봇)를 전혀 사용하지 않는 순수 텍스트 공간**이다
+* 백엔드: `domain/memo` 패키지 신규 — `Memo` 엔티티(`novel_id` FK + title + content(TEXT), `BaseEntity` 상속), `MemoRepository`/`MemoService`/`MemoController`/DTO 3종. Episode/Character와 동일하게 `novel.getUser()`로 소유권 검증(`IllegalArgumentException`=404, `SecurityException`=403)
+* API: `POST/GET /api/novels/{novelId}/memos`, `GET/PATCH/DELETE /api/memos/{memoId}` — Episode API와 동일한 경로 규칙
+* Novel 삭제 시 하위 리소스 정리 순서(`NovelService.deleteNovel`)에 `memoRepository.deleteAllByNovel(novel)` 추가 — Character/WorldSetting과 동일한 정책(명시적 선삭제, FK CASCADE 미사용)
+* Flyway `V9__create_memos_table.sql` — V6~V8과 동일하게 `information_schema` 존재 확인 + `PREPARE`/`EXECUTE` 동적 DDL 패턴, `(novel_id, updated_at)` 인덱스(목록을 최근 수정순으로 조회하기 위함)
+* 프론트엔드: `types/memo.ts` + `api/memoApi.ts`(episodeApi.ts와 동일한 형태) + `MemoListPage`/`MemoCreatePage`/`MemoDetailPage`(상세 화면에서 인라인으로 수정 토글, Episode처럼 별도 `/edit` 라우트를 두지 않음) — 라우트: `/novels/:novelId/memos`, `/novels/:novelId/memos/new`, `/memos/:memoId`
+* Episode 작성/수정 화면의 글자 수 계산, 구분선/기호 삽입 도구, AI 도구 전체를 의도적으로 제외 — 단순 제목 input + 내용 textarea만 제공
+* 작품 상세 페이지(`NovelDetailPage`)에 "메모 관리" 카드 추가, 관리 카드 레이아웃을 `.section-cards` 1×3 → **2×2 grid**로 변경(순서: 회차 관리 / 등장인물 관리 / 세계관 관리 / 메모 관리), 480px 이하에서는 1열로 재배치
+* 신규 CSS는 `.memo-list`/`.memo-item`/`.memo-detail` 등 — 기존 `--color-bg-card`/`--color-border`/`--color-text-*` 등 다크 모드 대응 토큰만 재사용해 별도 다크 모드 오버라이드 없이 라이트/다크 모두 자동 대응
+* 백엔드 테스트: `MemoServiceTest`(Mockito) — 생성/여러 개 생성/목록/상세/수정/삭제/타 사용자 접근 차단/존재하지 않는 ID 시나리오 검증
+
+### 메모 즐겨찾기 + 회차 작성/수정 메뉴 통합 + 관리 버튼 재배치
+* 메모 즐겨찾기: `Memo.isFavorite`(Boolean, 기본값 false) 추가 — Character/WorldSetting의 `isFavorite` 필드·`PATCH /favorite` API·`MemoFavoriteRequestDto` 패턴을 그대로 재사용. Flyway `V10__add_favorite_to_memos.sql`(`information_schema` 컬럼 존재 확인 후 `ALTER TABLE ... ADD COLUMN ... DEFAULT 0` 동적 실행)
+* 정렬 통일: `MemoRepository.findAllByNovelOrderByIsFavoriteDescUpdatedAtDesc` 하나로 목록 정렬을 백엔드에 고정 — 메모 관리 페이지와 회차 작성/수정 메뉴가 같은 API를 호출하므로 항상 같은 순서를 본다. 프론트 낙관적 재정렬(즐겨찾기 토글 직후 refetch 없이 즉시 위치 이동)에도 `frontend/src/utils/memoSort.ts`의 `sortMemos` 하나만 두 화면(`MemoListPage`, `MemoReferencePanel`)이 공유해, 각자 다른 정렬 로직을 중복 작성해 순서가 어긋날 여지를 없앴다
+* 회차 작성/수정 메뉴: `EpisodeToolRail`의 `EpisodeWorkspacePanelKey`에 `'memos'` 추가, 메뉴 순서를 **메모 → 등장인물 → 세계관 → AI 채팅**으로 배치. 아이콘은 새 라이브러리 없이 기존 인라인 SVG 컨벤션 그대로 FileText 형태 아이콘 추가. `MemoReferencePanel`(신규) — `CharacterReferencePanel`/`WorldSettingReferencePanel`과 동일한 구조(검색, 인라인 확장으로 상세 열람, `전체 관리 ↗` 새 탭 링크, 즐겨찾기 토글)로 조회 전용 CRUD만 재사용. 메모 작성/수정/삭제는 이 패널에서 제공하지 않음(관리 페이지 전용)
+* 작품 상세 페이지 2×2 버튼: DOM 순서를 회차 관리 → 메모 관리 → 등장인물 관리 → 세계관 관리로 바꿔 1행 [회차][메모], 2행 [등장인물][세계관] 배치. `.section-card` 세로 padding을 26px→14px로 줄여 카드가 더 슬림해짐(가로 크기·grid 구조·border/hover/shadow는 그대로 유지, 클릭 영역은 여전히 충분)
+* 다크 모드: 신규 UI 전부 기존 `--color-*` 토큰과 `.favorite-btn`/`.item-card`/`.workspace-ref-*` 공통 클래스만 재사용 — 별도 오버라이드 추가 없음
+
 ## 아직 구현되지 않음
 
 ### AI 기능 (미구현)
@@ -439,6 +458,38 @@ category 예시
 * 조회
 * 수정
 * 삭제
+
+---
+
+## 5. 메모 관리
+
+**Memo**
+
+작품별로 아이디어, 복선, 장면 구상, TODO 등을 자유롭게 기록해두는 개인 텍스트 메모장이다.
+회차와 달리 순번(episodeNumber 같은) 개념이 없고, AI 분석·요약·추출 등 AI 도구를 전혀 사용하지
+않는다 — 순수하게 사용자가 직접 쓰고 읽는 공간이다.
+
+속성
+
+* id
+* novel
+* title
+* content
+* isFavorite (기본값 false — Character/WorldSetting과 동일한 명명·기본값 규칙)
+* createdAt
+* updatedAt
+
+기능
+
+* 메모 생성
+* 메모 목록 조회 (즐겨찾기 우선 → 최근 수정순)
+* 메모 상세 조회
+* 메모 수정
+* 메모 즐겨찾기 설정/해제
+* 메모 삭제
+
+회차 작성/수정 화면의 메뉴 레일(메모 → 등장인물 → 세계관 → AI 채팅 순)에서도 메모 목록을
+참고용으로 열람할 수 있다 — 목록/상세 확인만 가능하고 수정·삭제는 메모 관리 페이지에서만 한다.
 
 ---
 

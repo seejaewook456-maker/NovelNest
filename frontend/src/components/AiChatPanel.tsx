@@ -127,8 +127,12 @@ export default function AiChatPanel({ novelId }: AiChatPanelProps) {
       .catch(() => {/* 통계 실패는 챗봇 자체를 막지 않음 */});
   }, [novelId]);
 
-  // 새 메시지가 추가될 때마다 맨 아래로 스크롤
+  // 새 메시지가 추가될 때마다 맨 아래로 스크롤.
+  // 마운트 직후(메시지가 아직 하나도 없을 때)에도 이 effect는 실행되는데, 그때 scrollIntoView를
+  // 호출하면 페이지 하단의 빈 채팅창까지 화면 전체가 스크롤되어 버려(작품 상세 페이지 진입 시
+  // 스크롤이 중간에 가 있는 버그의 원인) 메시지가 실제로 있을 때만 스크롤한다.
   useEffect(() => {
+    if (messages.length === 0) return;
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 

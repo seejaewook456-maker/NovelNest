@@ -37,6 +37,7 @@ function deriveFeatureTag(path: string): string | undefined {
   if (path.includes('/chat')) return 'ai_chat';
   if (path.includes('/characters')) return 'character';
   if (path.includes('/world-settings')) return 'worldsetting';
+  if (path.includes('/memos')) return 'memo';
   if (path.startsWith('/episodes')) return 'episode';
   if (path.startsWith('/novels')) return 'novel';
   if (path.startsWith('/auth') || path.startsWith('/users')) return 'auth';

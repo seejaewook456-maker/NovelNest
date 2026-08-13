@@ -17,6 +17,9 @@ import EpisodeCreatePage from '../pages/EpisodeCreatePage';
 import EpisodeDetailPage from '../pages/EpisodeDetailPage';
 import CharacterPage from '../pages/CharacterPage';
 import WorldSettingPage from '../pages/WorldSettingPage';
+import MemoListPage from '../pages/MemoListPage';
+import MemoCreatePage from '../pages/MemoCreatePage';
+import MemoDetailPage from '../pages/MemoDetailPage';
 import CharacterReviewPage from '../pages/CharacterReviewPage';
 import WorldSettingReviewPage from '../pages/WorldSettingReviewPage';
 
@@ -64,6 +67,9 @@ export const router = createBrowserRouter([
       { path: '/episodes/:episodeId/world-setting-review', element: <WorldSettingReviewPage /> },
       { path: '/novels/:novelId/characters', element: <CharacterPage /> },
       { path: '/novels/:novelId/world-settings', element: <WorldSettingPage /> },
+      { path: '/novels/:novelId/memos', element: <MemoListPage /> },
+      { path: '/novels/:novelId/memos/new', element: <MemoCreatePage /> },
+      { path: '/memos/:memoId', element: <MemoDetailPage /> },
     ],
   },
   {

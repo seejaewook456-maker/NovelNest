@@ -16,6 +16,8 @@
 - [x] 회차별 등장인물 연결 (EpisodeCharacter N:M) — 회차 상세 페이지 인물 박스 표시
 - [x] 세계관 AI 추출 (WorldSettingExtraction — 후보 반환, 신규/기존 설정 구분, newInsights)
 - [x] 세계관 AI 추출 UI (WorldSettingReviewPage — 1개씩 검토/수정/저장, 신규/보강 구분, 완료 통계)
+- [x] 메모(Memo) CRUD API 및 UI (작품별 개인 텍스트 메모장 — AI 도구 미사용, 작품 상세 관리 카드 1×3 → 2×2 grid로 변경)
+- [x] 메모 즐겨찾기 (Character/WorldSetting과 동일한 isFavorite 패턴) + 회차 작성/수정 메뉴에 메모 참고 패널 추가 (메모 → 등장인물 → 세계관 → AI 채팅 순) + 작품 상세 관리 버튼 재배치([회차][메모] / [등장인물][세계관])·높이 축소
 
 ---
 
@@ -27,6 +29,7 @@
 - [x] Episode (회차) CRUD
 - [x] Character (등장인물) CRUD
 - [x] WorldSetting (세계관) CRUD
+- [x] Memo (메모) CRUD — AI 도구 없는 순수 텍스트 메모장
 
 ### Phase 2 — AI 기능
 
