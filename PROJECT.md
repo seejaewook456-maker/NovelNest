@@ -261,6 +261,11 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
   - 괄호형 특수문자(『』「」〈〉) 클릭 시 커서 자동으로 괄호 가운데 이동
   - 선택 영역 있으면 삽입 문자로 대체, 없으면 커서 위치 삽입
   - 공통 컴포넌트(WritingAssistToolbar.tsx) — props: content / onChange / textareaRef
+  - 구분선/기호 삽입 시 caret·스크롤 위치 유지 (버그 수정)
+    - 원인: controlled textarea의 value를 코드로 갱신하면(React가 DOM value를 직접 set) 브라우저가 scrollTop을 0으로, 커서를 텍스트 끝으로 되돌리는 부작용 발생
+    - 툴바 버튼에 `onMouseDown` preventDefault를 걸어 클릭해도 textarea가 blur되지 않도록 함(포커스/selection 유지)
+    - 삽입 직전 scrollTop/scrollLeft/selectionStart/End를 저장해두고, value 갱신 후 `requestAnimationFrame`에서 `focus({ preventScroll: true })` + `setSelectionRange` + scrollTop/scrollLeft 복원
+    - 회차 작성/수정 화면 모두 동일 컴포넌트를 사용하므로 한 번의 수정으로 양쪽에 적용됨
 * Episode Detail Page 반응형 2열 레이아웃 — 회차 본문 / AI 도구를 독립된 박스로 분리
   - 브레이크포인트 **1200px** 이상: `.episode-detail-layout`이 CSS Grid(`minmax(0,3fr) minmax(0,2fr)`)로 좌우 2열 배치 — **본문 60% : AI 도구 40%** 비율
     - `.main-content`(최대 800px)로는 두 박스가 나란히 표시될 폭이 부족해, `.episode-workspace`(회차 작성/수정 화면)와 동일한 breakout 기법(width:100vw + max-width + left:50% + translateX(-50%))으로 뷰포트 기준 폭을 확장
