@@ -335,6 +335,93 @@ DELETE /api/episodes/{episodeId}
 
 ---
 
+## 메모(Memo) API
+
+> 모든 메모 API는 `Authorization: Bearer {accessToken}` 헤더가 필요합니다.
+> 메모는 AI 도구를 사용하지 않는 순수 텍스트 메모장이며, 회차와 달리 번호(episodeNumber) 개념이 없습니다.
+
+### 메모 생성
+
+```
+POST /api/novels/{novelId}/memos
+```
+
+**Request**
+```json
+{ "title": "30화 복선 정리", "content": "레온이 3화에서 언급한 반지가 결말의 복선" }
+```
+
+**Response (201)**: 생성된 메모 정보 반환
+
+---
+
+### 메모 목록 조회
+
+```
+GET /api/novels/{novelId}/memos
+```
+
+**Response (200)**: 즐겨찾기 우선(isFavorite DESC) → 최근 수정순(updatedAt DESC)으로 정렬된 메모 배열 반환.
+이 정렬은 Repository 쿼리 메서드(`findAllByNovelOrderByIsFavoriteDescUpdatedAtDesc`) 하나에서만 적용되므로,
+이 API를 호출하는 화면(메모 관리 페이지, 회차 작성/수정 페이지의 메모 메뉴)은 항상 같은 순서를 본다.
+```json
+{
+  "message": "메모 목록 조회 성공",
+  "data": [
+    { "id": 1, "novelId": 1, "title": "30화 복선 정리", "content": "...", "isFavorite": true, "createdAt": "...", "updatedAt": "..." }
+  ]
+}
+```
+
+---
+
+### 메모 상세 조회
+
+```
+GET /api/memos/{memoId}
+```
+
+**Response (200)**: 메모 상세 정보 반환
+
+---
+
+### 메모 수정 (전체 교체)
+
+```
+PATCH /api/memos/{memoId}
+```
+
+**Request**: `{ title, content }` — 2개 필드 모두 필수 (즐겨찾기 상태는 이 API로 바뀌지 않음)
+
+**Response (200)**: 수정된 메모 정보 반환
+
+---
+
+### 메모 즐겨찾기 설정
+
+```
+PATCH /api/memos/{memoId}/favorite
+```
+
+**Request**
+```json
+{ "isFavorite": true }
+```
+
+**Response (200)**: 즐겨찾기 상태가 반영된 메모 정보 반환 — Character/WorldSetting의 `/favorite` API와 동일한 패턴
+
+---
+
+### 메모 삭제
+
+```
+DELETE /api/memos/{memoId}
+```
+
+**Response (200)**: `{ "message": "메모 삭제 성공" }`
+
+---
+
 ## 등장인물(Character) API
 
 > 모든 인물 API는 `Authorization: Bearer {accessToken}` 헤더가 필요합니다.
@@ -886,6 +973,9 @@ AiChatPanel (작품 상세/회차 작성/회차 수정 3개 페이지 공유)
 | `/episodes/:episodeId` | 회차 상세/수정/삭제 |
 | `/novels/:novelId/characters` | 등장인물 관리 (인라인 CRUD) |
 | `/novels/:novelId/world-settings` | 세계관 관리 (인라인 CRUD) |
+| `/novels/:novelId/memos` | 메모 목록 |
+| `/novels/:novelId/memos/new` | 메모 생성 |
+| `/memos/:memoId` | 메모 상세/수정/삭제 |
 
 ---
 

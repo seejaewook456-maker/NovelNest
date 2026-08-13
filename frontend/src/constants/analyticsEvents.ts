@@ -11,6 +11,8 @@ export const ANALYTICS_EVENTS = {
   EPISODE_CREATE: 'episode_create',
   EPISODE_UPDATE: 'episode_update',
   EPISODE_COPY: 'episode_copy',
+  MEMO_CREATE: 'memo_create',
+  MEMO_UPDATE: 'memo_update',
 
   // AI 도구
   AI_SUMMARY_RUN: 'ai_summary_run',

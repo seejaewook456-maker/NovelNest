@@ -8,6 +8,7 @@ import org.example.domain.episode.repository.EpisodeRepository;
 import org.example.domain.episodecharacter.repository.EpisodeCharacterRepository;
 import org.example.domain.episodesummary.repository.EpisodeSummaryRepository;
 import org.example.domain.episodeworldsetting.repository.EpisodeWorldSettingRepository;
+import org.example.domain.memo.repository.MemoRepository;
 import org.example.domain.novel.dto.NovelCreateRequestDto;
 import org.example.domain.novel.dto.NovelResponseDto;
 import org.example.domain.novel.dto.NovelUpdateRequestDto;
@@ -34,6 +35,7 @@ public class NovelService {
     private final EpisodeRepository episodeRepository;
     private final CharacterRepository characterRepository;
     private final WorldSettingRepository worldSettingRepository;
+    private final MemoRepository memoRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -93,6 +95,7 @@ public class NovelService {
         episodeRepository.deleteAllByNovel(novel);
         characterRepository.deleteAllByNovel(novel);
         worldSettingRepository.deleteAllByNovel(novel);
+        memoRepository.deleteAllByNovel(novel);
         novelRepository.delete(novel);
         log.info("Novel deleted. novelId={}, userId={}", novelId, user.getId());
     }

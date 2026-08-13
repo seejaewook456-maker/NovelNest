@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type EpisodeWorkspacePanelKey = 'characters' | 'worldSettings' | 'chat';
+export type EpisodeWorkspacePanelKey = 'memos' | 'characters' | 'worldSettings' | 'chat';
 
 interface MenuItem {
   key: EpisodeWorkspacePanelKey;
@@ -10,6 +10,15 @@ interface MenuItem {
 
 // 이모지 대신 CDN 의존 없는 인라인 SVG 라인 아이콘을 사용해 OS/브라우저마다 다르게 보이지 않고
 // 항상 같은 모습으로, 브랜드 색(currentColor)을 그대로 상속받아 보이도록 한다.
+const MemoIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="8" y1="13" x2="16" y2="13" />
+    <line x1="8" y1="17" x2="16" y2="17" />
+  </svg>
+);
+
 const CharacterIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <circle cx="12" cy="8" r="4" />
@@ -32,6 +41,7 @@ const ChatIcon = () => (
 );
 
 const MENU_ITEMS: MenuItem[] = [
+  { key: 'memos', label: '메모', icon: <MemoIcon /> },
   { key: 'characters', label: '등장인물', icon: <CharacterIcon /> },
   { key: 'worldSettings', label: '세계관', icon: <WorldviewIcon /> },
   { key: 'chat', label: 'AI 채팅', icon: <ChatIcon /> },

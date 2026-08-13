@@ -1,9 +1,11 @@
 import type { EpisodeWorkspacePanelKey } from './EpisodeToolRail';
+import MemoReferencePanel from './MemoReferencePanel';
 import CharacterReferencePanel from './CharacterReferencePanel';
 import WorldSettingReferencePanel from './WorldSettingReferencePanel';
 import AiChatPanel from '../AiChatPanel';
 
 const PANEL_TITLES: Record<EpisodeWorkspacePanelKey, string> = {
+  memos: '메모',
   characters: '등장인물 관리',
   worldSettings: '세계관 관리',
   chat: 'AI 채팅',
@@ -41,6 +43,14 @@ export default function EpisodeSidePanel({ novelId, activePanel, visited, onClos
         <div className="episode-workspace-panel-body">
           {/* 한 번 열린 패널은 계속 마운트해두고 display로만 보이기/숨기기를 전환한다.
               — 처음 열 때만 데이터를 조회하고, 닫았다 다시 열어도 상태가 유지된다. */}
+          {visited.has('memos') && (
+            <div
+              className="episode-workspace-panel-slot"
+              style={{ display: activePanel === 'memos' ? 'flex' : 'none' }}
+            >
+              <MemoReferencePanel novelId={novelId} />
+            </div>
+          )}
           {visited.has('characters') && (
             <div
               className="episode-workspace-panel-slot"

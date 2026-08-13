@@ -66,16 +66,28 @@ Novel
     │   └── updatedAt
     │   UNIQUE(episode_id, character_id)
     │
+    ├── 1:N
+    │   ▼
+    │ WorldSetting
+    │ ├── id (PK)
+    │ ├── novel_id (FK → Novel.id)
+    │ ├── category (ENUM: COUNTRY/RACE/MAGIC/ORGANIZATION/PLACE/EVENT/ITEM/RULE/ETC)
+    │ ├── title
+    │ ├── content (TEXT)
+    │ ├── createdAt
+    │ └── updatedAt
+    │
     └── 1:N
         ▼
-      WorldSetting
+      Memo
       ├── id (PK)
       ├── novel_id (FK → Novel.id)
-      ├── category (ENUM: COUNTRY/RACE/MAGIC/ORGANIZATION/PLACE/EVENT/ITEM/RULE/ETC)
       ├── title
       ├── content (TEXT)
+      ├── isFavorite (기본값 false)
       ├── createdAt
       └── updatedAt
+      (episodeNumber 같은 순번 없음, AI 도구 미사용 — 순수 개인 텍스트 메모)
 ```
 
 ---
@@ -89,6 +101,7 @@ Novel
 | Novel : Character = 1:N | 한 작품은 여러 등장인물을 가질 수 있다 |
 | Episode : Character = N:M | 한 회차에 여러 인물, 한 인물이 여러 회차에 등장 가능 (EpisodeCharacter 중간 테이블) |
 | Novel : WorldSetting = 1:N | 한 작품은 여러 세계관 설정을 가질 수 있다 |
+| Novel : Memo = 1:N | 한 작품은 여러 개인 메모를 가질 수 있다 |
 
 ---
 
@@ -98,6 +111,7 @@ Novel
 Episode.novel_id     → Novel.user_id → User.id
 Character.novel_id   → Novel.user_id → User.id
 WorldSetting.novel_id → Novel.user_id → User.id
+Memo.novel_id         → Novel.user_id → User.id
 ```
 
 모든 하위 리소스의 접근 권한은 Novel을 통해 User까지 거슬러 올라가서 검증한다.
@@ -119,4 +133,5 @@ OpenAI가 반환한 후보(CharacterCandidateDto)는 메모리에서만 처리�
 | Phase 2-b | CharacterExtraction (AI 후보 추출) | 완료 |
 | Phase 2-c | EpisodeCharacter (회차별 인물 연결) | 완료 |
 | Phase 2-d | 문체 분석, 설정 충돌 탐지 | 미구현 |
+| Phase 2-e | Memo(작품별 개인 메모) CRUD | 완료 |
 | Phase 3 | RAG 도입 | 미구현 |

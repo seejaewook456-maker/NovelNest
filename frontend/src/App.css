@@ -682,15 +682,22 @@ select {
 
 .section-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 14px;
+}
+
+/* 아주 좁은 화면(휴대폰)에서는 2열도 비좁아 보이므로 1열로 재배치한다 */
+@media (max-width: 480px) {
+  .section-cards {
+    grid-template-columns: 1fr;
+  }
 }
 
 .section-card {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: 26px 20px;
+  padding: 14px 20px;
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
@@ -947,6 +954,107 @@ select {
   line-height: 2.0;
   color: var(--color-text-primary);
   white-space: pre-wrap;
+}
+
+/* =============================================
+   메모 목록/상세 — 회차 목록/상세와 동일한 카드 톤(배경/테두리/hover/그림자)을 그대로
+   재사용하되, 회차 번호 배지가 없으므로 제목/최근 수정일을 세로로 쌓는 구조로 둔다.
+   ============================================= */
+.memo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.memo-item {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 18px 22px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.memo-item:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
+}
+
+.memo-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.memo-item-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.memo-item-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.memo-arrow {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.memo-detail {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 36px;
+  box-shadow: var(--shadow-sm);
+}
+
+.memo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.memo-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.memo-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.memo-updated-at {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.memo-content {
+  font-size: 16px;
+  line-height: 2.0;
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+}
+
+@media (max-width: 480px) {
+  .memo-detail {
+    padding: 22px;
+  }
 }
 
 /* =============================================
@@ -2942,8 +3050,8 @@ select {
     padding: 6px 2px;
   }
 
-  /* 넓은 화면(세로 배치)에서는 첫 버튼(등장인물) 위에 구분선이 없어도 자연스럽지만,
-     좁은 화면은 가로로 줄바꿈되어 배치되므로 첫 버튼도 나머지 두 버튼과 동일하게
+  /* 넓은 화면(세로 배치)에서는 첫 버튼(메모) 위에 구분선이 없어도 자연스럽지만,
+     좁은 화면은 가로로 줄바꿈되어 배치되므로 첫 버튼도 나머지 버튼들과 동일하게
      구분선이 보여야 시각적으로 통일된다. */
   .episode-tool-rail-btn:first-of-type {
     border-top: 1px solid var(--color-border);

@@ -37,10 +37,16 @@ export default function NovelDetailPage() {
         {novel.description && <p className="description">{novel.description}</p>}
       </div>
 
+      {/* 2×2 grid — DOM 순서가 곧 배치 순서(좌→우, 상→하)다:
+          1행 [회차 관리][메모 관리], 2행 [등장인물 관리][세계관 관리] */}
       <div className="section-cards">
         <div className="section-card" onClick={() => navigate(`/novels/${id}/episodes`)}>
           <h3>회차 관리</h3>
           <p>회차 목록 조회 및 작성</p>
+        </div>
+        <div className="section-card" onClick={() => navigate(`/novels/${id}/memos`)}>
+          <h3>메모 관리</h3>
+          <p>아이디어 및 참고사항 기록</p>
         </div>
         <div className="section-card" onClick={() => navigate(`/novels/${id}/characters`)}>
           <h3>등장인물 관리</h3>
