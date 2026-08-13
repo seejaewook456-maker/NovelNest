@@ -62,6 +62,20 @@ Blue(Primary)/Green(Success)/Orange(Warning)/Red(Error) 색상을 사용한다.
 - 구글 로그인 버튼 SVG 4색 로고 — `LoginPage.tsx`, `SignupPage.tsx`
 - 노벨네스트 연필 로고 SVG(`#70492E` / `#FFFFFF`) — `LoginPage.tsx`, `SignupPage.tsx`, `LandingHeader.tsx`
 
+## select 다크 모드 화살표 — background shorthand 주의
+
+`App.css`의 `select`에는 커스텀 dropdown 화살표를 `background-image`(data URI SVG,
+`background-repeat: no-repeat`)로 그리고, `[data-theme='dark'] select`가 화살표 색상만
+다시 그린 SVG로 교체하는 구조다.
+
+`.form-group input/textarea/select, select { background: var(--color-bg-input); ... }`처럼
+**shorthand `background`를 쓰면 안 된다.** `.form-group select`가 bare `select`보다
+specificity가 높아, shorthand가 암묵적으로 `background-image: none` /
+`background-repeat: repeat`로 초기화해버린다. 그 결과 `[data-theme='dark'] select`(동일
+specificity, 소스 순서상 나중)가 `background-image`만 다시 채워 넣으면서 `repeat`가 살아남아
+화살표 SVG가 박스 전체에 타일처럼 반복되는 버그가 있었다(세계관 추출 리뷰 화면의 `분류`
+select에서 발견). 배경색만 지정할 때는 반드시 `background-color`를 쓴다.
+
 ## 다크 모드 적용 방식
 
 ```css

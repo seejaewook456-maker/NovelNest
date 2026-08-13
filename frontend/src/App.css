@@ -226,7 +226,10 @@ select {
   border-radius: var(--radius-input);
   font-size: 15px;
   outline: none;
-  background: var(--color-bg-input);
+  /* background(shorthand)를 쓰면 select의 화살표 background-image/repeat/position이
+     .form-group select(더 높은 specificity)에 의해 초기값(image:none, repeat:repeat)으로
+     리셋되어 다크 모드 화살표 아이콘이 타일처럼 반복되는 버그가 있었다. background-color만 지정. */
+  background-color: var(--color-bg-input);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   transition: border-color 0.2s, box-shadow 0.2s;
