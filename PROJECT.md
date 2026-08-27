@@ -348,6 +348,22 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * 작품 상세 페이지 2×2 버튼: DOM 순서를 회차 관리 → 메모 관리 → 등장인물 관리 → 세계관 관리로 바꿔 1행 [회차][메모], 2행 [등장인물][세계관] 배치. `.section-card` 세로 padding을 26px→14px로 줄여 카드가 더 슬림해짐(가로 크기·grid 구조·border/hover/shadow는 그대로 유지, 클릭 영역은 여전히 충분)
 * 다크 모드: 신규 UI 전부 기존 `--color-*` 토큰과 `.favorite-btn`/`.item-card`/`.workspace-ref-*` 공통 클래스만 재사용 — 별도 오버라이드 추가 없음
 
+### 회차 작성/수정 메뉴 패널 — 메모/이전 회차/AI 채팅 탭 넓은 레이아웃
+* 메모/이전 회차/AI 채팅은 카드형 정보(등장인물/세계관)보다 긴 텍스트를 읽는 비중이 높아, 화면 폭이 충분한 대형 데스크톱에서는 우측 패널을 더 넓게 사용하도록 개선. 등장인물/세계관 탭은 기존 380px 패널·카드 배치를 그대로 유지
+* 구현: `EpisodeWorkspace`가 `activePanel`이 `'memos'`/`'previousEpisodes'`/`'chat'`일 때 최상위 컨테이너에 `panel-wide` 클래스를 추가. CSS는 `.episode-workspace.panel-wide`의 `--ep-panel-width`를 `clamp(380px, 30vw, 640px)`로 덮어쓰기만 함 — 이 변수 하나를 이미 `.episode-workspace-panel-wrap.open`/`.episode-workspace-panel`의 width와 `.episode-workspace.panel-open`의 breakout `max-width` calc가 모두 참조하고 있어, 새 위치 계산 코드 없이 회차 본문 입력 박스·메뉴 레일·패널이 전체 레이아웃(breakout 중앙 정렬) 차원에서 함께 재배치된다(패널이 넓어진 만큼 중앙 정렬 축이 이동해 입력 박스가 자연스럽게 왼쪽으로 밀림, 본문과 겹치지 않음)
+* 고정 breakpoint 하나로 전환하는 대신 `vw` 기반 `clamp`로 화면 폭에 비례해 연속적으로 넓어지게 구현 — 처음에 특정 px 이상에서만 켜지는 방식으로 시도했더니 그 기준보다 좁은(그러나 결코 좁지는 않은) 일반적인 노트북 브라우저 창 폭에서는 패널이 전혀 안 넓어져 보이는 문제가 있어 변경. 하한 380px(=등장인물/세계관과 동일한 기존 폭)로 좁은 화면에서 더 좁아지지 않게, 상한 640px로 초대형 모니터에서 과도하게 넓어지지 않게 막음. 30vw 계수는 "패널을 제외한 나머지 고정 폭 합(입력 박스 680 + gap 20×2 + 메뉴 96 + breakout 여백 48 = 864px)에 0.30·VW를 더해도 VW(뷰포트 폭)보다 항상 작다"는 조건이 VW≈1235px부터 성립하도록 역산한 값 — 기존 1300px 오버레이 전환 breakpoint보다 낮은 지점이라 가로 스크롤 없이 항상 안전
+* 패널 내부(`MemoReferencePanel`/`AiChatPanel`의 목록·카드·채팅 말풍선·입력창)는 이미 고정 px 폭이 아닌 상대 폭(`width:100%`, `flex:1`, `max-width:80%` 등)으로 구현돼 있어 패널 컴포넌트 자체는 수정하지 않고도 넓어진 폭에 자동으로 맞춰짐
+
+### 회차 작성/수정 메뉴 — "이전 회차" 참고 패널 추가
+* 회차 작성/수정 중 페이지 이동 없이 이전 회차 본문을 참고할 수 있는 조회 전용(Read-only) 패널 추가. 메뉴 순서: **메모 → 이전 회차 → 등장인물 → 세계관 → AI 채팅**(`EpisodeToolRail`의 `EpisodeWorkspacePanelKey`에 `'previousEpisodes'` 추가, 아이콘은 새 라이브러리 없이 기존 인라인 SVG 컨벤션 그대로 열린 책 모양 추가)
+* 범위 필터링: 현재 작성/수정 중인 회차의 `episodeNumber`보다 작은(`<`) 회차만 오름차순으로 노출. ID 크기가 아니라 실제 회차 순서 필드(`episodeNumber`)를 기준으로 필터링·정렬(기존 `findAllByNovelOrderByEpisodeNumberAsc`와 동일한 정렬 기준 재사용). 새 회차 작성 화면은 사용자가 입력 중인 회차 번호 입력창의 실시간 값을, 수정 화면은 autoSave payload(`Number(editEpisodeNumber) || episode.episodeNumber`)와 동일한 폴백 규칙을 그대로 재사용해 기준 번호로 삼는다 — 아직 번호를 입력하지 않은 새 회차 작성 화면에서는 무엇이 "이전"인지 알 수 없으므로 전체 회차를 보여준다
+* 성능 고려 — 신규 경량 API 추가: 기존 `GET /api/novels/{novelId}/episodes`는 회차 목록 조회 시 각 회차의 전체 본문(content)까지 함께 반환해, 회차가 수백 개인 작품에서는 "이전 회차" 목록만 보여주는 데도 불필요하게 무거운 응답이 된다. 이를 피하기 위해 본문 없이 번호+제목만 반환하는 `GET /api/novels/{novelId}/episodes/brief`(`EpisodeBriefResponseDto`)를 새로 추가 — 목록에서는 이 경량 API만 쓰고, 사용자가 특정 회차를 클릭했을 때만 기존 `GET /api/episodes/{episodeId}` 상세 API를 그대로 재사용해 본문을 가져온다(상세 조회용 신규 API는 만들지 않음). 두 API 모두 기존 `validateOwner`(작품 소유자만 접근 가능) 검증을 그대로 재사용
+* UI 구조: `PreviousEpisodesPanel`(신규) — 회차 본문이 길어 `MemoReferencePanel`의 인라인 아코디언 방식 대신, 목록 화면과 상세 화면을 완전히 분리하고 `BackLink`(기존 "← 회차 목록" 컴포넌트 재사용)로 목록에 돌아가는 방식을 사용. 카드/헤더 스타일은 `.item-card`/`.workspace-ref-card`/`.item-card-header` 등 기존 참고 패널 공통 클래스를 그대로 재사용. 본문 줄바꿈/빈 줄은 메모 상세와 동일하게 `white-space: pre-wrap`(`.episode-ref-content`, `.memo-ref-content`와 동일한 방식)으로 처리. 회차 상세 데이터를 새로 조회할 때는 이전 선택 내용을 즉시 비우고 로딩 상태로 전환해, 다른 회차의 내용이 잘못 표시되지 않게 함
+* 1화 작성/수정 시(이전 회차 없음)에는 기존 `EmptyState` 컴포넌트로 안내 문구 표시
+* 패널은 메모/AI 채팅과 동일하게 `panel-wide` 넓은 레이아웃 대상에 포함(위 섹션 참고)
+* DB 스키마 변경 없음(Flyway 마이그레이션 추가 없음) — 기존 `episodes` 테이블/엔티티를 그대로 조회만 함
+* 백엔드 테스트: `EpisodeServiceTest`(신규, Mockito) — 이번에 추가한 `getEpisodeBriefs`만 검증(본문 미포함·번호순 반환, 타 사용자 접근 차단). 기존 회차 CRUD 메서드들은 이전부터 테스트가 없던 영역이라 이번 범위에 포함하지 않음
+
 ## 아직 구현되지 않음
 
 ### AI 기능 (미구현)

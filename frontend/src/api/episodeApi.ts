@@ -1,8 +1,14 @@
-import type { Episode, EpisodeCreateRequest, EpisodeUpdateRequest } from '../types/episode';
+import type { Episode, EpisodeBrief, EpisodeCreateRequest, EpisodeUpdateRequest } from '../types/episode';
 import { fetchWithAuth } from './fetchWithAuth';
 
 export const getEpisodes = async (novelId: number): Promise<Episode[]> => {
   const json = await fetchWithAuth<Episode[]>(`/novels/${novelId}/episodes`);
+  return json.data!;
+};
+
+// "이전 회차" 참고 패널 전용 — 본문 없이 번호+제목만 가져온다(getEpisodes는 전체 본문을 포함해 무겁다).
+export const getEpisodeBriefs = async (novelId: number): Promise<EpisodeBrief[]> => {
+  const json = await fetchWithAuth<EpisodeBrief[]>(`/novels/${novelId}/episodes/brief`);
   return json.data!;
 };
 

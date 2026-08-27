@@ -87,6 +87,10 @@ export default function EpisodeCreatePage() {
 
   if (numericNovelId === null) return null;
 
+  // "이전 회차" 패널 필터링 기준. 아직 유효한 번호를 입력하지 않았다면(빈 값/0 이하)
+  // 무엇이 "이전"인지 알 수 없으므로 null을 넘겨 패널이 전체 회차를 보여주게 한다.
+  const currentEpisodeNumber = Number(episodeNumber) > 0 ? Number(episodeNumber) : null;
+
   if (pendingDraft) {
     return (
       <div style={{ maxWidth: 680 }}>
@@ -100,7 +104,11 @@ export default function EpisodeCreatePage() {
   return (
     // 뒤로가기/제목/저장 상태를 EpisodeWorkspace의 children(=입력 박스와 같은 flex 컬럼) 안에
     // 함께 렌더링해, 패널 열림/닫힘·화면 크기 변경과 무관하게 입력 박스와 항상 같은 위치를 유지한다.
-    <EpisodeWorkspace novelId={numericNovelId} fixedContentWidth={680}>
+    <EpisodeWorkspace
+      novelId={numericNovelId}
+      fixedContentWidth={680}
+      currentEpisodeNumber={currentEpisodeNumber}
+    >
       <EditorHeader
         backLabel="← 회차 목록"
         onBack={() => navigate(`/novels/${novelId}/episodes`)}

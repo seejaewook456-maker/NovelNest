@@ -94,7 +94,9 @@ export default function MemoReferencePanel({ novelId }: MemoReferencePanelProps)
                   {m.isFavorite ? '★' : '☆'}
                 </button>
               </div>
-              {isExpanded && <p className="item-field workspace-ref-card-detail">{m.content}</p>}
+              {isExpanded && (
+                <p className="item-field workspace-ref-card-detail memo-ref-content">{m.content}</p>
+              )}
             </div>
           );
         })

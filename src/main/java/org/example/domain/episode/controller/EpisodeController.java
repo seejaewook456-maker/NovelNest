@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.domain.episode.dto.EpisodeBriefResponseDto;
 import org.example.domain.episode.dto.EpisodeCreateRequestDto;
 import org.example.domain.episode.dto.EpisodeResponseDto;
 import org.example.domain.episode.dto.EpisodeUpdateRequestDto;
@@ -43,6 +44,15 @@ public class EpisodeController {
             @PathVariable Long novelId) {
         List<EpisodeResponseDto> response = episodeService.getEpisodes(userDetails.getUsername(), novelId);
         return ResponseEntity.ok(ApiResponse.of("회차 목록 조회 성공", response));
+    }
+
+    @Operation(summary = "회차 목록 간략 조회", description = "본문(content) 없이 회차 번호와 제목만 반환합니다. 회차 작성/수정 화면의 '이전 회차' 참고 패널처럼 목록만 필요한 화면에서 사용합니다.")
+    @GetMapping("/api/novels/{novelId}/episodes/brief")
+    public ResponseEntity<ApiResponse> getEpisodeBriefs(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long novelId) {
+        List<EpisodeBriefResponseDto> response = episodeService.getEpisodeBriefs(userDetails.getUsername(), novelId);
+        return ResponseEntity.ok(ApiResponse.of("회차 목록 간략 조회 성공", response));
     }
 
     @Operation(summary = "회차 상세 조회", description = "회차 ID로 상세 내용을 조회합니다. 본인 작품의 회차만 조회 가능합니다.")
