@@ -8,6 +8,9 @@ interface EpisodeWorkspaceProps {
   // 회차 작성 입력 박스처럼, 패널이 열려도 절대 축소되면 안 되는 고정 폭 콘텐츠일 때 지정한다.
   // 지정하지 않으면 기존처럼 유연한 폭(flex:1)을 사용한다(회차 읽기 전용 화면 등).
   fixedContentWidth?: number;
+  // "이전 회차" 패널 필터링 기준 — 현재 작성/수정 중인 회차 번호. 아직 번호를 입력하지 않은
+  // 새 회차 작성 화면에서는 null을 넘기면 전체 회차를 보여준다.
+  currentEpisodeNumber?: number | null;
 }
 
 // 회차 작성/수정 화면에 "메뉴 사이드바 + 작업 패널"을 덧붙이는 레이아웃 래퍼.
@@ -19,7 +22,12 @@ interface EpisodeWorkspaceProps {
 // 유지한다. 대신 메뉴 레일·패널의 상단 테두리를 입력 박스(EditorHeader 아래)와 맞추기 위해,
 // fixedContentWidth가 있을 때(=EditorHeader가 있는 회차 작성/수정 화면)만 has-header 클래스를
 // 붙여 CSS가 헤더 높이만큼 메뉴/패널을 아래로 내리도록 한다.
-export default function EpisodeWorkspace({ novelId, children, fixedContentWidth }: EpisodeWorkspaceProps) {
+export default function EpisodeWorkspace({
+  novelId,
+  children,
+  fixedContentWidth,
+  currentEpisodeNumber = null,
+}: EpisodeWorkspaceProps) {
   const [activePanel, setActivePanel] = useState<EpisodeWorkspacePanelKey | null>(null);
   // 한 번이라도 연 패널만 마운트 목록에 추가한다 — 패널을 열기 전에는
   // 등장인물/세계관/AI 채팅 데이터를 전혀 조회하지 않기 위함.
@@ -32,9 +40,15 @@ export default function EpisodeWorkspace({ novelId, children, fixedContentWidth 
 
   const handleClose = () => setActivePanel(null);
 
+  // 메모/이전 회차/AI 채팅은 카드형 정보보다 긴 텍스트를 읽는 비중이 높아, 화면 폭이 충분한
+  // 대형 데스크톱에서는 패널을 더 넓게 쓴다(panel-wide, App.css 참고). 등장인물/세계관은
+  // 기존 카드 배치를 그대로 유지해야 하므로 대상에서 제외한다.
+  const isWidePanel =
+    activePanel === 'memos' || activePanel === 'previousEpisodes' || activePanel === 'chat';
+
   return (
     <div
-      className={`episode-workspace${activePanel ? ' panel-open' : ''}${fixedContentWidth ? ' has-header' : ''}`}
+      className={`episode-workspace${activePanel ? ' panel-open' : ''}${fixedContentWidth ? ' has-header' : ''}${isWidePanel ? ' panel-wide' : ''}`}
     >
       <div
         className={`episode-workspace-main${fixedContentWidth ? ' fixed-width' : ''}`}
@@ -55,6 +69,7 @@ export default function EpisodeWorkspace({ novelId, children, fixedContentWidth 
         activePanel={activePanel}
         visited={visited}
         onClose={handleClose}
+        currentEpisodeNumber={currentEpisodeNumber}
       />
 
       <EpisodeToolRail activePanel={activePanel} onSelect={handleSelect} />

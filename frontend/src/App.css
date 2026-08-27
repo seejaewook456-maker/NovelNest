@@ -2666,6 +2666,23 @@ select {
   transform: translateX(-50%);
 }
 
+/* 메모/AI 채팅 탭은 긴 텍스트를 읽는 비중이 높아 등장인물/세계관보다 넓은 패널이 읽기 좋다.
+   --ep-panel-width만 덮어쓰면 위 max-width calc와 .episode-workspace-panel-wrap.open,
+   .episode-workspace-panel의 width가 전부 이 값을 그대로 참조하고 있어 새 위치/너비 계산
+   코드 없이도 입력 박스·메뉴·패널이 함께 재배치된다(입력 박스는 패널이 넓어진 만큼
+   중앙 정렬 축이 이동하며 자연스럽게 왼쪽으로 밀린다).
+   화면 폭에 비례해 연속적으로 넓어지도록 vw 기반 clamp를 사용한다(고정 breakpoint 하나로
+   전환하면 그 지점 미만인 일반적인 노트북 창 폭(예: 1440px)에서는 전혀 안 넓어져 보이는
+   문제가 있었음). 하한 380px = 등장인물/세계관과 동일한 기존 폭(패널이 좁아지지 않게
+   보장), 상한 640px = 초대형 모니터에서 과도하게 넓어지는 것 방지.
+   30vw로 계산해도 항상 안전한 이유: 패널을 제외한 나머지(입력 박스 680 + gap 20×2 +
+   메뉴 96 + breakout 여백 48 = 864px)와 합쳐도 필요 폭 = 864 + 0.30·VW인데, 이는
+   VW가 약 1235px보다 크면 VW 자체보다 항상 작아 가로 스크롤 없이 항상 화면 안에 들어간다
+   (기존 1300px 오버레이 전환 breakpoint보다 낮은 지점이라 안전 마진 확보). */
+.episode-workspace.panel-wide {
+  --ep-panel-width: clamp(380px, 30vw, 640px);
+}
+
 /* 메뉴 레일 — 항상 노출되는 아이콘 메뉴. position은 sticky를 쓰지 않는다 — 스크롤 시
    뷰포트에 붙어 입력 박스와 따로 움직이는 대신, 입력 박스와 같은 위치를 그대로 유지한 채
    페이지와 함께 스크롤되도록 일반 flex 항목으로 둔다. */
@@ -2939,6 +2956,16 @@ select {
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid var(--color-border);
+}
+
+/* 메모 상세 페이지(.memo-content)와 동일하게 줄바꿈/빈 줄을 그대로 표시한다 */
+.memo-ref-content {
+  white-space: pre-wrap;
+}
+
+/* 이전 회차 상세도 회차 읽기 전용 뷰(.episode-content)와 동일하게 줄바꿈/빈 줄을 그대로 표시한다 */
+.episode-ref-content {
+  white-space: pre-wrap;
 }
 
 /* 작은 데스크톱/태블릿 — 입력 박스+패널을 나란히 놓을 폭이 부족하므로

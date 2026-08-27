@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type EpisodeWorkspacePanelKey = 'memos' | 'characters' | 'worldSettings' | 'chat';
+export type EpisodeWorkspacePanelKey = 'memos' | 'previousEpisodes' | 'characters' | 'worldSettings' | 'chat';
 
 interface MenuItem {
   key: EpisodeWorkspacePanelKey;
@@ -16,6 +16,14 @@ const MemoIcon = () => (
     <polyline points="14 2 14 8 20 8" />
     <line x1="8" y1="13" x2="16" y2="13" />
     <line x1="8" y1="17" x2="16" y2="17" />
+  </svg>
+);
+
+// 열린 책 형태 — "이전 회차"(과거 기록을 되짚어보는 회차 목록)를 나타낸다.
+const PreviousEpisodesIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M2 4.5A2.5 2.5 0 0 1 4.5 2H9a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+    <path d="M22 4.5A2.5 2.5 0 0 0 19.5 2H15a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h8z" />
   </svg>
 );
 
@@ -42,6 +50,7 @@ const ChatIcon = () => (
 
 const MENU_ITEMS: MenuItem[] = [
   { key: 'memos', label: '메모', icon: <MemoIcon /> },
+  { key: 'previousEpisodes', label: '이전 회차', icon: <PreviousEpisodesIcon /> },
   { key: 'characters', label: '등장인물', icon: <CharacterIcon /> },
   { key: 'worldSettings', label: '세계관', icon: <WorldviewIcon /> },
   { key: 'chat', label: 'AI 채팅', icon: <ChatIcon /> },

@@ -2,6 +2,7 @@ package org.example.domain.episode.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.domain.episode.dto.EpisodeBriefResponseDto;
 import org.example.domain.episode.dto.EpisodeCreateRequestDto;
 import org.example.domain.episode.dto.EpisodeResponseDto;
 import org.example.domain.episode.dto.EpisodeUpdateRequestDto;
@@ -63,6 +64,19 @@ public class EpisodeService {
 
         return episodeRepository.findAllByNovelOrderByEpisodeNumberAsc(novel).stream()
                 .map(EpisodeResponseDto::from)
+                .toList();
+    }
+
+    // "이전 회차" 참고 패널 전용 — getEpisodes와 동일한 조회/정렬/권한 검증을 재사용하되
+    // 본문(content) 없이 번호+제목만 반환해 회차가 많은 작품에서도 응답을 가볍게 유지한다.
+    @Transactional(readOnly = true)
+    public List<EpisodeBriefResponseDto> getEpisodeBriefs(String email, Long novelId) {
+        User user = findUserByEmail(email);
+        Novel novel = findNovelById(novelId);
+        validateOwner(novel, user);
+
+        return episodeRepository.findAllByNovelOrderByEpisodeNumberAsc(novel).stream()
+                .map(EpisodeBriefResponseDto::from)
                 .toList();
     }
 

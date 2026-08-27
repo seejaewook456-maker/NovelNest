@@ -1,11 +1,13 @@
 import type { EpisodeWorkspacePanelKey } from './EpisodeToolRail';
 import MemoReferencePanel from './MemoReferencePanel';
+import PreviousEpisodesPanel from './PreviousEpisodesPanel';
 import CharacterReferencePanel from './CharacterReferencePanel';
 import WorldSettingReferencePanel from './WorldSettingReferencePanel';
 import AiChatPanel from '../AiChatPanel';
 
 const PANEL_TITLES: Record<EpisodeWorkspacePanelKey, string> = {
   memos: '메모',
+  previousEpisodes: '이전 회차',
   characters: '등장인물 관리',
   worldSettings: '세계관 관리',
   chat: 'AI 채팅',
@@ -17,12 +19,20 @@ interface EpisodeSidePanelProps {
   // 한 번이라도 열었던 패널 — 계속 마운트 상태를 유지해 검색어/스크롤/대화 내용을 보존한다.
   visited: Set<EpisodeWorkspacePanelKey>;
   onClose: () => void;
+  // "이전 회차" 패널에 현재 작성/수정 중인 회차 번호를 넘겨 그보다 이전 회차만 보여주게 한다.
+  currentEpisodeNumber: number | null;
 }
 
 // 오른쪽에서 슬라이드로 열리는 작업 패널. 폭 애니메이션(width)과 슬라이드 애니메이션(transform)을
 // 함께 적용해 "펼쳐지며 오른쪽에서 들어오는" 느낌을 준다. 패널 전환(activePanel 변경)은
 // 이 열림/닫힘 애니메이션과 무관하게 내부 콘텐츠만 즉시 바뀐다.
-export default function EpisodeSidePanel({ novelId, activePanel, visited, onClose }: EpisodeSidePanelProps) {
+export default function EpisodeSidePanel({
+  novelId,
+  activePanel,
+  visited,
+  onClose,
+  currentEpisodeNumber,
+}: EpisodeSidePanelProps) {
   const isOpen = activePanel !== null;
 
   return (
@@ -49,6 +59,14 @@ export default function EpisodeSidePanel({ novelId, activePanel, visited, onClos
               style={{ display: activePanel === 'memos' ? 'flex' : 'none' }}
             >
               <MemoReferencePanel novelId={novelId} />
+            </div>
+          )}
+          {visited.has('previousEpisodes') && (
+            <div
+              className="episode-workspace-panel-slot"
+              style={{ display: activePanel === 'previousEpisodes' ? 'flex' : 'none' }}
+            >
+              <PreviousEpisodesPanel novelId={novelId} currentEpisodeNumber={currentEpisodeNumber} />
             </div>
           )}
           {visited.has('characters') && (

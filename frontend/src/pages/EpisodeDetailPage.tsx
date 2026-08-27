@@ -349,6 +349,10 @@ export default function EpisodeDetailPage() {
   if (error) return <p className="error-message">{error}</p>;
   if (!episode) return <LoadingSpinner />;
 
+  // "이전 회차" 패널 필터링 기준 — autoSave 저장 payload(위 55행)와 동일한 폴백 규칙을 재사용해,
+  // 입력 중 잠깐 빈 값이 되어도 원래 회차 번호 기준으로 이전 회차를 보여준다.
+  const currentEpisodeNumber = Number(editEpisodeNumber) || episode.episodeNumber;
+
   return (
     <>
       {/* 메뉴(등장인물/세계관/AI 채팅)는 회차 작성·수정 화면에서만 제공한다.
@@ -356,7 +360,11 @@ export default function EpisodeDetailPage() {
       {isEditing ? (
         // 뒤로가기/제목/저장 상태를 EpisodeWorkspace의 children(=입력 박스와 같은 flex 컬럼) 안에
         // 함께 렌더링해, 패널 열림/닫힘·화면 크기 변경과 무관하게 입력 박스와 항상 같은 위치를 유지한다.
-        <EpisodeWorkspace novelId={episode.novelId} fixedContentWidth={680}>
+        <EpisodeWorkspace
+          novelId={episode.novelId}
+          fixedContentWidth={680}
+          currentEpisodeNumber={currentEpisodeNumber}
+        >
           <EditorHeader
             backLabel="← 회차 목록"
             onBack={() => navigate(`/novels/${episode.novelId}/episodes`)}
