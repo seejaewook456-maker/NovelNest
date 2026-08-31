@@ -2989,6 +2989,13 @@ select {
   white-space: pre-wrap;
 }
 
+/* 세계관 설명 — 사용자가 입력하거나 AI가 생성/보강한 개행(빈 줄 포함)을 그대로 표시한다.
+   작품 상세(WorldSettingPage)/회차 작성·수정(WorldSettingReferencePanel)/세계관 보강 검토
+   (WorldSettingReviewPage) 세 화면에서 공통으로 사용한다. */
+.world-setting-content {
+  white-space: pre-wrap;
+}
+
 /* 이전 회차 상세도 회차 읽기 전용 뷰(.episode-content)와 동일하게 줄바꿈/빈 줄을 그대로 표시한다 */
 .episode-ref-content {
   white-space: pre-wrap;

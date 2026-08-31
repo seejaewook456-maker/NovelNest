@@ -202,7 +202,7 @@ export default function WorldSettingReviewPage() {
                 </div>
                 <div className="field-row">
                   <span className="field-label">내용</span>
-                  <span className="field-value">{current.existingWorldSetting.content}</span>
+                  <span className="field-value world-setting-content">{current.existingWorldSetting.content}</span>
                 </div>
               </div>
             </div>

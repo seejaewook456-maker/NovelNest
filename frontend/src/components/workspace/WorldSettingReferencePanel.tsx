@@ -143,7 +143,7 @@ export default function WorldSettingReferencePanel({ novelId }: WorldSettingRefe
                   {s.isFavorite ? '★' : '☆'}
                 </button>
               </div>
-              {isExpanded && <p className="item-field workspace-ref-card-detail">{s.content}</p>}
+              {isExpanded && <p className="item-field workspace-ref-card-detail world-setting-content">{s.content}</p>}
             </div>
           );
         })

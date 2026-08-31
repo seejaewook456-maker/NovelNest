@@ -31,6 +31,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class WorldSettingExtractionService {
 
+    // 병합 시 기존 내용과 신규 내용 사이를 구분하는 빈 줄 — 반복 보강 시에도 정확히 이 구분자
+    // 하나만 남도록 mergeWithExistingContent()가 기존 내용 끝의 개행을 먼저 정리한다.
+    private static final String CONTENT_MERGE_SEPARATOR = "\n\n";
+
     private static final String EXTRACTION_INSTRUCTIONS =
             "당신은 소설 세계관 분석 전문가입니다. 주어진 소설 회차를 분석하여 세계관/설정 후보를 추출합니다.\n\n" +
             "반드시 다음 규칙을 따르세요:\n" +
@@ -38,11 +42,19 @@ public class WorldSettingExtractionService {
             "2. 기존 세계관 설정 목록이 제공된 경우, 본문에 등장하는 기존 설정을 반드시 식별하세요.\n" +
             "3. 기존 설정은 isExistingSetting을 true로, matchedWorldSettingId에 해당 ID를 설정하세요.\n" +
             "4. 신규 설정은 isExistingSetting을 false로, matchedWorldSettingId를 null로 설정하세요.\n" +
-            "5. newInsights는 기존 설정에만 사용하며, 기존 content에 없는 새로운 정보만 리스트로 포함하세요.\n" +
+            "5. newInsights는 기존 설정에만 사용하며, 기존 content에 없는 새로운 정보만 짧은 문장 리스트로 포함하세요.\n" +
             "6. evidence는 해당 설정을 뒷받침하는 회차 내 구체적인 장면이나 대사를 기록하세요.\n" +
             "7. category는 반드시 COUNTRY/RACE/MAGIC/ORGANIZATION/PLACE/EVENT/ITEM/RULE/ETC 중 하나로 설정하세요.\n" +
             "8. 모든 문자열 값은 유효한 JSON 문자열이어야 합니다. 값 안에 큰따옴표(\")가 필요하면 반드시 \\\"로 이스케이프하거나 " +
-            "작은따옴표(')로 바꿔 쓰세요. 줄바꿈이 필요하면 \\n으로 이스케이프하세요. 대사를 인용할 때 특히 주의하세요.";
+            "작은따옴표(')로 바꿔 쓰세요. 줄바꿈이 필요하면 \\n으로 이스케이프하세요. 대사를 인용할 때 특히 주의하세요.\n" +
+            "9. content(신규 설정) 또는 newContent(기존 설정 보강)를 작성할 때 모든 문장을 하나의 문단으로 이어쓰지 마세요. " +
+            "같은 맥락의 문장은 한 문단으로 유지하되, 주제가 전환되거나 서로 다른 규칙·개념으로 넘어갈 때는 문단 사이에 " +
+            "빈 줄(\\n\\n)을 넣어 구분하세요. 단, 문장 단위로 무조건 줄바꿈하거나 과도하게 짧은 문단을 여러 개 만들지 말고, " +
+            "읽기 자연스러운 문단 구조를 우선하세요.\n" +
+            "10. 기존 설정을 보강하는 경우 newContent에는 기존 content를 반복하거나 요약하지 말고, 이번 회차에서 새롭게 " +
+            "확인된 내용만 9번 규칙에 따른 문단으로 작성하세요. content에는 참고용으로 기존 내용과 newContent를 이어붙인 " +
+            "전체 내용을 작성하되, 기존 내용 자체를 임의로 수정·요약하지 마세요(실제 저장 시 서버가 기존 내용을 기준으로 " +
+            "다시 병합합니다).";
 
     private final EpisodeRepository episodeRepository;
     private final WorldSettingRepository worldSettingRepository;
@@ -80,6 +92,12 @@ public class WorldSettingExtractionService {
                 WorldSetting matched = settingMap.get(candidate.getMatchedWorldSettingId());
                 if (matched != null) {
                     candidate.setExistingWorldSetting(WorldSettingResponseDto.from(matched));
+                    // AI가 content에 기존 내용을 그대로 옮기며 재작성/요약할 위험이 있으므로,
+                    // newContent(신규 보강분)만 신뢰하고 기존 내용은 DB 값을 그대로 사용해
+                    // 서버가 직접 "기존 내용 + 빈 줄 + 신규 내용" 구조로 다시 병합한다.
+                    if (candidate.getNewContent() != null && !candidate.getNewContent().isBlank()) {
+                        candidate.setContent(mergeWithExistingContent(matched.getContent(), candidate.getNewContent()));
+                    }
                 }
             }
         }
@@ -128,14 +146,37 @@ public class WorldSettingExtractionService {
         sb.append("[{");
         sb.append("\"category\":\"COUNTRY 또는 RACE 또는 MAGIC 또는 ORGANIZATION 또는 PLACE 또는 EVENT 또는 ITEM 또는 RULE 또는 ETC\",");
         sb.append("\"title\":\"설정 제목\",");
-        sb.append("\"content\":\"설정 내용 (기존 설정이면 기존 내용 + 새 정보를 합쳐서 작성)\",");
+        sb.append("\"content\":\"설정 내용 (신규 설정은 전체 내용, 기존 설정 보강은 참고용으로 기존 내용+newContent를 합친 전체 내용)\",");
         sb.append("\"evidence\":\"회차 내 근거 장면 또는 대사\",");
         sb.append("\"isExistingSetting\":true 또는 false,");
         sb.append("\"matchedWorldSettingId\":기존설정ID 또는 null,");
-        sb.append("\"newInsights\":{\"content\":[\"새로운 정보1\",\"새로운 정보2\"]} 또는 null");
+        sb.append("\"newInsights\":{\"content\":[\"새로운 정보1\",\"새로운 정보2\"]} 또는 null,");
+        sb.append("\"newContent\":\"기존 설정 보강 시 이번 회차에서 새로 추가되는 문단 내용(문맥 단위 줄바꿈 적용)\" 또는 null");
         sb.append("}]");
 
         return sb.toString();
+    }
+
+    // 기존 세계관 내용 뒤에 신규 보강 내용을 정확히 빈 줄 하나로 구분해 붙인다.
+    // 기존 내용 끝의 개행/공백을 먼저 제거한 뒤 구분자를 붙이므로, 여러 회차에 걸쳐 반복
+    // 보강해도 빈 줄이 2개 이상으로 누적되지 않는다.
+    private String mergeWithExistingContent(String existingContent, String newContent) {
+        String trimmedExisting = existingContent == null ? "" : stripTrailingBlank(existingContent);
+        String trimmedNew = newContent.strip();
+
+        if (trimmedExisting.isEmpty()) {
+            return trimmedNew;
+        }
+        return trimmedExisting + CONTENT_MERGE_SEPARATOR + trimmedNew;
+    }
+
+    // 문자열 끝의 개행/공백 문자만 제거 (앞부분과 중간 내용은 그대로 보존)
+    private String stripTrailingBlank(String text) {
+        int end = text.length();
+        while (end > 0 && Character.isWhitespace(text.charAt(end - 1))) {
+            end--;
+        }
+        return text.substring(0, end);
     }
 
     // OpenAI 응답 텍스트 → List<WorldSettingCandidateDto> 파싱
