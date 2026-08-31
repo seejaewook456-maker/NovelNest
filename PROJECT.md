@@ -204,8 +204,12 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * WorldSetting Extraction — POST /api/episodes/{episodeId}/world-setting-extraction
   - 회차 본문 + 작품 정보 + 기존 WorldSetting 목록을 AI에 전달
   - 신규 설정(isExistingSetting=false) / 기존 설정 보강(isExistingSetting=true) 구분
-  - newInsights: 기존 content 대비 새롭게 발견된 정보 목록
+  - newInsights: 기존 content 대비 새롭게 발견된 정보 목록(짧은 문장 리스트, 검토 화면 태그 표시용)
   - DB 저장 없음 — 사용자 검토 후 기존 WorldSetting CRUD API로 저장
+* 세계관 설명 줄바꿈 규칙 (content):
+  - content 작성 시 문장마다 줄바꿈하지 않고, 문맥(주제)이 전환될 때만 빈 줄(`\n\n`)로 문단을 구분하도록 AI 프롬프트에 명시
+  - 기존 설정 보강 시 AI는 새로 발견한 내용만 `newContent`에 작성(9번 규칙과 동일하게 문맥 단위 줄바꿈 적용) → 서버(`WorldSettingExtractionService.mergeWithExistingContent`)가 `기존 content(끝 공백/개행 제거) + "\n\n" + newContent`로 다시 조립해 `content`를 덮어씀 — 기존 내용을 AI가 재작성/요약하지 않고 그대로 보존, 반복 보강해도 구분 빈 줄이 1개로 유지(누적 방지)
+  - 프론트(WorldSettingPage/WorldSettingReferencePanel/WorldSettingReviewPage)는 `.world-setting-content { white-space: pre-wrap }`로 렌더링해 사용자 입력·AI 생성 개행을 그대로 표시
 
 ### Backend (설정 충돌 탐지)
 * Conflict Detection — POST /api/episodes/{episodeId}/conflict-detection

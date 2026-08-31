@@ -274,7 +274,7 @@ export default function WorldSettingPage() {
               </div>
 
               {editingId !== s.id ? (
-                <p className="item-field">{s.content}</p>
+                <p className="item-field world-setting-content">{s.content}</p>
               ) : (
                 <div className="inline-edit-form">
                   <div className="form-row">

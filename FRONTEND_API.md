@@ -686,16 +686,28 @@ Authorization: Bearer {accessToken}
         },
         "newInsights": {
           "content": ["발동 시 손목에 붉은 낙인이 남는다"]
-        }
+        },
+        "newContent": "발동 시 손목에 붉은 낙인이 남으며, 낙인은 시전자가 사망할 때까지 사라지지 않는다."
       }
     ]
   }
 }
 ```
 
+**content 필드 구성 방식**:
+- 신규 설정(`isExistingSetting: false`): AI가 작성한 전체 설명. 문장마다 줄바꿈하지 않고 문맥(주제)이
+  바뀔 때만 빈 줄(`\n\n`)로 문단을 구분한다.
+- 기존 설정 보강(`isExistingSetting: true`): AI가 새로 발견한 내용만 `newContent`에 작성하면,
+  서버가 `기존 content(끝 공백/개행 제거) + "\n\n" + newContent`로 다시 조립해 `content`에 덮어써
+  응답한다. 기존 내용은 AI가 재작성하지 않고 DB 값 그대로 보존되며, 여러 회차에 걸쳐 반복
+  보강해도 구분 빈 줄이 1개로 유지된다(누적되지 않음).
+- 화면(작품 상세/회차 작성·수정/보강 검토)에서는 `white-space: pre-wrap`으로 렌더링하므로 `content`에
+  들어있는 개행이 그대로 표시된다.
+
 **저장 방식** (DB 저장은 사용자 검토 후 기존 API로):
 - 신규 설정: `POST /api/novels/{novelId}/world-settings` with `{ category, title, content }`
 - 기존 설정 보강: `PATCH /api/world-settings/{matchedWorldSettingId}` with `{ category, title, content }`
+  (여기서 `content`는 위 방식으로 서버가 이미 병합해 내려준 값 — 사용자가 검토 화면에서 수정 후 그대로 전송)
 
 ### 프론트 연동 흐름
 
