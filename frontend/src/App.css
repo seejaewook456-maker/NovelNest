@@ -1344,6 +1344,16 @@ select {
   font-size: 10px;
 }
 
+/* 다크 모드 — 본문 대비 파란색이 과하게 강조되지 않도록 제목 텍스트는 기본 텍스트 색으로,
+   장식용 별표 아이콘만 포인트 컬러(파란색)로 남긴다. */
+[data-theme='dark'] .ai-section-header h3 {
+  color: var(--color-text-primary);
+}
+
+[data-theme='dark'] .ai-section-header h3::before {
+  color: var(--color-primary);
+}
+
 .summary-box {
   background: var(--color-bg-card);
   border-radius: 10px;
@@ -1438,6 +1448,11 @@ select {
   border-radius: 8px;
   padding: 8px 14px;
   margin: 10px auto 0;
+}
+
+/* 다크 모드 — 단순 안내 문구이므로 파란색 대신 보조 텍스트 색(회색)으로 낮춘다. */
+[data-theme='dark'] .ai-usage-recharge-note {
+  color: var(--color-text-secondary);
 }
 
 .ai-usage-recharge-note-icon {
@@ -2002,6 +2017,11 @@ select {
   font-weight: 700;
 }
 
+/* 다크 모드 — 단순 수치 정보라 파란색 대신 기본 텍스트 색으로 표시한다. */
+[data-theme='dark'] .chat-stat-value {
+  color: var(--color-text-primary);
+}
+
 .chat-stat-divider {
   color: var(--color-border);
   font-size: 12px;
@@ -2204,6 +2224,12 @@ select {
   border-radius: 4px;
   padding: 1px 5px;
   color: var(--color-primary);
+}
+
+/* 다크 모드 — AI 답변 안에서 인라인 코드가 자주 등장해 파란색이 과하게 반복되므로
+   본문과 같은 기본 텍스트 색으로 낮추고 배경/테두리만으로 코드임을 구분한다. */
+[data-theme='dark'] .chat-inline-code {
+  color: var(--color-text-primary);
 }
 
 /* 입력 영역 */
