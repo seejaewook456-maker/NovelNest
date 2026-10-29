@@ -30,6 +30,7 @@ import RevertConfirmModal from '../components/RevertConfirmModal';
 import EpisodeWorkspace from '../components/workspace/EpisodeWorkspace';
 import EditorHeader from '../components/workspace/EditorHeader';
 import WritingAssistToolbar from '../components/WritingAssistToolbar';
+import { countChars } from '../lib/charCount';
 
 export default function EpisodeDetailPage() {
   const { episodeId } = useParams<{ episodeId: string }>();
@@ -353,6 +354,13 @@ export default function EpisodeDetailPage() {
   // 입력 중 잠깐 빈 값이 되어도 원래 회차 번호 기준으로 이전 회차를 보여준다.
   const currentEpisodeNumber = Number(editEpisodeNumber) || episode.episodeNumber;
 
+  // 상세 화면에 표시할 본문 글자 수 — 저장(자동 저장 포함) 후 episode가 갱신되면 함께 다시 계산된다.
+  const contentCount = countChars(episode.content);
+
+  // 작성 일시 "2026.08.09" — 서버의 LocalDateTime 문자열("2026-08-09T12:34:56")에서 날짜 부분만 잘라 쓴다.
+  // Date 객체로 변환하지 않아 브라우저 시간대에 따라 날짜가 하루 밀리는 일이 없다. 형식이 다르면 표시하지 않는다.
+  const createdDate = /^(\d{4})-(\d{2})-(\d{2})/.exec(episode.createdAt ?? '')?.slice(1).join('.') ?? '';
+
   return (
     <>
       {/* 메뉴(등장인물/세계관/AI 채팅)는 회차 작성·수정 화면에서만 제공한다.
@@ -450,9 +458,8 @@ export default function EpisodeDetailPage() {
         <div className="episode-detail">
           <div className="ep-header">
             {/* 회차 제목은 사용자가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다 (회차 번호는 마스킹 대상 아님) */}
-            <div data-clarity-mask="true">
+            <div className="ep-title-block" data-clarity-mask="true">
               <h2>{episode.title}</h2>
-              <p className="ep-num-badge">{episode.episodeNumber}화</p>
             </div>
             <div className="ep-actions">
               <Button variant="secondary" size="sm" onClick={handleStartEdit}>
@@ -462,6 +469,23 @@ export default function EpisodeDetailPage() {
                 삭제
               </Button>
             </div>
+            {/* 메타 정보 한 줄 — "N회차 | 글자 수 | 작성 일시". 제목/버튼 줄 아래에 헤더 전체 폭으로 배치된다.
+                글자 수는 작성/수정 화면 툴바와 같은 계산 기준(countChars)을 사용한다 */}
+            <p className="ep-meta">
+              <span>{episode.episodeNumber}회차</span>
+              <span className="ep-meta-sep" aria-hidden="true">|</span>
+              <span>
+                공백 포함 <strong>{contentCount.withSpaces.toLocaleString()}</strong>자
+                <span className="ep-meta-dot" aria-hidden="true"> · </span>
+                공백 제외 <strong>{contentCount.withoutSpaces.toLocaleString()}</strong>자
+              </span>
+              {createdDate && (
+                <>
+                  <span className="ep-meta-sep" aria-hidden="true">|</span>
+                  <span>{createdDate} 작성</span>
+                </>
+              )}
+            </p>
           </div>
 
           <div className="episode-content-header">
@@ -508,14 +532,14 @@ export default function EpisodeDetailPage() {
           {/* AI 회차 요약 섹션 */}
           <div className="ai-section">
             <div className="ai-section-header">
-              <h3>AI 회차 요약</h3>
+              <h3>회차 요약</h3>
               <Button
                 variant="primary"
                 size="sm"
                 onClick={handleGenerateSummary}
                 disabled={summaryLoading || !canRunSummary}
               >
-                {summaryLoading ? '생성 중...' : summary ? '재생성' : 'AI 요약 생성'}
+                {summaryLoading ? '생성 중...' : summary ? '재생성' : '회차 요약 생성'}
               </Button>
             </div>
             <AiUsageHint
@@ -535,7 +559,7 @@ export default function EpisodeDetailPage() {
               </div>
             ) : (
               !summaryLoading && (
-                <p className="summary-empty">아직 요약이 없습니다. AI 요약을 생성해 보세요.</p>
+                <p className="summary-empty">아직 요약이 없습니다. 회차 요약을 생성해 보세요.</p>
               )
             )}
           </div>
@@ -593,14 +617,14 @@ export default function EpisodeDetailPage() {
           {/* AI 등장인물 추출 섹션 */}
           <div className="ai-section">
             <div className="ai-section-header">
-              <h3>AI 등장인물 추출</h3>
+              <h3>등장인물 추출</h3>
               <Button
                 variant="primary"
                 size="sm"
                 onClick={handleExtractCharacters}
                 disabled={extractionLoading || !canRunCharacterExtraction}
               >
-                {extractionLoading ? '분석 중...' : 'AI 등장인물 추출'}
+                {extractionLoading ? '분석 중...' : '등장인물 추출'}
               </Button>
             </div>
             <AiUsageHint
@@ -632,14 +656,14 @@ export default function EpisodeDetailPage() {
           {/* 세계관 AI 추출 섹션 */}
           <div className="ai-section">
             <div className="ai-section-header">
-              <h3>AI 세계관 추출</h3>
+              <h3>세계관 설정 추출</h3>
               <Button
                 variant="primary"
                 size="sm"
                 onClick={handleExtractWorldSettings}
                 disabled={wsExtractionLoading || !canRunWorldviewExtraction}
               >
-                {wsExtractionLoading ? '분석 중...' : 'AI 세계관 추출'}
+                {wsExtractionLoading ? '분석 중...' : '세계관 설정 추출'}
               </Button>
             </div>
             <AiUsageHint

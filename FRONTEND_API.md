@@ -713,7 +713,7 @@ Authorization: Bearer {accessToken}
 
 ```
 EpisodeDetailPage
-→ [AI 세계관 추출] 버튼 클릭
+→ [세계관 설정 추출] 버튼 클릭
 → POST /api/episodes/{episodeId}/world-setting-extraction
 → navigate('/episodes/{episodeId}/world-setting-review', { state: { candidates, novelId, episodeId, episodeTitle } })
 
@@ -1044,8 +1044,8 @@ function PrivateRoute({ children }) {
 | `episode_copy` | `EpisodeDetailPage` (본문 복사 버튼) | |
 | `ai_summary_run` | `EpisodeDetailPage` (AI 요약 생성) | |
 | `ai_conflict_check_run` | `EpisodeDetailPage` (설정 충돌 감지) | |
-| `ai_character_extract_run` | `EpisodeDetailPage` (AI 등장인물 추출) | |
-| `ai_worldview_extract_run` | `EpisodeDetailPage` (AI 세계관 추출) | |
+| `ai_character_extract_run` | `EpisodeDetailPage` (등장인물 추출) | |
+| `ai_worldview_extract_run` | `EpisodeDetailPage` (세계관 설정 추출) | |
 | `ai_chat_message_send` | `AiChatPanel` (채팅 전송 성공) | |
 | `account_delete` | `NovelListPage` (회원 탈퇴 성공) | |
 
@@ -1093,7 +1093,7 @@ Clarity는 브라우저의 실제 클릭/스크롤/DOM 변화를 관찰하는 �
 | 로그인 / 회원가입 / 비밀번호 찾기 | 이메일·비밀번호·인증번호 입력 폼(`<form>`) 전체 |
 | 작품 생성/상세/목록 | 제목·장르·설명이 담긴 카드(`.novel-info-card`, `.novel-card`) 및 생성 폼 |
 | 회차 작성/수정/상세 | 번호·제목·본문 입력 폼, 회차 제목(`<h2>`), 본문(`.episode-content`) |
-| AI 회차 요약 | 요약 텍스트(`.summary-text`) |
+| 회차 요약 | 요약 텍스트(`.summary-text`) |
 | 설정 충돌 감지 결과 | 충돌 카드(`ConflictCard` 루트, 기존 설정/현재 내용/AI 설명/제안 포함) |
 | AI 등장인물·세계관 추출 결과 (회차 상세) | 결과 목록(`.episode-character-list`) |
 | 등장인물 관리 / 참고 패널 | 인물 카드(`.item-card`, 이름·역할·나이·성격·말투·설명) |

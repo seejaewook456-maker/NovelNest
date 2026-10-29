@@ -10,7 +10,7 @@ const PANEL_TITLES: Record<EpisodeWorkspacePanelKey, string> = {
   previousEpisodes: '이전 회차',
   characters: '등장인물 관리',
   worldSettings: '세계관 관리',
-  chat: 'AI 채팅',
+  chat: '챗봇',
 };
 
 interface EpisodeSidePanelProps {

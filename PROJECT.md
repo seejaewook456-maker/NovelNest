@@ -180,7 +180,7 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * AI 추출 후 저장 시 자동 연결 — 회차별 추출 인물 영구 보존
 
 ### Frontend (회차별 인물 박스)
-* 회차 상세 페이지 "AI 등장인물 추출" 박스 — 해당 회차에서 저장된 인물만 표시
+* 회차 상세 페이지 "등장인물 추출" 박스 — 해당 회차에서 저장된 인물만 표시
 * 인물 카드: 이름, 역할, AI 추출 배지
 * 새로고침 후에도 유지 (DB 기반)
 * CharacterReviewPage — 저장 후 episodeCharacterApi로 회차-인물 연결 자동 생성
@@ -193,7 +193,7 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * `CODING_CONVENTIONS.md` 작성 — FK 삭제 순서, /error permitAll, GlobalExceptionHandler, fetchWithAuth 동작 규칙 문서화
 
 ### Frontend (세계관 AI 추출 UI)
-* 회차 상세 페이지 "AI 세계관 추출" 버튼 — 추출 후 WorldSettingReviewPage로 이동
+* 회차 상세 페이지 "세계관 설정 추출" 버튼 — 추출 후 WorldSettingReviewPage로 이동
 * WorldSettingReviewPage — 설정 후보 1개씩 검토/수정/저장 플로우
   - 신규 설정: category select + title + content 수정 후 저장 → POST /api/novels/{novelId}/world-settings
   - 기존 설정 보강: 기존 내용 + newInsights 강조 표시 → PATCH /api/world-settings/{id}
@@ -259,7 +259,7 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
   - 백엔드 수정 없음, 프론트엔드 전용
 * Episode 글쓰기 보조 툴바 (WritingAssistToolbar) — 새 회차 작성 / 회차 수정 공통 적용
   - Plain text 유지 원칙 (Markdown/HTML 저장 없음, AI 기능에 영향 없음)
-  - 글자 수 실시간 표시 — 공백 제외 / 공백 포함 글자 수
+  - 글자 수 실시간 표시 — 공백 제외 / 공백 포함 글자 수 (계산은 `lib/charCount.ts`의 `countChars` — 회차 상세 화면과 공유)
   - 구분선 삽입 — 커서 위치에 ────────────── 삽입, 앞뒤 줄바꿈 자동 처리
   - 특수문자 빠른 입력 — ……/…/『』/「」/〈〉/― 버튼
   - 괄호형 특수문자(『』「」〈〉) 클릭 시 커서 자동으로 괄호 가운데 이동
@@ -275,7 +275,7 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
     - `.main-content`(최대 800px)로는 두 박스가 나란히 표시될 폭이 부족해, `.episode-workspace`(회차 작성/수정 화면)와 동일한 breakout 기법(width:100vw + max-width + left:50% + translateX(-50%))으로 뷰포트 기준 폭을 확장
     - 1200px은 두 박스가 각각 실질적인 폭을 확보할 수 있는 지점으로 선택 (본문 가독성 + AI 도구 폼/카드 모두 고려)
   - 1200px 미만: 세로 스택 유지(본문 박스 → AI 도구 박스), 두 박스는 동일하게 독립된 카드로 표시
-  - **AI 도구 순서** — 화면 크기와 무관하게 항상 동일한 DOM 순서: ① AI 회차 요약 → ② 설정 충돌 감지 → ③ AI 등장인물 추출 → ④ AI 세계관 추출 (설정 충돌 감지를 인물/세계관 추출보다 먼저 실행하도록 권장하는 흐름에 맞춰 배치, `order` 없이 렌더링 순서 자체를 정렬)
+  - **AI 도구 순서** — 화면 크기와 무관하게 항상 동일한 DOM 순서: ① 회차 요약 → ② 설정 충돌 감지 → ③ 등장인물 추출 → ④ 세계관 설정 추출 (설정 충돌 감지를 인물/세계관 추출보다 먼저 실행하도록 권장하는 흐름에 맞춰 배치, `order` 없이 렌더링 순서 자체를 정렬)
   - **인물/세계관 추출 결과 카드**(`.episode-character-list`) — 화면 크기와 무관하게 항상 한 행에 1개(`grid-template-columns: minmax(0,1fr)`). 카드 내 "AI 추출" 배지는 제거됨(이름/역할만 표시)
   - **`← 회차 목록` 버튼** — 1200px 이상에서는 `.episode-detail-back-link`가 `position:absolute`로 AI 도구 박스 우측 상단(그리드 컨테이너 기준 top/right 36px)에 재배치되어 AI 도구 박스 헤더와 겹쳐 보이도록 배치(그리드 자동 배치에서 제외되어 본문/AI 도구 컬럼 배치에 영향 없음). 1200px 미만에서는 기존처럼 레이아웃 맨 위에 정적으로 표시. 컴포넌트는 한 곳에서만 렌더링하고 CSS로만 재배치(중복 렌더링 없음)
   - `▼ AI 도구로 이동` / `▲ 최상단으로 이동` 버튼: 1200px 이상(2열 동시 노출)에서는 각각 `.ai-tools-jump-btn`, `.scroll-to-top-btn`에 `display: none`으로 완전히 숨김(공간 차지 없음), 1200px 미만에서는 기존과 동일하게 표시 + 스크롤 이동 동작 유지
@@ -348,23 +348,23 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 ### 메모 즐겨찾기 + 회차 작성/수정 메뉴 통합 + 관리 버튼 재배치
 * 메모 즐겨찾기: `Memo.isFavorite`(Boolean, 기본값 false) 추가 — Character/WorldSetting의 `isFavorite` 필드·`PATCH /favorite` API·`MemoFavoriteRequestDto` 패턴을 그대로 재사용. Flyway `V10__add_favorite_to_memos.sql`(`information_schema` 컬럼 존재 확인 후 `ALTER TABLE ... ADD COLUMN ... DEFAULT 0` 동적 실행)
 * 정렬 통일: `MemoRepository.findAllByNovelOrderByIsFavoriteDescUpdatedAtDesc` 하나로 목록 정렬을 백엔드에 고정 — 메모 관리 페이지와 회차 작성/수정 메뉴가 같은 API를 호출하므로 항상 같은 순서를 본다. 프론트 낙관적 재정렬(즐겨찾기 토글 직후 refetch 없이 즉시 위치 이동)에도 `frontend/src/utils/memoSort.ts`의 `sortMemos` 하나만 두 화면(`MemoListPage`, `MemoReferencePanel`)이 공유해, 각자 다른 정렬 로직을 중복 작성해 순서가 어긋날 여지를 없앴다
-* 회차 작성/수정 메뉴: `EpisodeToolRail`의 `EpisodeWorkspacePanelKey`에 `'memos'` 추가, 메뉴 순서를 **메모 → 등장인물 → 세계관 → AI 채팅**으로 배치. 아이콘은 새 라이브러리 없이 기존 인라인 SVG 컨벤션 그대로 FileText 형태 아이콘 추가. `MemoReferencePanel`(신규) — `CharacterReferencePanel`/`WorldSettingReferencePanel`과 동일한 구조(검색, 인라인 확장으로 상세 열람, `전체 관리 ↗` 새 탭 링크, 즐겨찾기 토글)로 조회 전용 CRUD만 재사용. 메모 작성/수정/삭제는 이 패널에서 제공하지 않음(관리 페이지 전용)
+* 회차 작성/수정 메뉴: `EpisodeToolRail`의 `EpisodeWorkspacePanelKey`에 `'memos'` 추가, 메뉴 순서를 **메모 → 등장인물 → 세계관 → 챗봇**으로 배치. 아이콘은 새 라이브러리 없이 기존 인라인 SVG 컨벤션 그대로 FileText 형태 아이콘 추가. `MemoReferencePanel`(신규) — `CharacterReferencePanel`/`WorldSettingReferencePanel`과 동일한 구조(검색, 인라인 확장으로 상세 열람, `전체 관리 ↗` 새 탭 링크, 즐겨찾기 토글)로 조회 전용 CRUD만 재사용. 메모 작성/수정/삭제는 이 패널에서 제공하지 않음(관리 페이지 전용)
 * 작품 상세 페이지 2×2 버튼: DOM 순서를 회차 관리 → 메모 관리 → 등장인물 관리 → 세계관 관리로 바꿔 1행 [회차][메모], 2행 [등장인물][세계관] 배치. `.section-card` 세로 padding을 26px→14px로 줄여 카드가 더 슬림해짐(가로 크기·grid 구조·border/hover/shadow는 그대로 유지, 클릭 영역은 여전히 충분)
 * 다크 모드: 신규 UI 전부 기존 `--color-*` 토큰과 `.favorite-btn`/`.item-card`/`.workspace-ref-*` 공통 클래스만 재사용 — 별도 오버라이드 추가 없음
 
-### 회차 작성/수정 메뉴 패널 — 메모/이전 회차/AI 채팅 탭 넓은 레이아웃
-* 메모/이전 회차/AI 채팅은 카드형 정보(등장인물/세계관)보다 긴 텍스트를 읽는 비중이 높아, 화면 폭이 충분한 대형 데스크톱에서는 우측 패널을 더 넓게 사용하도록 개선. 등장인물/세계관 탭은 기존 380px 패널·카드 배치를 그대로 유지
+### 회차 작성/수정 메뉴 패널 — 메모/이전 회차/챗봇 탭 넓은 레이아웃
+* 메모/이전 회차/챗봇은 카드형 정보(등장인물/세계관)보다 긴 텍스트를 읽는 비중이 높아, 화면 폭이 충분한 대형 데스크톱에서는 우측 패널을 더 넓게 사용하도록 개선. 등장인물/세계관 탭은 기존 380px 패널·카드 배치를 그대로 유지
 * 구현: `EpisodeWorkspace`가 `activePanel`이 `'memos'`/`'previousEpisodes'`/`'chat'`일 때 최상위 컨테이너에 `panel-wide` 클래스를 추가. CSS는 `.episode-workspace.panel-wide`의 `--ep-panel-width`를 `clamp(380px, 30vw, 640px)`로 덮어쓰기만 함 — 이 변수 하나를 이미 `.episode-workspace-panel-wrap.open`/`.episode-workspace-panel`의 width와 `.episode-workspace.panel-open`의 breakout `max-width` calc가 모두 참조하고 있어, 새 위치 계산 코드 없이 회차 본문 입력 박스·메뉴 레일·패널이 전체 레이아웃(breakout 중앙 정렬) 차원에서 함께 재배치된다(패널이 넓어진 만큼 중앙 정렬 축이 이동해 입력 박스가 자연스럽게 왼쪽으로 밀림, 본문과 겹치지 않음)
 * 고정 breakpoint 하나로 전환하는 대신 `vw` 기반 `clamp`로 화면 폭에 비례해 연속적으로 넓어지게 구현 — 처음에 특정 px 이상에서만 켜지는 방식으로 시도했더니 그 기준보다 좁은(그러나 결코 좁지는 않은) 일반적인 노트북 브라우저 창 폭에서는 패널이 전혀 안 넓어져 보이는 문제가 있어 변경. 하한 380px(=등장인물/세계관과 동일한 기존 폭)로 좁은 화면에서 더 좁아지지 않게, 상한 640px로 초대형 모니터에서 과도하게 넓어지지 않게 막음. 30vw 계수는 "패널을 제외한 나머지 고정 폭 합(입력 박스 680 + gap 20×2 + 메뉴 96 + breakout 여백 48 = 864px)에 0.30·VW를 더해도 VW(뷰포트 폭)보다 항상 작다"는 조건이 VW≈1235px부터 성립하도록 역산한 값 — 기존 1300px 오버레이 전환 breakpoint보다 낮은 지점이라 가로 스크롤 없이 항상 안전
 * 패널 내부(`MemoReferencePanel`/`AiChatPanel`의 목록·카드·채팅 말풍선·입력창)는 이미 고정 px 폭이 아닌 상대 폭(`width:100%`, `flex:1`, `max-width:80%` 등)으로 구현돼 있어 패널 컴포넌트 자체는 수정하지 않고도 넓어진 폭에 자동으로 맞춰짐
 
 ### 회차 작성/수정 메뉴 — "이전 회차" 참고 패널 추가
-* 회차 작성/수정 중 페이지 이동 없이 이전 회차 본문을 참고할 수 있는 조회 전용(Read-only) 패널 추가. 메뉴 순서: **메모 → 이전 회차 → 등장인물 → 세계관 → AI 채팅**(`EpisodeToolRail`의 `EpisodeWorkspacePanelKey`에 `'previousEpisodes'` 추가, 아이콘은 새 라이브러리 없이 기존 인라인 SVG 컨벤션 그대로 열린 책 모양 추가)
+* 회차 작성/수정 중 페이지 이동 없이 이전 회차 본문을 참고할 수 있는 조회 전용(Read-only) 패널 추가. 메뉴 순서: **메모 → 이전 회차 → 등장인물 → 세계관 → 챗봇**(`EpisodeToolRail`의 `EpisodeWorkspacePanelKey`에 `'previousEpisodes'` 추가, 아이콘은 새 라이브러리 없이 기존 인라인 SVG 컨벤션 그대로 열린 책 모양 추가)
 * 범위 필터링: 현재 작성/수정 중인 회차의 `episodeNumber`보다 작은(`<`) 회차만 오름차순으로 노출. ID 크기가 아니라 실제 회차 순서 필드(`episodeNumber`)를 기준으로 필터링·정렬(기존 `findAllByNovelOrderByEpisodeNumberAsc`와 동일한 정렬 기준 재사용). 새 회차 작성 화면은 사용자가 입력 중인 회차 번호 입력창의 실시간 값을, 수정 화면은 autoSave payload(`Number(editEpisodeNumber) || episode.episodeNumber`)와 동일한 폴백 규칙을 그대로 재사용해 기준 번호로 삼는다 — 아직 번호를 입력하지 않은 새 회차 작성 화면에서는 무엇이 "이전"인지 알 수 없으므로 전체 회차를 보여준다
 * 성능 고려 — 신규 경량 API 추가: 기존 `GET /api/novels/{novelId}/episodes`는 회차 목록 조회 시 각 회차의 전체 본문(content)까지 함께 반환해, 회차가 수백 개인 작품에서는 "이전 회차" 목록만 보여주는 데도 불필요하게 무거운 응답이 된다. 이를 피하기 위해 본문 없이 번호+제목만 반환하는 `GET /api/novels/{novelId}/episodes/brief`(`EpisodeBriefResponseDto`)를 새로 추가 — 목록에서는 이 경량 API만 쓰고, 사용자가 특정 회차를 클릭했을 때만 기존 `GET /api/episodes/{episodeId}` 상세 API를 그대로 재사용해 본문을 가져온다(상세 조회용 신규 API는 만들지 않음). 두 API 모두 기존 `validateOwner`(작품 소유자만 접근 가능) 검증을 그대로 재사용
 * UI 구조: `PreviousEpisodesPanel`(신규) — 회차 본문이 길어 `MemoReferencePanel`의 인라인 아코디언 방식 대신, 목록 화면과 상세 화면을 완전히 분리하고 `BackLink`(기존 "← 회차 목록" 컴포넌트 재사용)로 목록에 돌아가는 방식을 사용. 카드/헤더 스타일은 `.item-card`/`.workspace-ref-card`/`.item-card-header` 등 기존 참고 패널 공통 클래스를 그대로 재사용. 본문 줄바꿈/빈 줄은 메모 상세와 동일하게 `white-space: pre-wrap`(`.episode-ref-content`, `.memo-ref-content`와 동일한 방식)으로 처리. 회차 상세 데이터를 새로 조회할 때는 이전 선택 내용을 즉시 비우고 로딩 상태로 전환해, 다른 회차의 내용이 잘못 표시되지 않게 함
 * 1화 작성/수정 시(이전 회차 없음)에는 기존 `EmptyState` 컴포넌트로 안내 문구 표시
-* 패널은 메모/AI 채팅과 동일하게 `panel-wide` 넓은 레이아웃 대상에 포함(위 섹션 참고)
+* 패널은 메모/챗봇과 동일하게 `panel-wide` 넓은 레이아웃 대상에 포함(위 섹션 참고)
 * DB 스키마 변경 없음(Flyway 마이그레이션 추가 없음) — 기존 `episodes` 테이블/엔티티를 그대로 조회만 함
 * 백엔드 테스트: `EpisodeServiceTest`(신규, Mockito) — 이번에 추가한 `getEpisodeBriefs`만 검증(본문 미포함·번호순 반환, 타 사용자 접근 차단). 기존 회차 CRUD 메서드들은 이전부터 테스트가 없던 영역이라 이번 범위에 포함하지 않음
 
@@ -375,6 +375,19 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * 페이지 이동 바(`components/Pagination.tsx`, 신규): `[‹ 이전] 1 … 4 5 6 … 13 [다음 ›]` 형태로 목록 바로 아래 표시. 첫/마지막 페이지와 현재 페이지 앞뒤 1개만 보여주고 나머지는 `…`로 접어 페이지가 수백 개여도 번호는 최대 7칸. 첫 페이지에서 이전, 마지막 페이지에서 다음 버튼 비활성화. 페이지가 1개뿐이면 렌더링하지 않음. 현재 페이지는 `.btn-primary`와 같은 `--color-primary-deep` 배경으로 강조하고 색상은 모두 테마 변수만 사용해 라이트/다크 모드 자동 대응. 480px 이하에서는 버튼을 줄이고 "이전/다음" 글자를 숨겨 화살표만 표시(한 줄 유지)
 * 계산 로직 분리(`lib/pagination.ts`, 신규): `getTotalPages`/`clampPage`/`getPageItems` 순수 함수 — 다른 목록에도 재사용 가능
 * 회차 추가/삭제 시 처리: 작성·삭제는 별도 페이지에서 끝난 뒤 목록으로 다시 이동하므로, 작품별 현재 페이지를 `sessionStorage`(`episodeListPage:{novelId}`)에 기억해 돌아와도 보던 페이지를 유지. 전체 페이지 수는 매 렌더링마다 회차 수로 다시 계산하고, 현재 페이지가 범위를 벗어나면(예: 마지막 페이지의 유일한 회차 삭제) `clampPage`로 마지막 유효 페이지를 표시. 저장소를 쓸 수 없는 환경에서는 1페이지부터 시작. 회차가 0개면 기존 `EmptyState` 안내 그대로 표시
+
+### 회차 상세 페이지 — 본문 글자 수 / 작성 일시 표시
+* 회차 상세(`EpisodeDetailPage`, 조회 모드)에서 제목 바로 아래 메타 정보를 한 줄(`.ep-meta`)로 표시: `1회차 | 공백 포함 1,704자 · 공백 제외 1,256자 | 2026.08.09 작성`. 기존 "N화" 배지(`.ep-num-badge`)는 이 줄의 "N회차"로 통합
+* 작성 일시: `createdAt`(서버 `LocalDateTime` 문자열)에서 날짜 부분만 잘라 `YYYY.MM.DD`로 표시 — `Date` 변환 없이 문자열만 사용해 브라우저 시간대에 따른 날짜 밀림이 없음. 형식이 예상과 다르면 작성 일시 항목만 생략
+* 계산 기준은 작성/수정 화면 툴바(`WritingAssistToolbar`)와 동일 — 공백 포함 = 본문 문자열 길이(공백·줄바꿈 포함), 공백 제외 = 모든 공백 문자(`\s`: 스페이스·탭·줄바꿈)를 뺀 길이. 두 화면 숫자가 어긋나지 않도록 툴바의 계산식을 그대로 `lib/charCount.ts`의 `countChars`(신규)로 옮기고 툴바와 상세 화면이 같은 함수를 사용(툴바의 계산 결과·표시는 변경 없음). 본문이 비어 있거나 없으면 0자, 숫자는 `toLocaleString()`으로 천 단위 쉼표(툴바와 동일)
+* 글자 수는 DB에 저장하지 않고 화면에서 본문으로 계산 — 백엔드 API·DB 변경 없음. 수정(자동 저장 포함) 후 상세 화면의 `episode` 상태가 갱신되면 글자 수도 함께 다시 계산됨
+* 스타일: 12px 보조 텍스트, 색상은 툴바 `.writing-stat`과 같은 테마 변수(`--color-text-muted`, 숫자는 `--color-text-secondary`)만 사용해 라이트/다크 모드 대응, `flex-wrap`으로 좁은 화면에서는 항목(회차/글자 수/작성 일시) 단위 줄바꿈. 메타 정보 줄은 제목/수정·삭제 버튼 줄 아래로 내려 헤더 전체 폭(`.ep-header`에 `flex-wrap`, `.ep-meta`에 `flex-basis: 100%`)을 차지하고, 위쪽에 헤더 하단과 같은 길이·스타일(1px `--color-border`)의 구분선을 둠. 위 구분선~텍스트 간격(`padding-top` 20px)을 헤더 하단 `padding-bottom`(20px)과 같게 맞춰 텍스트가 두 구분선의 세로 중앙에 위치
+
+### AI 기능 UI 명칭 변경
+* 화면에 표시되는 이름만 변경: AI 회차 요약 → **회차 요약**, AI 등장인물 추출 → **등장인물 추출**, AI 세계관 추출 → **세계관 설정 추출**, AI Writing Assistant(화면에는 대문자로 표시) → **작품 정보 챗봇**
+* 적용 위치: 회차 상세 AI 도구 박스의 섹션 제목·실행 버튼(요약 버튼 "AI 요약 생성" → "회차 요약 생성", 요약 빈 상태 안내 문구 포함), 챗봇 패널(`AiChatPanel`) 헤더(작품 상세·회차 작성/수정 메뉴 공통), 랜딩 페이지 요약 이미지 대체 텍스트
+* 기능 로직·API·컴포넌트/변수명·애널리틱스 이벤트명·AI 프롬프트는 변경 없음. 회차 작성/수정 메뉴의 "AI 채팅" 탭(메뉴 레일·패널 제목)은 이후 **챗봇**으로 변경. 사용량 소진 안내("AI 채팅 횟수")는 유지
+* 챗봇 문구 정리: 질문 입력창 안내 "작품에 대해 질문해 보세요..." → "작품에 대해 질문해 보세요." (뒤의 "Enter로 전송, Shift+Enter로 줄바꿈" 안내는 유지), 요약 미완성 경고에서 "요약이 없는 회차 내용은 AI가 참고할 수 없습니다." 문장을 빼고 "더 정확한 답변을 위해 회차 요약을 추가해 보세요."만 표시
 
 ## 아직 구현되지 않음
 
@@ -516,7 +529,7 @@ category 예시
 * 메모 즐겨찾기 설정/해제
 * 메모 삭제
 
-회차 작성/수정 화면의 메뉴 레일(메모 → 등장인물 → 세계관 → AI 채팅 순)에서도 메모 목록을
+회차 작성/수정 화면의 메뉴 레일(메모 → 등장인물 → 세계관 → 챗봇 순)에서도 메모 목록을
 참고용으로 열람할 수 있다 — 목록/상세 확인만 가능하고 수정·삭제는 메모 관리 페이지에서만 한다.
 
 ---

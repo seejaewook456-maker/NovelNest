@@ -53,7 +53,7 @@ const MENU_ITEMS: MenuItem[] = [
   { key: 'previousEpisodes', label: '이전 회차', icon: <PreviousEpisodesIcon /> },
   { key: 'characters', label: '등장인물', icon: <CharacterIcon /> },
   { key: 'worldSettings', label: '세계관', icon: <WorldviewIcon /> },
-  { key: 'chat', label: 'AI 채팅', icon: <ChatIcon /> },
+  { key: 'chat', label: '챗봇', icon: <ChatIcon /> },
 ];
 
 interface EpisodeToolRailProps {
