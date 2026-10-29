@@ -201,7 +201,7 @@ export default function AiChatPanel({ novelId }: AiChatPanelProps) {
   return (
     <div className="ai-section chat-section">
       <div className="ai-section-header">
-        <h3>AI Writing Assistant</h3>
+        <h3>작품 정보 챗봇</h3>
       </div>
       <AiUsageHint
         detail={aiUsage?.chat}
@@ -249,7 +249,6 @@ export default function AiChatPanel({ novelId }: AiChatPanelProps) {
       {hasIncompleteSummaries && (
         <div className="chat-warning">
           <span className="chat-warning-text">
-            요약이 없는 회차 내용은 AI가 참고할 수 없습니다.
             더 정확한 답변을 위해 회차 요약을 추가해 보세요.
           </span>
           <button
@@ -332,7 +331,7 @@ export default function AiChatPanel({ novelId }: AiChatPanelProps) {
           onKeyDown={handleKeyDown}
           placeholder={
             canSendChat
-              ? '작품에 대해 질문해 보세요... (Enter로 전송, Shift+Enter로 줄바꿈)'
+              ? '작품에 대해 질문해 보세요. (Enter로 전송, Shift+Enter로 줄바꿈)'
               : '오늘 이용 가능한 AI 채팅 횟수를 모두 사용했습니다.'
           }
           rows={3}

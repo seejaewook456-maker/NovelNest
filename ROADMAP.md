@@ -10,14 +10,14 @@
 - [x] 등장인물(Character) CRUD API
 - [x] 세계관(WorldSetting) CRUD API
 - [x] 프론트엔드 전체 페이지 구현 (MVP 1~2차)
-- [x] AI 회차 요약 UI (Emerald AI 섹션)
-- [x] AI 등장인물 추출 UI (CharacterReviewPage — 단계별 검토, ProgressBar)
+- [x] 회차 요약 UI (Emerald AI 섹션)
+- [x] 등장인물 추출 UI (CharacterReviewPage — 단계별 검토, ProgressBar)
 - [x] 프론트엔드 디자인 시스템 구축 (Warm Brown 컬러, 공통 컴포넌트 7개)
 - [x] 회차별 등장인물 연결 (EpisodeCharacter N:M) — 회차 상세 페이지 인물 박스 표시
 - [x] 세계관 AI 추출 (WorldSettingExtraction — 후보 반환, 신규/기존 설정 구분, newInsights)
 - [x] 세계관 AI 추출 UI (WorldSettingReviewPage — 1개씩 검토/수정/저장, 신규/보강 구분, 완료 통계)
 - [x] 메모(Memo) CRUD API 및 UI (작품별 개인 텍스트 메모장 — AI 도구 미사용, 작품 상세 관리 카드 1×3 → 2×2 grid로 변경)
-- [x] 메모 즐겨찾기 (Character/WorldSetting과 동일한 isFavorite 패턴) + 회차 작성/수정 메뉴에 메모 참고 패널 추가 (메모 → 등장인물 → 세계관 → AI 채팅 순) + 작품 상세 관리 버튼 재배치([회차][메모] / [등장인물][세계관])·높이 축소
+- [x] 메모 즐겨찾기 (Character/WorldSetting과 동일한 isFavorite 패턴) + 회차 작성/수정 메뉴에 메모 참고 패널 추가 (메모 → 등장인물 → 세계관 → 챗봇 순) + 작품 상세 관리 버튼 재배치([회차][메모] / [등장인물][세계관])·높이 축소
 
 ---
 

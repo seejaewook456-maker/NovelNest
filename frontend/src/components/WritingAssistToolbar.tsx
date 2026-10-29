@@ -1,4 +1,5 @@
 import type { MouseEvent, RefObject } from 'react';
+import { countChars } from '../lib/charCount';
 
 interface SpecialChar {
   label: string;
@@ -24,8 +25,8 @@ interface Props {
 }
 
 export default function WritingAssistToolbar({ content, onChange, textareaRef }: Props) {
-  const withoutSpaces = content.replace(/\s/g, '').length;
-  const withSpaces = content.length;
+  // 계산 기준은 회차 상세 화면과 공유한다(lib/charCount)
+  const { withSpaces, withoutSpaces } = countChars(content);
 
   // 툴바 버튼은 마우스다운 시 기본 동작(포커스 이동)을 막아 textarea의 포커스/선택 영역이
   // 항상 유지되도록 한다. 이렇게 하면 클릭 시점의 selectionStart/End를 안전하게 읽을 수 있다.

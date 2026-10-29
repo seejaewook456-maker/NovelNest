@@ -20,7 +20,7 @@ const FEATURES: FeatureItem[] = [
   },
   {
     image: '/landing/summary.png',
-    alt: 'AI 회차 요약 결과',
+    alt: '회차 요약 결과',
     width: 1122,
     height: 511,
     title: '긴 회차도 핵심만 빠르게 확인하세요',

@@ -909,6 +909,8 @@ select {
 
 .ep-header {
   display: flex;
+  /* 1행: 제목 + 수정/삭제 버튼, 2행: 메타 정보(.ep-meta, 전체 폭) */
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 28px;
@@ -1012,10 +1014,44 @@ select {
   font-weight: 700;
 }
 
-.ep-num-badge {
+/* 회차 상세 — 제목 아래 메타 정보 한 줄("N회차 | 글자 수 | 작성 일시").
+   작성/수정 툴바의 .writing-stat과 같은 색 체계(테마 변수)를 써서 라이트/다크 모드 모두 보조 텍스트로 읽히게 한다.
+   좁은 화면에서는 항목(회차/글자 수/작성 일시) 단위로 줄바꿈된다. */
+/* 제목은 버튼 앞까지 차지하고, 긴 제목이 버튼과 붙지 않도록 간격을 둔다 */
+.ep-title-block {
+  flex: 1;
+  min-width: 0;
+  margin-right: 16px;
+}
+
+/* 제목/버튼 줄 아래 전체 폭(flex-basis 100%)으로 내려와, 위쪽 구분선이 .ep-header 하단 구분선과
+   같은 길이·같은 스타일(1px var(--color-border))로 그어진다.
+   위 구분선과 텍스트 사이(padding-top)를 .ep-header의 padding-bottom(20px)과 같게 맞춰
+   텍스트가 두 구분선의 세로 중앙에 오도록 한다. */
+.ep-meta {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
   font-size: 12px;
   color: var(--color-text-muted);
-  margin-top: 5px;
+}
+
+.ep-meta-dot {
+  color: var(--color-border-strong);
+}
+
+.ep-meta strong {
+  color: var(--color-text-secondary);
+  font-weight: 700;
+}
+
+.ep-meta-sep {
+  color: var(--color-border-strong);
 }
 
 .ep-actions {
