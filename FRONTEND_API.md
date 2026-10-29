@@ -980,7 +980,7 @@ AiChatPanel (작품 상세/회차 작성/회차 수정 3개 페이지 공유)
 | `/novels` | 작품 목록 |
 | `/novels/new` | 작품 생성 |
 | `/novels/:novelId` | 작품 상세 |
-| `/novels/:novelId/episodes` | 회차 목록 |
+| `/novels/:novelId/episodes` | 회차 목록 (페이지당 8개, 프론트 페이지네이션 — URL 변경 없음) |
 | `/novels/:novelId/episodes/new` | 회차 생성 |
 | `/episodes/:episodeId` | 회차 상세/수정/삭제 |
 | `/novels/:novelId/characters` | 등장인물 관리 (인라인 CRUD) |

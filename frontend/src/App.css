@@ -778,6 +778,80 @@ select {
 }
 
 /* =============================================
+   페이지네이션 (회차 목록 하단)
+   ============================================= */
+/* 색상은 모두 테마 변수만 사용 — 라이트/다크 모드가 자동으로 따라간다.
+   현재 페이지 강조는 .btn-primary와 같은 primary-deep 배경 + 흰 글자로 통일 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 24px;
+}
+
+.pagination-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.pagination-btn:hover:not(:disabled):not(.active) {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.pagination-btn.active {
+  background: var(--color-primary-deep);
+  border-color: var(--color-primary-deep);
+  color: #ffffff;
+  cursor: default;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+  min-width: 20px;
+  text-align: center;
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+/* 좁은 모바일 화면: 버튼을 줄이고 이전/다음은 화살표만 남겨 한 줄(최대 9칸)에 들어가게 한다 */
+@media (max-width: 480px) {
+  .pagination {
+    gap: 4px;
+  }
+  .pagination-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 6px;
+    font-size: 13px;
+  }
+  .pagination-nav-label {
+    display: none;
+  }
+  .pagination-ellipsis {
+    min-width: 14px;
+  }
+}
+
+/* =============================================
    회차 상세
    ============================================= */
 /* 본문 박스 + AI 도구 박스를 감싸는 레이아웃 컨테이너.
