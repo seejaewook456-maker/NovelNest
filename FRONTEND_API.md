@@ -637,6 +637,29 @@ Authorization: Bearer {accessToken}
 }
 ```
 
+**기존 인물(`isExistingCharacter: true`)의 `newInsights` 필드**:
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `personality` | `string[]` | 기존 정보에 없는 새 성격 |
+| `speechStyle` | `string[]` | 기존 정보에 없는 새 말투 |
+| `description` | `string[]` | 외모·능력·배경·관계 등 설명에 보완할 새 정보 (추가 필드) |
+| `role` | `string \| null` | 기존과 **다르게** 확인된 역할 — 변경 없으면 `null` (추가 필드) |
+| `age` | `number \| null` | 기존과 **다르게** 확인된 나이 — 변경 없으면 `null` (추가 필드) |
+
+**변경사항 없는 기존 인물 제외 규칙**:
+- `candidates`에는 **신규 인물**과 **실제로 추가·수정할 정보가 있는 기존 인물**만 포함된다.
+  기존 인물이 새 정보 없이 다시 등장한 경우는 응답에서 제외된다. `totalCount`도 제외 후 개수다.
+- 1차: AI 프롬프트에서 기존 정보(role/age/personality/speechStyle/description)와 의미적으로 비교해
+  새 정보가 없는 기존 인물은 결과에 넣지 않도록 지시한다.
+- 2차: 서버(`CharacterExtractionService.removeAlreadyKnownInsights`)가 `newInsights`에서 빈 값·중복·
+  기존 정보에 이미 포함된 항목(공백/문장부호/대소문자 무시)과 기존과 같은 role/age를 제거하고,
+  남은 항목이 없으면 후보에서 제외한다. 조회만 하며 DB 쓰기는 없다.
+- 3차: 프론트(`lib/extractionFilter.ts`)가 렌더링 전 한 번 더 걸러낸다.
+- 남은 후보가 0개면 검토 페이지로 이동하지 않고 회차 상세 화면에
+  "새롭게 발견되거나 변경된 등장인물 정보가 없습니다." 안내를 표시한다.
+  (AI 호출 실패·파싱 실패 등 오류는 기존처럼 `error-message`로 표시 — "변경사항 없음"으로 처리하지 않음)
+
 ---
 
 ## AI 세계관 추출(WorldSettingExtraction) API — 프론트 연동
@@ -697,10 +720,24 @@ Authorization: Bearer {accessToken}
 **content 필드 구성 방식**:
 - 신규 설정(`isExistingSetting: false`): AI가 작성한 전체 설명. 문장마다 줄바꿈하지 않고 문맥(주제)이
   바뀔 때만 빈 줄(`\n\n`)로 문단을 구분한다.
-- 기존 설정 보강(`isExistingSetting: true`): AI가 새로 발견한 내용만 `newContent`에 작성하면,
-  서버가 `기존 content(끝 공백/개행 제거) + "\n\n" + newContent`로 다시 조립해 `content`에 덮어써
-  응답한다. 기존 내용은 AI가 재작성하지 않고 DB 값 그대로 보존되며, 여러 회차에 걸쳐 반복
-  보강해도 구분 빈 줄이 1개로 유지된다(누적되지 않음).
+- **정보 선별·요약 (신규/기존 공통)**: 세계관 설정은 회차별 사건 기록이 아니라 이후 집필용 설정 자료이므로,
+  AI는 이후 집필에 필요한 정보(작동 규칙·사용 조건·제한, 장소·조직의 역할과 관계, 법률·경제·계급·관습,
+  일관성 유지가 필요한 사실)만 선별하고 일시적 사건·배경 묘사·분위기 문장·사소한 정보는 제외한다.
+  본문을 복사하지 않고 핵심 사실만 간결하게 요약하되 규칙·조건·수치·고유명사는 보존하고, 추측을 확정 사실로 쓰지 않는다.
+- 기존 설정 보강(`isExistingSetting: true`): AI가 **기존 content 전체를 새 정보와 함께 다시 분석해 재구성한 최종 설명**을
+  `content`에 작성한다(기존 설명 안의 중복·유사 문장 통합, 새 정보를 가장 관련 있는 문장에 녹여 넣기, 장황한 표현 정리,
+  다른 주제만 빈 줄로 구분, '추가 내용' 같은 소제목 없음, 뒤에 덧붙이기 금지). AI 호출은 기존과 동일하게 1회.
+  서버(`WorldSettingExtractionService.resolveIntegratedContent`)가 아래를 모두 통과할 때만 채택한다.
+  1. "이번 회차에서는", "새롭게 확인된 사실은", "~라는 사실이 드러났다" 같은 **회차 중심 표현이 없을 것**
+     (문장 앞의 "이번 회차에서(는)"은 먼저 제거한 뒤 검사)
+  2. 기존 content의 내용이 **60% 이상 유지**될 것(정규화 후 글자 bigram 기준) — 중복 통합·간결화는 허용하되 설정을 통째로 빼지 않았는지
+  3. 기존 content의 **핵심 용어(숫자, 따옴표·낫표로 감싼 고유명사)가 모두 남아 있을 것** — 세부 설정 누락 방지
+  4. 기존 content와 실제로 다를 것
+  - 실패 시 예비 병합: 기존 content는 DB 값 그대로 두고 `기존 content + "\n\n" + newContent`(없으면 newInsights 문장)로
+    조립한다. 이때도 문장 앞의 "이번 회차에서(는)" 류 표현은 제거한다. → 사용자 작성 설명이 훼손되는 경우는 없다.
+  - 통합본은 3줄 이상 연속 개행을 빈 줄 하나로 정리한다.
+  - 기존 설정 후보의 `title`/`category`는 AI 값 대신 DB 값으로 고정해 응답한다.
+- 신규 설정도 문장 앞의 "이번 회차에서(는)" 류 표현은 서버가 제거한다.
 - 화면(작품 상세/회차 작성·수정/보강 검토)에서는 `white-space: pre-wrap`으로 렌더링하므로 `content`에
   들어있는 개행이 그대로 표시된다.
 
@@ -709,12 +746,25 @@ Authorization: Bearer {accessToken}
 - 기존 설정 보강: `PATCH /api/world-settings/{matchedWorldSettingId}` with `{ category, title, content }`
   (여기서 `content`는 위 방식으로 서버가 이미 병합해 내려준 값 — 사용자가 검토 화면에서 수정 후 그대로 전송)
 
+**변경사항 없는 기존 설정 제외 규칙**:
+- `candidates`에는 **신규 설정**과 **실제로 추가·보완할 정보가 있는 기존 설정**만 포함된다.
+  기존 설정이 단순히 다시 언급된 경우는 응답에서 제외된다. `totalCount`도 제외 후 개수다.
+- 1차: AI 프롬프트에서 기존 content와 의미적으로 비교해 새 정보가 없는 기존 설정은 결과에 넣지 않도록 지시한다.
+- 2차: 서버(`WorldSettingExtractionService.removeAlreadyKnownInsights`)가 `newInsights.content`에서 기존 content에
+  이미 포함된 항목을 제거하고, `newContent`가 기존 content에 그대로 포함되어 있으면 비운다.
+  둘 다 남은 것이 없으면 후보에서 제외한다. 조회만 하며 DB 쓰기는 없다.
+- 3차: 프론트(`lib/extractionFilter.ts`)가 렌더링 전 한 번 더 걸러낸다.
+- 남은 후보가 0개면 검토 페이지로 이동하지 않고 회차 상세 화면에
+  "새롭게 발견되거나 변경된 세계관 설정이 없습니다." 안내를 표시한다. (오류는 기존 오류 처리 유지)
+
 ### 프론트 연동 흐름
 
 ```
 EpisodeDetailPage
 → [세계관 설정 추출] 버튼 클릭
 → POST /api/episodes/{episodeId}/world-setting-extraction
+→ filterWorldSettingCandidates()로 변경사항 있는 후보만 남김
+→ 0개면: 회차 상세에 "새롭게 발견되거나 변경된 세계관 설정이 없습니다." 표시 (이동 없음)
 → navigate('/episodes/{episodeId}/world-setting-review', { state: { candidates, novelId, episodeId, episodeTitle } })
 
 WorldSettingReviewPage (1/N ~ N/N)
@@ -980,7 +1030,7 @@ AiChatPanel (작품 상세/회차 작성/회차 수정 3개 페이지 공유)
 | `/novels` | 작품 목록 |
 | `/novels/new` | 작품 생성 |
 | `/novels/:novelId` | 작품 상세 |
-| `/novels/:novelId/episodes` | 회차 목록 (페이지당 8개, 프론트 페이지네이션 — URL 변경 없음) |
+| `/novels/:novelId/episodes` | 회차 목록 (회차 번호 내림차순 — 최신 회차가 맨 위, 페이지당 8개, 프론트 정렬·페이지네이션 — URL 변경 없음, API 응답은 오름차순 유지) |
 | `/novels/:novelId/episodes/new` | 회차 생성 |
 | `/episodes/:episodeId` | 회차 상세/수정/삭제 |
 | `/novels/:novelId/characters` | 등장인물 관리 (인라인 CRUD) |

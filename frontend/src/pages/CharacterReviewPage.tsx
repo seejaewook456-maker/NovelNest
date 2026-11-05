@@ -5,6 +5,7 @@ import { linkCharacterToEpisode } from '../api/episodeCharacterApi';
 import type { CharacterCandidate } from '../types/characterExtraction';
 import Button from '../components/Button';
 import ProgressBar from '../components/ProgressBar';
+import { hasCharacterChanges } from '../lib/extractionFilter';
 
 interface ReviewState {
   candidates: CharacterCandidate[];
@@ -18,6 +19,14 @@ function mergeList(base: string | null, additions: string[] | undefined): string
   const baseItems = base ? base.split(',').map((s) => s.trim()).filter(Boolean) : [];
   const newItems = (additions ?? []).filter((item) => !baseItems.includes(item));
   return [...baseItems, ...newItems].join(', ');
+}
+
+// 기존 설명 뒤에 AI가 찾은 보완 정보를 줄바꿈으로 이어붙인다 (기존 설명은 그대로 보존)
+function appendDescription(base: string | null, additions: string[] | null | undefined): string {
+  const baseText = (base ?? '').trimEnd();
+  const newText = (additions ?? []).map((s) => s.trim()).filter(Boolean).join('\n');
+  if (!newText) return baseText;
+  return baseText ? `${baseText}\n${newText}` : newText;
 }
 
 export default function CharacterReviewPage() {
@@ -52,9 +61,7 @@ export default function CharacterReviewPage() {
   const current = candidates[currentIndex];
   const isLast = currentIndex + 1 >= total;
   const isExisting = current.isExistingCharacter && current.existingCharacter !== null;
-  const hasNewInsights =
-    (current.newInsights?.personality?.length ?? 0) > 0 ||
-    (current.newInsights?.speechStyle?.length ?? 0) > 0;
+  const hasNewInsights = hasCharacterChanges(current);
 
   // 인덱스가 바뀌면 편집 필드를 현재 후보 값으로 초기화
   useEffect(() => {
@@ -62,12 +69,15 @@ export default function CharacterReviewPage() {
     if (c.isExistingCharacter && c.existingCharacter) {
       // 기존 인물: 등록된 정보 + newInsights 병합 값으로 초기화
       const ex = c.existingCharacter;
+      // 역할/나이는 AI가 "달라졌다"고 판단한 값이 있을 때만 그 값으로 제안한다
+      const role = c.newInsights?.role?.trim() ? c.newInsights.role : ex.role;
+      const age = c.newInsights?.age ?? ex.age;
       setEditedName(ex.name);
-      setEditedRole(ex.role ?? '');
-      setEditedAge(ex.age != null ? String(ex.age) : '');
+      setEditedRole(role ?? '');
+      setEditedAge(age != null ? String(age) : '');
       setEditedPersonality(mergeList(ex.personality, c.newInsights?.personality));
       setEditedSpeechStyle(mergeList(ex.speechStyle, c.newInsights?.speechStyle));
-      setEditedDescription(ex.description ?? '');
+      setEditedDescription(appendDescription(ex.description, c.newInsights?.description));
     } else {
       // 신규 인물: AI 추출 값으로 초기화
       setEditedName(c.name);
@@ -222,6 +232,22 @@ export default function CharacterReviewPage() {
             {hasNewInsights && (
               <div className="insights-section">
                 <p className="insights-title">새로 발견된 정보</p>
+                {current.newInsights!.role?.trim() && (
+                  <div className="insights-group">
+                    <span className="insights-label">역할</span>
+                    <div className="insights-tags">
+                      <span className="insight-tag">★ {current.newInsights!.role}</span>
+                    </div>
+                  </div>
+                )}
+                {current.newInsights!.age != null && (
+                  <div className="insights-group">
+                    <span className="insights-label">나이</span>
+                    <div className="insights-tags">
+                      <span className="insight-tag">★ {current.newInsights!.age}세</span>
+                    </div>
+                  </div>
+                )}
                 {(current.newInsights!.personality?.length ?? 0) > 0 && (
                   <div className="insights-group">
                     <span className="insights-label">성격</span>
@@ -237,6 +263,16 @@ export default function CharacterReviewPage() {
                     <span className="insights-label">말투</span>
                     <div className="insights-tags">
                       {current.newInsights!.speechStyle!.map((item, i) => (
+                        <span key={i} className="insight-tag">★ {item}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(current.newInsights!.description?.length ?? 0) > 0 && (
+                  <div className="insights-group">
+                    <span className="insights-label">설명</span>
+                    <div className="insights-tags">
+                      {current.newInsights!.description!.map((item, i) => (
                         <span key={i} className="insight-tag">★ {item}</span>
                       ))}
                     </div>
