@@ -54,11 +54,13 @@ export default function EpisodeListPage() {
   if (loading) return <LoadingSpinner />;
   if (error) return <p className="error-message">{error}</p>;
 
-  // 서버가 이미 회차 번호순으로 정렬해 주므로 순서는 그대로 두고 잘라서 보여주기만 한다.
+  // 서버 응답(회차 번호 오름차순)의 복사본을 최신 회차가 먼저 오도록 뒤집어 정렬한 뒤 페이지별로 자른다.
+  // 전체를 정렬하고 나서 자르므로 페이지 사이에 회차가 중복되거나 누락되지 않는다.
   // 회차 수가 바뀌어(추가/삭제) 현재 페이지가 범위를 벗어나면 렌더링 시점에 마지막 유효 페이지로 보정된다.
-  const totalPages = getTotalPages(episodes.length, EPISODES_PER_PAGE);
+  const sortedEpisodes = [...episodes].sort((a, b) => b.episodeNumber - a.episodeNumber);
+  const totalPages = getTotalPages(sortedEpisodes.length, EPISODES_PER_PAGE);
   const page = clampPage(currentPage, totalPages);
-  const pagedEpisodes = episodes.slice((page - 1) * EPISODES_PER_PAGE, page * EPISODES_PER_PAGE);
+  const pagedEpisodes = sortedEpisodes.slice((page - 1) * EPISODES_PER_PAGE, page * EPISODES_PER_PAGE);
 
   const handlePageChange = (next: number) => {
     const target = clampPage(next, totalPages);

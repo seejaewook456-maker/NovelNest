@@ -31,6 +31,7 @@ import EpisodeWorkspace from '../components/workspace/EpisodeWorkspace';
 import EditorHeader from '../components/workspace/EditorHeader';
 import WritingAssistToolbar from '../components/WritingAssistToolbar';
 import { countChars } from '../lib/charCount';
+import { filterCharacterCandidates, filterWorldSettingCandidates } from '../lib/extractionFilter';
 
 export default function EpisodeDetailPage() {
   const { episodeId } = useParams<{ episodeId: string }>();
@@ -72,10 +73,13 @@ export default function EpisodeDetailPage() {
 
   const [extractionLoading, setExtractionLoading] = useState(false);
   const [extractionError, setExtractionError] = useState('');
+  // 추출은 성공했지만 새롭게 발견되거나 변경된 항목이 없을 때 보여줄 안내 문구 (오류와 구분)
+  const [extractionNotice, setExtractionNotice] = useState('');
   const [episodeCharacters, setEpisodeCharacters] = useState<Character[]>([]);
 
   const [wsExtractionLoading, setWsExtractionLoading] = useState(false);
   const [wsExtractionError, setWsExtractionError] = useState('');
+  const [wsExtractionNotice, setWsExtractionNotice] = useState('');
   const [episodeWorldSettings, setEpisodeWorldSettings] = useState<WorldSetting[]>([]);
 
   const [conflicts, setConflicts] = useState<ConflictResult[]>([]);
@@ -170,12 +174,21 @@ export default function EpisodeDetailPage() {
     if (!episode) return;
     setExtractionLoading(true);
     setExtractionError('');
+    setExtractionNotice('');
     try {
       const result = await extractCharacters(episode.id);
       trackEvent(ANALYTICS_EVENTS.AI_CHARACTER_EXTRACT_RUN);
       void refetchAiUsage();
+      // 신규 인물 + 실제 변경사항이 있는 기존 인물만 카드로 보여준다
+      const candidates = filterCharacterCandidates(result.candidates ?? []);
+      if (candidates.length === 0) {
+        // 검토할 카드가 없으면 검토 페이지로 이동하지 않고 이 화면에서 안내만 한다
+        setExtractionNotice('새롭게 발견되거나 변경된 등장인물 정보가 없습니다.');
+        setExtractionLoading(false);
+        return;
+      }
       navigate(`/episodes/${episode.id}/character-review`, {
-        state: { candidates: result.candidates, novelId: episode.novelId, episodeId: episode.id, episodeTitle: result.episodeTitle },
+        state: { candidates, novelId: episode.novelId, episodeId: episode.id, episodeTitle: result.episodeTitle },
       });
     } catch (err) {
       setExtractionError(err instanceof Error ? err.message : '등장인물 추출 실패');
@@ -188,12 +201,20 @@ export default function EpisodeDetailPage() {
     if (!episode) return;
     setWsExtractionLoading(true);
     setWsExtractionError('');
+    setWsExtractionNotice('');
     try {
       const result = await extractWorldSettings(episode.id);
       trackEvent(ANALYTICS_EVENTS.AI_WORLDVIEW_EXTRACT_RUN);
       void refetchAiUsage();
+      // 신규 설정 + 실제 변경사항이 있는 기존 설정만 카드로 보여준다
+      const candidates = filterWorldSettingCandidates(result.candidates ?? []);
+      if (candidates.length === 0) {
+        setWsExtractionNotice('새롭게 발견되거나 변경된 세계관 설정이 없습니다.');
+        setWsExtractionLoading(false);
+        return;
+      }
       navigate(`/episodes/${episode.id}/world-setting-review`, {
-        state: { candidates: result.candidates, novelId: episode.novelId, episodeId: episode.id, episodeTitle: result.episodeTitle },
+        state: { candidates, novelId: episode.novelId, episodeId: episode.id, episodeTitle: result.episodeTitle },
       });
     } catch (err) {
       setWsExtractionError(err instanceof Error ? err.message : '세계관 추출 실패');
@@ -634,6 +655,7 @@ export default function EpisodeDetailPage() {
               depletedMessage="오늘 이용 가능한 횟수를 모두 사용했습니다."
             />
             {extractionError && <p className="error-message">{extractionError}</p>}
+            {extractionNotice && <p className="summary-empty">{extractionNotice}</p>}
             {episodeCharacters.length > 0 ? (
               // 등장인물 이름/역할은 사용자·AI가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다
               <div className="episode-character-list" data-clarity-mask="true">
@@ -645,7 +667,7 @@ export default function EpisodeDetailPage() {
                 ))}
               </div>
             ) : (
-              !extractionLoading && (
+              !extractionLoading && !extractionNotice && (
                 <p className="summary-empty">
                   AI가 이 회차의 등장인물을 분석합니다. 추출 후 1명씩 검토해 저장할 수 있습니다.
                 </p>
@@ -673,6 +695,7 @@ export default function EpisodeDetailPage() {
               depletedMessage="오늘 이용 가능한 횟수를 모두 사용했습니다."
             />
             {wsExtractionError && <p className="error-message">{wsExtractionError}</p>}
+            {wsExtractionNotice && <p className="summary-empty">{wsExtractionNotice}</p>}
             {episodeWorldSettings.length > 0 ? (
               // 세계관 설정 제목/카테고리는 사용자·AI가 작성한 콘텐츠이므로 세션 리플레이에서 마스킹한다
               <div className="episode-character-list" data-clarity-mask="true">
@@ -684,7 +707,7 @@ export default function EpisodeDetailPage() {
                 ))}
               </div>
             ) : (
-              !wsExtractionLoading && (
+              !wsExtractionLoading && !wsExtractionNotice && (
                 <p className="summary-empty">
                   AI가 이 회차의 세계관/설정 정보를 분석합니다. 추출 후 1개씩 검토해 저장할 수 있습니다.
                 </p>

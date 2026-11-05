@@ -45,7 +45,8 @@ public class WorldSettingCandidateDto {
     private WorldSettingNewInsightsDto newInsights;
 
     // 기존 설정 보강 시 이번 회차에서 새로 추가되는 문단 내용만 담은 필드 — OpenAI가 설정, 기존 설정에만 존재.
-    // 서비스가 이 값을 기존 WorldSetting.content 뒤에 "\n\n"으로 이어붙여 content를 다시 계산하므로,
-    // 기존 내용이 AI에 의해 재작성/요약되지 않고 그대로 보존된다.
+    // content에는 AI가 기존 설명과 새 정보를 통합한 최종 설명이 들어오며, 서비스가 이를 검증한다.
+    // 통합본이 검증(회차 표현 없음/기존 내용 보존/실제 변경)에 실패하면 이 값을 기존 content 뒤에
+    // "\n\n"으로 이어붙이는 예비 병합에 사용해, 기존 내용이 훼손되지 않도록 한다.
     private String newContent;
 }

@@ -1,6 +1,11 @@
 export interface NewInsights {
   personality: string[];
   speechStyle: string[];
+  // 외모·능력·배경·관계 등 설명에 보완할 새 정보 (구버전 응답 호환을 위해 optional)
+  description?: string[] | null;
+  // 기존과 다르게 확인된 역할/나이 — 변경이 없으면 null
+  role?: string | null;
+  age?: number | null;
 }
 
 export interface ExistingCharacterInfo {
