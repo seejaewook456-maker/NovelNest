@@ -35,12 +35,14 @@ export default function HeroSection({ onExploreFeatures }: HeroSectionProps) {
             <span />
             <span />
           </div>
+          {/* 작품 상세 페이지 캡처. 박스 비율은 두 테마 중 세로로 더 긴 라이트(960x805) 기준 */}
           <LandingImage
-            src="/landing/hero-dashboard.png"
-            alt="노벨네스트 AI 웹소설 대시보드"
+            lightSrc="/landing/main-light.png"
+            darkSrc="/landing/main-dark.png"
+            alt="노벨네스트 작품 상세 페이지 — 회차·메모·등장인물·세계관 관리 화면"
             className="landing-browser-frame-img"
-            width={1247}
-            height={810}
+            width={960}
+            height={805}
             fetchPriority="high"
             eager
           />

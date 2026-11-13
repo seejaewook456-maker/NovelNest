@@ -124,3 +124,52 @@ select에서 발견). 배경색만 지정할 때는 반드시 `background-color`
 `useSyncExternalStore` + 모듈 스토어 패턴은 `aiUsageStore`에서 이미 검증된 방식으로,
 테마를 구독하는 컴포넌트(`ThemeToggle`)만 리렌더링되고 나머지 컴포넌트 트리는
 영향받지 않는다.
+
+## 랜딩 페이지 스크린샷 — 테마별 자동 전환
+
+랜딩 페이지(Hero + 핵심 기능 섹션)의 서비스 캡처는 라이트/다크 2종을 준비해 두고,
+현재 테마에 맞는 한 장만 표시한다. 랜딩 전용 테마 상태는 두지 않고 위의 `themeStore`를 그대로 구독한다.
+
+### 파일 위치 / 이름 규칙
+
+- 위치: `frontend/public/landing/` (Vite `public` 폴더라 빌드 시 `dist/landing/`으로 그대로 복사되고,
+  개발·배포 환경 모두 `/landing/<파일명>` 절대 경로로 접근한다)
+- 이름: `{기능}-light.png` / `{기능}-dark.png` — 두 파일은 반드시 쌍으로 존재해야 한다.
+
+| 기능 | 파일 이름(기능 부분) | 사용 위치 |
+|---|---|---|
+| 작품 상세 페이지 | `main` | `HeroSection.tsx` |
+| 회차 작성 | `episode-write` | `FeatureShowcaseSection.tsx` 1행 |
+| 회차 요약 | `episode-summary` | 2행 |
+| 등장인물 추출 + 관리 | `character-extract`, `character-info` | 3행(별도 프레임 2개를 위아래로 배치) |
+| 세계관 설정 추출 + 관리 | `world-extract`, `world-info` | 4행(별도 프레임 2개를 위아래로 배치) |
+| 설정 충돌 감지 | `conflict` | 5행 |
+| 작품 정보 챗봇 | `chatbot` | 6행 |
+
+### 동작 방식
+
+- `components/landing/LandingImage.tsx`가 `lightSrc`/`darkSrc`를 받아 `useTheme()` 값으로 하나만 `<img>`에
+  넣는다. 렌더링되지 않은 반대 테마 이미지는 다운로드되지 않는다.
+- `themeStore`는 모듈 로드 시 localStorage를 읽어 두므로 첫 렌더부터 올바른 테마 이미지가 선택된다
+  (반대 테마 이미지가 잠깐 보이는 현상 없음). 토글 시 `src`만 바뀌므로 새로고침 없이 즉시 전환된다.
+- 같은 기능이라도 라이트/다크 캡처의 픽셀 크기가 조금씩 다르다. 그래서 `width`/`height`(박스 기준 크기)로
+  `aspect-ratio`를 고정하고 `object-fit: contain`으로 넣어 테마 전환 시 레이아웃이 흔들리지 않게 한다.
+  박스 기준 크기는 두 캡처 중 **세로로 더 긴 쪽**의 픽셀 크기를 쓴다(다른 쪽은 위아래 몇 px 여백만 생기고 잘리지 않음).
+- 로드 실패 시 깨진 이미지 아이콘 대신 "이미지를 준비 중입니다" 안내 박스를 같은 비율로 보여준다.
+- Hero 이미지(LCP)는 `eager` + `fetchPriority="high"`, 나머지는 `loading="lazy"`.
+  `frontend/index.html` `<head>`의 인라인 스크립트가 저장된 테마에 맞는 Hero 이미지(`main-{theme}.png`)
+  한 장만 프리로드한다.
+
+### 레이아웃 규칙
+
+- 프레임 최대 너비는 기본적으로 캡처 원본 너비로 제한한다(작은 캡처가 확대되어 글자가 흐려지는 것 방지).
+  `FEATURES`의 `frameMaxWidth`로 개별 지정할 수 있다(설정 충돌 캡처는 세로가 길어 400px로 지정).
+- 세로형 캡처(높이 > 너비)는 `.landing-browser-frame-img-tall`이 자동으로 붙어 기존 최대 높이(560px) 제한을 해제한다.
+- 한 기능에 캡처가 여러 장이면 캡처마다 별도 프레임(박스)으로 감싸 위아래로 20px 간격을 두고 배치한다. 같은 기능의 프레임 너비는 동일하게 맞춘다.
+
+### 이미지 추가/교체 시
+
+1. 라이트/다크 캡처를 같은 영역·비슷한 크기로 찍어 `{기능}-light.png` / `{기능}-dark.png`로 저장한다.
+2. 두 캡처 중 세로로 더 긴 쪽의 픽셀 크기를 `FEATURES`(또는 `HeroSection`)의 `width`/`height`에 반영한다.
+3. Hero 이미지 이름을 바꾸면 `frontend/index.html`의 프리로드 스크립트 경로도 함께 바꾼다.
+4. 원본보다 크게 표시되지 않도록, 캡처는 실제 표시 크기 이상(가급적 900px 이상 너비)으로 준비한다.

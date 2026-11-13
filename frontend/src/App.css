@@ -3413,6 +3413,11 @@ select {
   background: var(--color-bg);
 }
 
+/* 세로형 캡처(회차 요약, 설정 충돌)는 높이 제한 대신 프레임 너비 제한(frameMaxWidth)으로 크기를 조절한다 */
+.landing-browser-frame-img-tall {
+  max-height: none;
+}
+
 .landing-image-fallback {
   display: flex;
   align-items: center;
@@ -3531,6 +3536,16 @@ select {
   order: 2;
 }
 
+/* 캡처 원본이 열 너비보다 작아 프레임이 좁아지는 경우(회차 요약, 설정 충돌) 열 가운데에 둔다 */
+.landing-feature-visual .landing-browser-frame {
+  margin: 0 auto;
+}
+
+/* 한 기능에 캡처가 여러 장이면(예: 추출 화면 + 정보 카드) 각각 별도 프레임으로 두고 사이에 간격을 준다 */
+.landing-feature-visual .landing-browser-frame + .landing-browser-frame {
+  margin-top: 20px;
+}
+
 .landing-feature-copy h3 {
   font-size: 22px;
   margin-bottom: 12px;
@@ -3542,6 +3557,8 @@ select {
   font-size: 15px;
   line-height: 1.75;
   word-break: keep-all;
+  /* 설명 문구 안의 \n을 줄바꿈으로 표시 */
+  white-space: pre-line;
 }
 
 /* 사용 방법 3단계 */
