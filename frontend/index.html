@@ -17,8 +17,23 @@
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://www.novelnestia.com/" />
 
-    <!-- 랜딩 페이지 Hero 이미지(LCP 요소)를 HTML 파서가 최대한 빨리 발견하도록 프리로드 -->
-    <link rel="preload" as="image" href="/landing/hero-dashboard.png" fetchpriority="high" />
+    <!-- 랜딩 페이지 Hero 이미지(LCP 요소)를 최대한 빨리 받아오도록 프리로드.
+         Hero 캡처가 라이트/다크 2종이므로, 저장된 테마('theme' 키, themeStore.ts와 동일)에 맞는
+         한 장만 프리로드해 반대 테마 이미지를 불필요하게 다운로드하지 않는다. -->
+    <script>
+      (function () {
+        var theme = 'light';
+        try {
+          if (localStorage.getItem('theme') === 'dark') theme = 'dark';
+        } catch (e) {}
+        var link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = '/landing/main-' + theme + '.png';
+        link.setAttribute('fetchpriority', 'high');
+        document.head.appendChild(link);
+      })();
+    </script>
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
