@@ -33,7 +33,7 @@ export default function ProblemSolutionSection() {
           </ul>
         </div>
         <div className="landing-compare-col landing-compare-solution">
-          <h3>노벨네스트의 해결 방식</h3>
+          <h3>NovelNest의 해결 방식</h3>
           <ul>
             {SOLUTIONS.map((item) => (
               <li key={item}>

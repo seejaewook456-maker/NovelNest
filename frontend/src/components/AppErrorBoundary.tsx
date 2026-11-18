@@ -8,7 +8,7 @@ function ErrorFallback() {
   return (
     <div className="auth-wrapper">
       <div className="auth-card" style={{ textAlign: 'center' }}>
-        <p className="auth-brand">노벨네스트</p>
+        <p className="auth-brand">NovelNest</p>
         <h2 className="auth-title" style={{ marginBottom: 16 }}>
           문제가 발생했습니다
         </h2>

@@ -131,7 +131,7 @@ export default function ForgotPasswordPage() {
     <div className="auth-wrapper">
       <div className="auth-card">
         <div className="auth-header">
-          <p className="auth-brand">노벨네스트</p>
+          <p className="auth-brand">NovelNest</p>
           <h2 className="auth-title">비밀번호 찾기</h2>
         </div>
 

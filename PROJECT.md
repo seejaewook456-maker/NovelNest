@@ -435,6 +435,16 @@ AI가 작가의 "제2의 기억 장치" 역할을 해야 한다.
 * 기능 로직·API·컴포넌트/변수명·애널리틱스 이벤트명·AI 프롬프트는 변경 없음. 회차 작성/수정 메뉴의 "AI 채팅" 탭(메뉴 레일·패널 제목)은 이후 **챗봇**으로 변경. 사용량 소진 안내("AI 채팅 횟수")는 유지
 * 챗봇 문구 정리: 질문 입력창 안내 "작품에 대해 질문해 보세요..." → "작품에 대해 질문해 보세요." (뒤의 "Enter로 전송, Shift+Enter로 줄바꿈" 안내는 유지), 요약 미완성 경고에서 "요약이 없는 회차 내용은 AI가 참고할 수 없습니다." 문장을 빼고 "더 정확한 답변을 위해 회차 요약을 추가해 보세요."만 표시
 
+### 서비스명 NovelNest 통일 (AWS Activate 검증 대응)
+* 목적: 외부 심사(AWS Activate 스타트업 검증)·검색엔진이 서비스 이름을 명확히 확인할 수 있도록 서비스 전체(랜딩페이지·메타데이터·앱 화면·안내 메일)의 서비스명을 영문 **NovelNest**로 통일
+* 랜딩 화면 표기: 한글 "노벨네스트"를 모두 "NovelNest"로 대체 — 헤더 브랜드(`LandingHeader`, 로고 SVG 옆 HTML 텍스트·`aria-label`), 푸터 로고(`LandingFooter`), 문제/해결 섹션 제목("NovelNest의 해결 방식"), 마지막 CTA 문구, Hero 이미지 대체 텍스트. 서비스명은 이미지가 아닌 일반 HTML 텍스트로 노출
+* 푸터: 오른쪽에 문의 이메일(`contact@novelnestia.com`, `mailto:` 링크)과 저작권 문구 `© {현재 연도} NovelNest. All rights reserved.`를 세로로 표시(2026년 기준 "© 2026 NovelNest"). 연도는 `new Date().getFullYear()`로 자동 갱신. 좁은 화면에서는 기존 `flex-wrap`으로 브랜드 아래로 내려감(`.landing-footer-meta`, `.landing-footer-contact` 신규, 테마 변수만 사용해 라이트/다크 대응)
+* `index.html` 메타데이터: `<title>`, `description`, `author`, `og:site_name`, `og:title`, `og:description`, `twitter:title`, `twitter:description`을 "NovelNest" 기준으로 변경, `og:image:alt` 추가. 구조화 데이터(JSON-LD)는 `SoftwareApplication.name`을 "NovelNest"로, `alternateName`을 "노벨네스트"로 바꾸고 `Organization`에 `email` 추가
+* 한글명 "노벨네스트"는 화면에 보이지 않는 `keywords`와 JSON-LD `alternateName`에만 유지 — 한글로 검색하는 사용자 유입을 위함
+* 서비스 전체 통일: 랜딩 밖 화면도 "NovelNest"로 변경 — 로그인(`LoginPage`)·회원가입(`SignupPage`)·비밀번호 찾기(`ForgotPasswordPage`) 브랜드 텍스트, 로그인 후 헤더(`MainLayout`), 오류 화면(`AppErrorBoundary`), PWA `manifest.json`(`name`: "NovelNest - 웹소설 창작 도구", `short_name`: "NovelNest")
+* 백엔드 메일: 이메일 인증 메일(`EmailVerificationService`) 제목 `[NovelNest] 이메일 인증번호`와 본문 브랜드 텍스트, 비밀번호 재설정 메일(`PasswordResetService`) 본문 브랜드 텍스트를 "NovelNest"로 변경(재설정 메일 제목은 이미 `application.yml`에서 `[NovelNest] ...`로 설정되어 있었음)
+* 기능 로직·라우팅·API·DB 변경 없음. 표시 문구만 변경
+
 ## 아직 구현되지 않음
 
 ### AI 기능 (미구현)

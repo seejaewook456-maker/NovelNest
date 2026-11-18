@@ -18,7 +18,7 @@ export default function MainLayout() {
     <div className="main-layout">
       <header className="header">
         <span className="header-logo" onClick={() => navigate('/novels')}>
-          노벨네스트
+          NovelNest
         </span>
         <div className="header-actions">
           <ThemeToggle />

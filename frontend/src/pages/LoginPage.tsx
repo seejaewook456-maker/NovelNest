@@ -133,7 +133,7 @@ export default function LoginPage() {
           <div className="auth-brand-icon">
             <PencilIcon />
           </div>
-          <h1 className="auth-brand-name">노벨네스트</h1>
+          <h1 className="auth-brand-name">NovelNest</h1>
           <p className="auth-brand-tagline">AI 기반 웹소설 집필 도구</p>
           <p className="auth-brand-desc">
             AI와 함께 등장인물, 세계관, 회차를
