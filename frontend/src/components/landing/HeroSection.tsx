@@ -39,7 +39,7 @@ export default function HeroSection({ onExploreFeatures }: HeroSectionProps) {
           <LandingImage
             lightSrc="/landing/main-light.png"
             darkSrc="/landing/main-dark.png"
-            alt="노벨네스트 작품 상세 페이지 — 회차·메모·등장인물·세계관 관리 화면"
+            alt="NovelNest 작품 상세 페이지 — 회차·메모·등장인물·세계관 관리 화면"
             className="landing-browser-frame-img"
             width={960}
             height={805}

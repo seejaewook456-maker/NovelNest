@@ -60,7 +60,7 @@ Blue(Primary)/Green(Success)/Orange(Warning)/Red(Error) 색상을 사용한다.
 
 - 카카오 로그인 버튼(`#FEE500` / `#191919`) — `App.css` `.btn-kakao`
 - 구글 로그인 버튼 SVG 4색 로고 — `LoginPage.tsx`, `SignupPage.tsx`
-- 노벨네스트 연필 로고 SVG(`#70492E` / `#FFFFFF`) — `LoginPage.tsx`, `SignupPage.tsx`, `LandingHeader.tsx`
+- NovelNest 연필 로고 SVG(`#70492E` / `#FFFFFF`) — `LoginPage.tsx`, `SignupPage.tsx`, `LandingHeader.tsx`
 
 ## select 다크 모드 화살표 — background shorthand 주의
 

@@ -160,7 +160,7 @@ export default function SignupPage() {
     <div className="auth-wrapper">
       <div className="auth-card">
         <div className="auth-header">
-          <p className="auth-brand">노벨네스트</p>
+          <p className="auth-brand">NovelNest</p>
           <h2 className="auth-title">회원가입</h2>
         </div>
         {/* 이메일/인증번호/비밀번호/닉네임 등 개인정보 입력 영역 전체를 세션 리플레이에서 마스킹한다 */}

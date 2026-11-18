@@ -21,9 +21,11 @@ export default function LandingHeader() {
   return (
     <header className="landing-header">
       <div className="landing-header-inner">
-        <Link to="/" className="landing-header-brand" aria-label="노벨네스트 홈으로 이동">
+        <Link to="/" className="landing-header-brand" aria-label="NovelNest 홈으로 이동">
           <BrandMark />
-          <span>노벨네스트</span>
+          {/* 서비스명(NovelNest)을 이미지가 아닌 HTML 텍스트로 노출해, 검색엔진·외부 심사(AWS Activate 등)에서
+              서비스 이름을 명확히 확인할 수 있게 한다. */}
+          <span>NovelNest</span>
         </Link>
         <nav className="landing-header-actions" aria-label="시작하기">
           <ThemeToggle />

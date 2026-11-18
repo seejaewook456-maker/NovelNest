@@ -3696,6 +3696,25 @@ select {
   margin-top: 2px;
 }
 
+/* 문의 이메일 + 저작권 문구를 오른쪽에 세로로 묶는다 (좁은 화면에서는 flex-wrap으로 브랜드 아래로 내려감) */
+.landing-footer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.landing-footer-contact {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.landing-footer-contact a {
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+}
+
 .landing-footer-copyright {
   color: var(--color-text-muted);
   font-size: 13px;

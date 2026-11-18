@@ -122,7 +122,7 @@ public class EmailVerificationService {
     private void sendSignUpMail(String email, String code) {
         eventPublisher.publishEvent(new EmailSendRequestedEvent(
                 email,
-                "[노벨네스트] 이메일 인증번호",
+                "[NovelNest] 이메일 인증번호",
                 buildSignUpCodeEmailHtml(code),
                 true
         ));
@@ -133,7 +133,7 @@ public class EmailVerificationService {
         return """
                 <div style="font-family: -apple-system, sans-serif; background-color: #FAF8F5; padding: 32px;">
                   <div style="max-width: 480px; margin: 0 auto; background-color: #FFFFFF; border: 1px solid #E7DDD3; border-radius: 12px; padding: 32px;">
-                    <p style="color: #8B5E3C; font-weight: bold; font-size: 14px; margin: 0 0 16px;">노벨네스트</p>
+                    <p style="color: #8B5E3C; font-weight: bold; font-size: 14px; margin: 0 0 16px;">NovelNest</p>
                     <h2 style="color: #2F2A26; margin: 0 0 16px;">이메일 인증번호</h2>
                     <p style="color: #2F2A26; line-height: 1.6;">
                       회원가입을 위해 이메일 인증을 요청하셨습니다. 아래 인증번호를 입력해주세요.

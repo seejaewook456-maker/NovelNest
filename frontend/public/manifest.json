@@ -1,6 +1,6 @@
 {
-  "name": "노벨네스트 - 웹소설 창작 도구",
-  "short_name": "노벨네스트",
+  "name": "NovelNest - 웹소설 창작 도구",
+  "short_name": "NovelNest",
   "description": "AI와 함께 웹소설을 집필하고 등장인물, 세계관, 설정을 체계적으로 관리할 수 있는 웹소설 창작 도구",
   "start_url": "/",
   "display": "standalone",
